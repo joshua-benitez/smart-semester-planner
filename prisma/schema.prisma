@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  
+  assignments Assignment[]
+  courses     Course[]
+  rpEvents    RPEvent[]
+  rank        Rank?
+}
+
+model Course {
+  id     String @id @default(cuid())
+  name   String
+  color  String?
+  userId String
+  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+  
+  @@unique([userId, name])
+}
+
+model Assignment {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  dueDate      DateTime
+  type         String   // 'homework', 'quiz', 'project', 'exam'
+  difficulty   String   // 'easy', 'moderate', 'crushing', 'brutal'
+  weight       Float    @default(1.0)
+  priority     Int?
+  status       String   @default("not_started") // 'not_started', 'in_progress', 'submitted', 'graded', 'missed'
+  awaitingGrade Boolean @default(false)
+  grade        Float?
+  submittedAt  DateTime?
+  suggestedDate DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  userId   String
+  courseId String
+  
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rpEvents RPEvent[]
+}
+
+model RPEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  assignmentId String?
+  rpChange     Int
+  reason       String
+  description  String?
+  createdAt    DateTime @default(now())
+  
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignment Assignment? @relation(fields: [assignmentId], references: [id])
+}
+
+model Rank {
+  id        String @id @default(cuid())
+  userId    String @unique
+  rpTotal   Int    @default(1000)
+  rankName  String @default("Bronze")
+  division  Int?   @default(5)
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
