@@ -13,12 +13,13 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/assignments/:path*',
-    '/calendar/:path*',
-    '/profile/:path*',
-    '/api/assignments/:path*',
-    '/api/daily-check/:path*',
-    '/api/rp-history/:path*'
+    // Temporarily disable auth protection for development
+    // '/dashboard/:path*',
+    // '/assignments/:path*',
+    // '/calendar/:path*',
+    // '/profile/:path*',
+    // '/api/assignments/:path*',
+    // '/api/daily-check/:path*',
+    // '/api/rp-history/:path*'
   ]
 }
