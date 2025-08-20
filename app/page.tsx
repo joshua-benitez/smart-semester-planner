@@ -82,15 +82,42 @@ export default function HomePage() {
               {/* Tags for assignment details with different colors based on difficulty */}
               <div className="flex gap-2 flex-wrap">
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{assignment.type}</span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  assignment.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                  assignment.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                  assignment.difficulty === 'crushing' ? 'bg-orange-100 text-orange-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${assignment.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                    assignment.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                      assignment.difficulty === 'crushing' ? 'bg-orange-100 text-orange-800' :
+                        'bg-red-100 text-red-800'
+                  }`}>
                   {assignment.difficulty}
                 </span>
                 <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Weight: {assignment.weight}</span>
+
+              </div>
+              {/* Edit and Delete buttons */}
+              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                <Link href={`/assignments/${assignment.id}/edit`} className="text-blue-600 hover:text-blue-800 transition">
+                  Edit
+                </Link>
+                <button
+                  className="text-red-600 hover:text-red-800 transition"
+                  onClick={async () => {
+                    if (confirm('Are you sure you want to delete this assignment?')) {
+                      try {
+                        const res = await fetch(`/api/assignments/${assignment.id}`, {
+                          method: 'DELETE'
+                        })
+                        if (!res.ok) throw new Error('Failed to delete assignment')
+                        setAssignments(assignments.filter((a) => a.id !== assignment.id))
+                      } catch (error) {
+                        console.error('Failed to delete assignment:', error)
+                      }
+                    }
+                    // No need to return anything here, just update state
+                    setAssignments((prev) => prev.filter((a) => a.id !== assignment.id))
+                    alert('Assignment deleted successfully')
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}

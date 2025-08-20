@@ -177,3 +177,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
   }
 }
+
