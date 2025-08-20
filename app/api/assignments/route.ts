@@ -6,9 +6,8 @@ declare global {
   // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined
 }
-
-const prisma: PrismaClient = (global as typeof globalThis & { __prisma?: PrismaClient }).__prisma ?? new PrismaClient()
-if (process.env.NODE_ENV !== 'production') (global as typeof globalThis & { __prisma?: PrismaClient }).__prisma = prisma
+const prisma: PrismaClient = global.__prisma ?? new PrismaClient()
+if (process.env.NODE_ENV !== 'production') global.__prisma = prisma
 
 // Lightweight runtime validation helper
 function isNonEmptyString(x: any): x is string {
@@ -149,8 +148,32 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE: remove an assignment
+export async function DELETE(request: Request) {
+  try {
+    const data = await request.json()
 
+    // I need to validate the assignment ID was provided
+    if (!isNonEmptyString(data?.id)) {
+      return NextResponse.json({ error: 'Missing assignment id' }, { status: 400 })
+    }
 
+    // Check if the assignment exists before trying to delete it
+    const existing = await prisma.assignment.findUnique({
+      where: { id: data.id }
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
+    }
 
+    // Delete the assignment from the database
+    await prisma.assignment.delete({
+      where: { id: data.id }
+    })
 
-
+    return NextResponse.json({ message: 'Assignment deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting assignment:', error)
+    return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
+  }
+}

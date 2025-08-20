@@ -12,56 +12,58 @@ type Assignment = {
   type: string
   difficulty: string
   weight: number
-  course: {
-    name: string
-  }
+  course: { name: string }
 }
 
 export default function HomePage() {
-  // State to hold my assignments and loading status
+  // I need state to hold my assignments and track loading
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
 
   // Function to fetch my assignments from the API
-  async function fetchAssignments() {
+  async function fetchAssignments(signal?: AbortSignal) {
     try {
-      const res = await fetch('/api/assignments')
+      const res = await fetch('/api/assignments', { signal })
       if (!res.ok) throw new Error('Network response was not ok')
       const data = await res.json()
-      return data || []
+      // Make sure I return an array even if the API returns something weird
+      return Array.isArray(data) ? data as Assignment[] : []
     } catch (error) {
       console.error('Failed to fetch assignments:', error)
       return []
     }
   }
 
-  // Load assignments when the page loads
+  // Load assignments when the page loads (with cleanup to avoid memory leaks)
   useEffect(() => {
-    fetchAssignments().then((data) => {
+    const controller = new AbortController()
+    fetchAssignments(controller.signal).then((data) => {
       setAssignments(data)
       setLoading(false)
     })
+    // Clean up the request if the component unmounts
+    return () => controller.abort()
   }, [])
 
-  // Format date to be more readable
+  // Helper to make dates look better
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Invalid date'
     return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Semester Planner</h1>
-      
-      <Link
-        href="/assignments/new"
-        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
-      >
+
+      {/* Button to add new assignments */}
+      <Link href="/assignments/new" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
         Add New Assignment
       </Link>
 
       <h2 className="text-2xl font-semibold mt-8 mb-4">Your Assignments</h2>
-      
+
+      {/* Show different content based on loading state and data */}
       {loading ? (
         <p className="text-gray-500">Loading assignments...</p>
       ) : assignments.length === 0 ? (
@@ -71,17 +73,15 @@ export default function HomePage() {
           {assignments.map((assignment) => (
             <div key={assignment.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{assignment.title}</h3>
-              <p className="text-blue-600 font-medium mb-2">{assignment.course.name}</p>
+              <p className="text-blue-600 font-medium mb-2">{assignment.course?.name ?? 'No course'}</p>
               <p className="text-gray-600 mb-3">Due: {formatDate(assignment.dueDate)}</p>
-              
-              {assignment.description && (
-                <p className="text-gray-700 mb-3">{assignment.description}</p>
-              )}
-              
+
+              {/* Only show description if it exists */}
+              {assignment.description && <p className="text-gray-700 mb-3">{assignment.description}</p>}
+
+              {/* Tags for assignment details with different colors based on difficulty */}
               <div className="flex gap-2 flex-wrap">
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {assignment.type}
-                </span>
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{assignment.type}</span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   assignment.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
                   assignment.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
@@ -90,9 +90,7 @@ export default function HomePage() {
                 }`}>
                   {assignment.difficulty}
                 </span>
-                <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Weight: {assignment.weight}
-                </span>
+                <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">Weight: {assignment.weight}</span>
               </div>
             </div>
           ))}
