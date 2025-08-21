@@ -83,9 +83,9 @@ export default function HomePage() {
               <div className="flex gap-2 flex-wrap">
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">{assignment.type}</span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${assignment.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                    assignment.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                      assignment.difficulty === 'crushing' ? 'bg-orange-100 text-orange-800' :
-                        'bg-red-100 text-red-800'
+                  assignment.difficulty === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                    assignment.difficulty === 'crushing' ? 'bg-orange-100 text-orange-800' :
+                      'bg-red-100 text-red-800'
                   }`}>
                   {assignment.difficulty}
                 </span>
@@ -102,18 +102,21 @@ export default function HomePage() {
                   onClick={async () => {
                     if (confirm('Are you sure you want to delete this assignment?')) {
                       try {
-                        const res = await fetch(`/api/assignments/${assignment.id}`, {
-                          method: 'DELETE'
+                        const res = await fetch('/api/assignments', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id: assignment.id })
                         })
                         if (!res.ok) throw new Error('Failed to delete assignment')
+
+                        // Remove from state only if API call succeeds
                         setAssignments(assignments.filter((a) => a.id !== assignment.id))
+                        alert('Assignment deleted successfully')
                       } catch (error) {
                         console.error('Failed to delete assignment:', error)
+                        alert('Failed to delete assignment')
                       }
                     }
-                    // No need to return anything here, just update state
-                    setAssignments((prev) => prev.filter((a) => a.id !== assignment.id))
-                    alert('Assignment deleted successfully')
                   }}
                 >
                   Delete
