@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 // I need a type for my form data to keep TypeScript happy
 type FormState = {
   title: string
-  description: string
+  description: string 
   dueDate: string
   type: string
   difficulty: string
