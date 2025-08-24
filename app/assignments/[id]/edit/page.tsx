@@ -39,8 +39,8 @@ export default function EditAssignment() {
         title: '',
         description: '',
         dueDate: '',
-        type: '',
-        difficulty: '',
+        type: 'homework',
+        difficulty: 'moderate',
         courseName: '',
         weight: 1
     })
@@ -67,41 +67,180 @@ export default function EditAssignment() {
         fetchAssignment()
     }, [assignmentId])
 
-    // TODO 3: Add another useEffect to populate form when data loads
-    // When data changes from null to actual assignment data,
-    // you need to setFormData with the fetched assignment values
-    // This runs AFTER the fetch completes and data is set
+    // useEffect to populate form when data loads
+    useEffect(() => {
+        if (data) {
+            setFormData({
+                title: data.title,
+                description: data.description || '',
+                dueDate: data.dueDate,
+                type: data.type || 'homework',
+                difficulty: data.difficulty || 'moderate',
+                courseName: data.course.name,
+                weight: data.weight || 1
+            })
 
+        }
+    }, [data])
 
-    // TODO 4: Add handleChange function
-    // Copy the handleChange function from your create assignment form
-    // It handles updating formData when user types in form fields
+    const validate = (): string | null => {
+        if (!formData.title.trim()) return 'Title is required'
+        if (!formData.courseName.trim()) return 'Course name is required'
+        if (!formData.dueDate) return 'Due date is required'
+        const d = new Date(formData.dueDate)
+        if (isNaN(d.getTime())) return 'Due date is invalid'
+        if (formData.weight < 1) return 'Weight must be at least 1'
+        return null
+    }
 
-    // TODO 5: Add handleSubmit function  
-    // Similar to create form but:
-    // - Use PUT method instead of POST
-    // - Send assignment ID in the request body
-    // - Navigate back to dashboard on success
+    // Add handleSubmit function  
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSubmitLoading(true)
+        try {
+            const res = await fetch('/api/assignments', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: assignmentId, ...formData })
+            })
+            if (!res.ok) {
+                // Try to get the error message from the response
+                const body = await res.json().catch(() => ({}))
+                console.error('Update failed:', body)
+                alert(body?.error || 'Failed to update assignment')
+                setSubmitLoading(false)
+                return
+            }
+            // Success! Go back to the dashboard
+            router.push('/')
+        } catch (error) {
+            console.error('Network error:', error)
+            alert('Network error updating assignment')
+        } finally {
+            setSubmitLoading(false)
+        }
+    }
 
-    return (
-        <div className="max-w-2xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Edit Assignment</h1>
+    // handleChange function to update form data
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) => {
+        const { name, value } = e.target
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === 'weight' ? Number(value) : value // Convert weight to number
+        }))
+    }
 
-            {loading && <p className="text-gray-500">Loading assignment...</p>}
-            {error && <p className="text-red-500">Error: {typeof error === 'string' ? error : error.toString()}</p>}
+    function renderForm(formData: FormData) {
+        return (
+            <div className="max-w-2xl mx-auto p-6">
+                <h1 className="text-3xl font-bold mb-6">Edit Assignment</h1>
 
-            {/* TODO 6: Add the form JSX when data is loaded and not loading */}
-            {/* Copy the form structure from your create assignment page */}
-            {/* Make sure form fields are pre-populated with data values */}
-            {/* Example: value={formData.title} will show the existing title */}
-
-            {data && !loading && (
-                <div>
-                    <p className="text-green-600 mb-4">Assignment loaded: {data.title}</p>
-                    {/* Your form goes here - copy from /assignments/new/page.tsx */}
-                    {/* Remember to use onSubmit={handleSubmit} */}
-                </div>
-            )}
-        </div>
-    )
+                {loading && <p className="text-gray-500">Loading assignment...</p>}
+                {error && <p className="text-red-500">Error: {typeof error === 'string' ? error : error.toString()}</p>}
+                {!data && !loading && !error && <p className="text-gray-500">Assignment not found.</p>}
+                {data && !loading && (
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Title *</label>
+                            <input
+                                type="text"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Course Name *</label>
+                            <input
+                                type="text"
+                                name="courseName"
+                                value={formData.courseName}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                rows={4}
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                            <input
+                                type="datetime-local"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
+                            <select
+                                name="type"
+                                value={formData.type}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="homework">Homework</option>
+                                <option value="project">Project</option>
+                                <option value="exam">Exam</option>
+                                <option value="quiz">Quiz</option>
+                                <option value="reading">Reading</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
+                            <select
+                                name="difficulty"
+                                value={formData.difficulty}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="easy">Easy</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="crushing">Crushing</option>
+                                <option value="brutal">Brutal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
+                            <input
+                                type="number"
+                                name="weight"
+                                value={formData.weight}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                min={1}
+                                max={5}
+                                step={0.1}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={submitLoading}
+                                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                            >
+                                {submitLoading ? 'Updating...' : 'Update Assignment'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </div>
+        )
+    }
+    return renderForm(formData)
 }
