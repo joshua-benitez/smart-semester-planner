@@ -10,7 +10,7 @@ const isNonEmptyString = (value: any): value is string => {
 // Add createOrFindUser function (copy from assignments route.ts)
 const createOrFindUser = async () => {
   // Placeholder: In real implementation, get user from auth/session
-  const email = ''
+  const email = 'student@example.com'
   let user = await prisma.user.findUnique({ where: { email } })
   if (!user) {
     user = await prisma.user.create({ data: { email } })
@@ -35,10 +35,6 @@ export async function GET() {
       orderBy: { name: 'asc' }
     })
     return NextResponse.json(courses)
-    // Order by name ascending
-    const sortedCourses = courses.sort((a, b) => a.name.localeCompare(b.name))
-    // Return JSON response
-    return NextResponse.json(sortedCourses)
   } catch (error) {
     // Handle errors and return 500 status
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
