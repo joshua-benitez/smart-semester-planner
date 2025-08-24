@@ -102,90 +102,116 @@ export default function CoursesPage() {
   }
 
     return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* header section with title and description */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Courses</h1>
-        <p className="text-gray-600 mb-6">Manage your courses and their assignments here.</p>
-        <Link href="/" className="text-blue-600 hover:underline mb-8 inline-block">
-          &larr; Back to Dashboard
-        </Link>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Add New Course</h2>
-          <form onSubmit={handleCreateCourse} className="space-y-4">
+    <div className="page-container">
+      <div className="page-content">
+        {/* Header Section */}
+        <div className="header-card">
+          <div className="page-header">
             <div>
-              <label htmlFor="courseName" className="block text-sm font-medium text-gray-700">
-                Course Name
-              </label>
-              <input
-                type="text"
-                id="courseName"
-                value={newCourseName}
-                onChange={(e) => setNewCourseName(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                placeholder="Enter course name"
-                required
-              />
+              <h1 className="page-title">My Courses</h1>
+              <p className="page-description">Organize and manage your semester courses.</p>
             </div>
-            <div>
-              <label htmlFor="courseColor" className="block text-sm font-medium text-gray-700">
-                Course Color
-              </label>
-              <input
-                type="color"
-                id="courseColor"
-                value={newCourseColor}
-                onChange={(e) => setNewCourseColor(e.target.value)}
-                className="mt-1 h-10 w-20 border border-gray-300 rounded-md shadow-sm p-1"
-                title="Choose your color"
-              />
+            <Link href="/" className="nav-link">
+              ← Back to Dashboard
+            </Link>
+          </div>
+        </div>
+
+        {/* Add New Course Section */}
+        <div className="page-card mb-8">
+          <h2 className="section-title">Add New Course</h2>
+          <form onSubmit={handleCreateCourse} className="form-group">
+            <div className="form-grid">
+              <div>
+                <label htmlFor="courseName" className="form-label">
+                  Course Name *
+                </label>
+                <input
+                  type="text"
+                  id="courseName"
+                  value={newCourseName}
+                  onChange={(e) => setNewCourseName(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g., Calculus I, Computer Science 101"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="courseColor" className="form-label">
+                  Course Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    id="courseColor"
+                    value={newCourseColor}
+                    onChange={(e) => setNewCourseColor(e.target.value)}
+                    className="h-12 w-16 border border-gray-300 rounded-lg cursor-pointer"
+                    title="Choose course color"
+                  />
+                  <span className="text-sm text-gray-500">Choose a color to identify this course</span>
+                </div>
+              </div>
             </div>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Create Course
-            </button>
+            <div className="pt-4">
+              <button type="submit" className="btn-primary">
+                Create Course
+              </button>
+            </div>
           </form>
         </div>
 
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Existing Courses</h2>
-      {loading ? (
-        <p>Loading courses...</p>
-      ) : courses.length === 0 ? (
-        <p className="text-gray-600">No courses found. Add a new course above.</p>
-      ) : (
-        <ul className="space-y-4">
-          {courses.map((course) => (
-            <li key={course.id} className="border border-gray-300 rounded-md p-4 flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <span
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: course.color }}
-                  title={`Course color: ${course.color}`}
-                ></span>
-                <span className="text-lg font-medium text-gray-900">{course.name}</span>
-                <span className="text-sm text-gray-500">({course._count.assignments} assignments)</span>
-              </div>
-              <div className="space-x-2">
-                <Link
-                  href={`/courses/${course.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  View
-                </Link>
-                <button
-                  onClick={() => handleDeleteCourse(course.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+        {/* Your Courses Section */}
+        <div className="page-card">
+          <h2 className="section-title">Your Courses</h2>
+          
+          {loading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading courses...</p>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="empty-state">
+              <p className="empty-title">No courses yet. Start by adding one!</p>
+              <p className="empty-description">Create your first course above to organize your assignments.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {courses.map((course) => (
+                <div key={course.id} className="content-card">
+                  <div className="mobile-stack">
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                        style={{ backgroundColor: course.color }}
+                        title={`Course color: ${course.color}`}
+                      ></div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900">{course.name}</h3>
+                        <p className="text-gray-600">
+                          {course._count.assignments} assignment{course._count.assignments !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Link href={`/?course=${course.id}`} className="nav-link">
+                        View Assignments
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteCourse(course.id)}
+                        className="btn-danger"
+                        title={course._count.assignments > 0 ? "Cannot delete course with assignments" : "Delete course"}
+                        disabled={course._count.assignments > 0}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
     </div>
       </div>
     </div>

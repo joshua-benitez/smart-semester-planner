@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 
 export default function EditAssignment() {
@@ -134,17 +135,21 @@ export default function EditAssignment() {
 
     function renderForm(formData: FormData) {
         return (
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-2xl mx-auto px-6">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="page-container">
+                <div className="page-content max-w-2xl">
+                    <div className="page-card">
                         <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Assignment</h1>
-                            <p className="text-gray-600">Update the details for your assignment below.</p>
+                            <h1 className="page-title">Edit Assignment</h1>
+                            <p className="page-description">Update the details for your assignment below.</p>
+                            <Link href="/" className="nav-link mt-4 inline-flex">
+                              ← Back to Dashboard
+                            </Link>
                         </div>
 
                         {loading && (
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">Loading assignment...</p>
+                            <div className="loading-container">
+                                <div className="loading-spinner"></div>
+                                <p className="loading-text">Loading assignment...</p>
                             </div>
                         )}
                         
@@ -155,52 +160,53 @@ export default function EditAssignment() {
                         )}
                         
                         {!data && !loading && !error && (
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">Assignment not found.</p>
+                            <div className="empty-state">
+                                <p className="empty-title">Assignment not found.</p>
+                                <p className="empty-description">The assignment you're looking for doesn't exist.</p>
                             </div>
                         )}
                         
                         {data && !loading && (
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="form-group">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Title *</label>
+                            <label className="form-label">Assignment Title *</label>
                             <input
                                 type="text"
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
                                 placeholder="e.g., Math homework Chapter 5"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                                className="form-input"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Course Name *</label>
+                            <label className="form-label">Course Name *</label>
                             <input
                                 type="text"
                                 name="courseName"
                                 value={formData.courseName}
                                 onChange={handleChange}
                                 placeholder="e.g., Calculus I"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                                className="form-input"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <label className="form-label">Description</label>
                             <textarea
                                 name="description"
                                 value={formData.description}
                                 onChange={handleChange}
                                 placeholder="Any additional details about this assignment..."
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                                className="form-input"
                                 rows={4}
                             ></textarea>
                         </div>
                         {/* Due Date and Type Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="form-grid">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                                <label className="form-label">Due Date *</label>
                                 <input
                                     type="datetime-local"
                                     name="dueDate"
@@ -211,7 +217,7 @@ export default function EditAssignment() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
+                                <label className="form-label">Assignment Type</label>
                                 <select
                                     name="type"
                                     value={formData.type}
@@ -228,9 +234,9 @@ export default function EditAssignment() {
                         </div>
 
                         {/* Difficulty and Weight Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="form-grid">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
+                                <label className="form-label">Difficulty Level</label>
                                 <select
                                     name="difficulty"
                                     value={formData.difficulty}
@@ -244,7 +250,7 @@ export default function EditAssignment() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
+                                <label className="form-label">Weight</label>
                                 <input
                                     type="number"
                                     name="weight"
@@ -266,14 +272,14 @@ export default function EditAssignment() {
                                 <button
                                     type="submit"
                                     disabled={submitLoading}
-                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="btn-primary flex-1"
                                 >
                                     {submitLoading ? 'Updating Assignment...' : 'Update Assignment'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => router.push('/')}
-                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition"
+                                    className="btn-secondary"
                                 >
                                     Cancel
                                 </button>
