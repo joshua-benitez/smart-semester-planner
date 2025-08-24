@@ -134,14 +134,34 @@ export default function EditAssignment() {
 
     function renderForm(formData: FormData) {
         return (
-            <div className="max-w-2xl mx-auto p-6">
-                <h1 className="text-3xl font-bold mb-6">Edit Assignment</h1>
+            <div className="min-h-screen bg-gray-50 py-8">
+                <div className="max-w-2xl mx-auto px-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Assignment</h1>
+                            <p className="text-gray-600">Update the details for your assignment below.</p>
+                        </div>
 
-                {loading && <p className="text-gray-500">Loading assignment...</p>}
-                {error && <p className="text-red-500">Error: {typeof error === 'string' ? error : error.toString()}</p>}
-                {!data && !loading && !error && <p className="text-gray-500">Assignment not found.</p>}
-                {data && !loading && (
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {loading && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">Loading assignment...</p>
+                            </div>
+                        )}
+                        
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                                <p className="text-red-700">Error: {typeof error === 'string' ? error : error.toString()}</p>
+                            </div>
+                        )}
+                        
+                        {!data && !loading && !error && (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">Assignment not found.</p>
+                            </div>
+                        )}
+                        
+                        {data && !loading && (
+                            <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Title *</label>
                             <input
@@ -149,7 +169,8 @@ export default function EditAssignment() {
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., Math homework Chapter 5"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                                 required
                             />
                         </div>
@@ -160,7 +181,8 @@ export default function EditAssignment() {
                                 name="courseName"
                                 value={formData.courseName}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., Calculus I"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                                 required
                             />
                         </div>
@@ -170,75 +192,97 @@ export default function EditAssignment() {
                                 name="description"
                                 value={formData.description}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Any additional details about this assignment..."
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
                                 rows={4}
                             ></textarea>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
-                            <input
-                                type="datetime-local"
-                                name="dueDate"
-                                value={formData.dueDate}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
+                        {/* Due Date and Type Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                                <input
+                                    type="datetime-local"
+                                    name="dueDate"
+                                    value={formData.dueDate}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
+                                <select
+                                    name="type"
+                                    value={formData.type}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="homework">Homework</option>
+                                    <option value="project">Project</option>
+                                    <option value="exam">Exam</option>
+                                    <option value="quiz">Quiz</option>
+                                    <option value="reading">Reading</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
-                            <select
-                                name="type"
-                                value={formData.type}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="homework">Homework</option>
-                                <option value="project">Project</option>
-                                <option value="exam">Exam</option>
-                                <option value="quiz">Quiz</option>
-                                <option value="reading">Reading</option>
-                            </select>
+
+                        {/* Difficulty and Weight Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
+                                <select
+                                    name="difficulty"
+                                    value={formData.difficulty}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="easy">Easy</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="crushing">Crushing</option>
+                                    <option value="brutal">Brutal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
+                                <input
+                                    type="number"
+                                    name="weight"
+                                    value={formData.weight}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    min={1}
+                                    max={5}
+                                    step={0.1}
+                                    required
+                                />
+                                <p className="text-sm text-gray-500 mt-1">How important this assignment is (0.1 - 5.0)</p>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
-                            <select
-                                name="difficulty"
-                                value={formData.difficulty}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="easy">Easy</option>
-                                <option value="moderate">Moderate</option>
-                                <option value="crushing">Crushing</option>
-                                <option value="brutal">Brutal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
-                            <input
-                                type="number"
-                                name="weight"
-                                value={formData.weight}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                min={1}
-                                max={5}
-                                step={0.1}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={submitLoading}
-                                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                            >
-                                {submitLoading ? 'Updating...' : 'Update Assignment'}
-                            </button>
+
+                        {/* Submit Button */}
+                        <div className="pt-6 border-t border-gray-200">
+                            <div className="flex gap-4">
+                                <button
+                                    type="submit"
+                                    disabled={submitLoading}
+                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {submitLoading ? 'Updating Assignment...' : 'Update Assignment'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/')}
+                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </form>
                 )}
+                    </div>
+                </div>
             </div>
         )
     }
