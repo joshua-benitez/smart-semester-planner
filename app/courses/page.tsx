@@ -189,7 +189,7 @@ export default function CoursesPage() {
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900">{course.name}</h3>
                         <p className="text-gray-600">
-                          {course._count.assignments} assignment{course._count.assignments !== 1 ? 's' : ''}
+                          {course._count?.assignments || 0} assignment{(course._count?.assignments || 0) !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
