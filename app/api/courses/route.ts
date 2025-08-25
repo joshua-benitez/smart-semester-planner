@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-// Set up Prisma client (copy from assignments route.ts)
-const prisma = new PrismaClient()
-// TODO: Add validation helpers (copy isNonEmptyString from assignments route.ts)
+import { prisma } from '@/lib/db'
+// Add validation helpers (copy isNonEmptyString from assignments route.ts)
 const isNonEmptyString = (value: any): value is string => {
   return typeof value === 'string' && value.trim().length > 0
 }
@@ -21,7 +18,7 @@ const createOrFindUser = async () => {
 // GET method - fetch all courses for the user
 export async function GET() {
   try {
-    // TODO: Get the user
+    // Get the user
     const user = await createOrFindUser()
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
