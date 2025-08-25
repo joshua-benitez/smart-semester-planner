@@ -1,10 +1,8 @@
-// Placeholder auth route - will implement later
-import { NextResponse } from 'next/server'
+import NextAuth from "next-auth"
+import { authOptions } from "@/lib/auth"
 
-export async function GET() {
-  return NextResponse.json({ message: 'Auth not implemented yet' })
-}
+// TODO: Create NextAuth handler with authOptions
+const handler = NextAuth(authOptions)
 
-export async function POST() {
-  return NextResponse.json({ message: 'Auth not implemented yet' })
-}
+// TODO: Export the handler for both GET and POST requests
+export { handler as GET, handler as POST }

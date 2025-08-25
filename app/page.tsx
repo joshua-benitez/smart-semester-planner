@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession, signIn, signOut } from 'next-auth/react'
 
 // I need this type to match what comes back from my API
 type Assignment = {
@@ -16,6 +17,9 @@ type Assignment = {
 }
 
 export default function HomePage() {
+  // Get user session
+  const { data: session, status } = useSession()
+  
   // I need state to hold my assignments and track loading
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,13 +66,35 @@ export default function HomePage() {
               <h1 className="page-title animate-float">Smart Semester Planner</h1>
               <p className="page-description">Keep track of all your assignments and courses in one place.</p>
             </div>
-            <div className="flex gap-3">
-              <Link href="/courses" className="nav-link">
-                Manage Courses
-              </Link>
-              <Link href="/assignments/new" className="btn-primary">
-                Add Assignment
-              </Link>
+            <div className="flex gap-3 items-center">
+              {session ? (
+                <>
+                  <div className="text-slate-300 mr-2">
+                    Welcome, {session.user?.name || session.user?.email}!
+                  </div>
+                  <Link href="/courses" className="nav-link">
+                    Manage Courses
+                  </Link>
+                  <Link href="/assignments/new" className="btn-primary">
+                    Add Assignment
+                  </Link>
+                  <button
+                    onClick={() => signOut()}
+                    className="btn-danger"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-3">
+                  <Link href="/auth/signin" className="btn-primary">
+                    Sign In
+                  </Link>
+                  <Link href="/auth/signup" className="nav-link">
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
