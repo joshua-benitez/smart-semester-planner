@@ -20,6 +20,8 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true) // Add state for loading status
   const [newCourseName, setNewCourseName] = useState('') // Add state for form data (new course name and color)
   const [newCourseColor, setNewCourseColor] = useState('#3b82f6') // Default to blue
+  const [sortBy, setSortBy] = useState<'name' | 'assignments' | 'created'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // Add useEffect to fetch courses when page loads
   useEffect(() => {
@@ -43,6 +45,36 @@ export default function CoursesPage() {
     }
     fetchCourses()
   }, [])
+
+  // Sort courses based on selected criteria
+  const sortedCourses = React.useMemo(() => {
+    const sorted = [...courses].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+        case 'assignments':
+          const aCount = a._count?.assignments || 0
+          const bCount = b._count?.assignments || 0
+          return sortOrder === 'asc' ? aCount - bCount : bCount - aCount
+        case 'created':
+          return sortOrder === 'asc' 
+            ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        default:
+          return 0
+      }
+    })
+    return sorted
+  }, [courses, sortBy, sortOrder])
+
+  const toggleSort = (newSortBy: typeof sortBy) => {
+    if (sortBy === newSortBy) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(newSortBy)
+      setSortOrder('asc')
+    }
+  }
 
   // Add function to handle creating new course
   const handleCreateCourse = async (e: React.FormEvent) => {
@@ -163,7 +195,46 @@ export default function CoursesPage() {
 
         {/* Your Courses Section */}
         <div className="page-card">
-          <h2 className="section-title">Your Courses</h2>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <h2 className="section-title mb-4 md:mb-0">Your Courses</h2>
+            
+            {/* Sorting Controls */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Sort by:</label>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => toggleSort('name')}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    sortBy === 'name' 
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
+                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </button>
+                <button
+                  onClick={() => toggleSort('assignments')}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    sortBy === 'assignments' 
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
+                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  Assignments {sortBy === 'assignments' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </button>
+                <button
+                  onClick={() => toggleSort('created')}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    sortBy === 'created' 
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
+                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  Created {sortBy === 'created' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </button>
+              </div>
+            </div>
+          </div>
           
           {loading ? (
             <div className="loading-container">
@@ -177,7 +248,7 @@ export default function CoursesPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {courses.map((course) => (
+              {sortedCourses.map((course) => (
                 <div key={course.id} className="content-card">
                   <div className="mobile-stack">
                     <div className="flex items-center space-x-4">

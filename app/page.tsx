@@ -1,15 +1,78 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { useAssignments } from '@/hooks/useAssignments'
 import { AssignmentList } from '@/components/features/assignments/AssignmentList'
+
+type Course = {
+  id: string
+  name: string
+  color?: string
+}
 
 export default function HomePage() {
   // Get user session and assignments
   const { data: session } = useSession()
   const { assignments, loading, deleteAssignment } = useAssignments()
+  const [courses, setCourses] = useState<Course[]>([])
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('')
+  const [sortBy, setSortBy] = useState<'dueDate' | 'title' | 'difficulty'>('dueDate')
+  const searchParams = useSearchParams()
+  
+  // Check for course filter from URL
+  useEffect(() => {
+    const courseParam = searchParams.get('course')
+    if (courseParam) {
+      setSelectedCourseId(courseParam)
+    }
+  }, [searchParams])
+
+  // Fetch courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/courses')
+        if (response.ok) {
+          const data = await response.json()
+          setCourses(data)
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error)
+      }
+    }
+    fetchCourses()
+  }, [])
+
+  // Filter and sort assignments
+  const filteredAndSortedAssignments = useMemo(() => {
+    let filtered = assignments
+    
+    // Filter by course if selected
+    if (selectedCourseId) {
+      filtered = assignments.filter(assignment => assignment.courseId === selectedCourseId)
+    }
+    
+    // Sort assignments
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'dueDate':
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        case 'title':
+          return a.title.localeCompare(b.title)
+        case 'difficulty':
+          const difficultyOrder = { 'easy': 1, 'moderate': 2, 'crushing': 3, 'brutal': 4 }
+          return (difficultyOrder[a.difficulty as keyof typeof difficultyOrder] || 0) - 
+                 (difficultyOrder[b.difficulty as keyof typeof difficultyOrder] || 0)
+        default:
+          return 0
+      }
+    })
+    
+    return sorted
+  }, [assignments, selectedCourseId, sortBy])
 
   return (
     <div className="page-container">
@@ -56,9 +119,46 @@ export default function HomePage() {
 
         {/* Assignments Section */}
         <div className="page-card animate-slide-up">
-          <h2 className="section-title">Your Assignments</h2>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <h2 className="section-title mb-4 md:mb-0">Your Assignments</h2>
+            
+            {/* Filters and Sorting */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Course Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Course:</label>
+                <select 
+                  value={selectedCourseId} 
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">All Courses</option>
+                  {courses.map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Sort Options */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'title' | 'difficulty')}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="dueDate">Due Date</option>
+                  <option value="title">Title</option>
+                  <option value="difficulty">Difficulty</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
           <AssignmentList 
-            assignments={assignments} 
+            assignments={filteredAndSortedAssignments} 
             loading={loading} 
             onDeleteAssignment={deleteAssignment}
           />

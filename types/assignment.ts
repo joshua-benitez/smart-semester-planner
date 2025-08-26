@@ -7,7 +7,8 @@ export type Assignment = {
   type: string
   difficulty: string
   weight: number
-  course: { name: string }
+  courseId: string
+  course: { id: string; name: string; color?: string }
 }
 
 export type AssignmentFormData = {
