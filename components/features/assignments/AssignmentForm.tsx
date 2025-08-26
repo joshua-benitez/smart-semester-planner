@@ -1,9 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { validateAssignment } from '@/lib/validations'
 import type { AssignmentFormData, AssignmentType, DifficultyLevel } from '@/types/assignment'
+
+type Course = {
+  id: string
+  name: string
+  color?: string
+}
 
 interface AssignmentFormProps {
   initialData?: Partial<AssignmentFormData>
@@ -19,6 +25,8 @@ export const AssignmentForm = ({
   submitText = 'Create Assignment' 
 }: AssignmentFormProps) => {
   const [loading, setLoading] = useState(false)
+  const [courses, setCourses] = useState<Course[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const [formData, setFormData] = useState<AssignmentFormData>({
     title: initialData.title || '',
     description: initialData.description || '',
@@ -28,6 +36,8 @@ export const AssignmentForm = ({
     courseName: initialData.courseName || '',
     weight: initialData.weight || 1
   })
+  const [isCreatingNewCourse, setIsCreatingNewCourse] = useState(false)
+  const [newCourseName, setNewCourseName] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +66,42 @@ export const AssignmentForm = ({
     }))
   }
 
+  // Fetch courses when component mounts
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/courses')
+        if (response.ok) {
+          const data = await response.json()
+          setCourses(data)
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error)
+      } finally {
+        setCoursesLoading(false)
+      }
+    }
+    fetchCourses()
+  }, [])
+
+  const handleCourseSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    if (value === '__create_new__') {
+      setIsCreatingNewCourse(true)
+      setFormData(prev => ({ ...prev, courseName: '' }))
+    } else {
+      setIsCreatingNewCourse(false)
+      const selectedCourse = courses.find(c => c.id === value)
+      setFormData(prev => ({ ...prev, courseName: selectedCourse?.name || value }))
+    }
+  }
+
+  const handleNewCourseNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setNewCourseName(value)
+    setFormData(prev => ({ ...prev, courseName: value }))
+  }
+
   return (
     <form onSubmit={handleSubmit} className="form-group">
       {/* Assignment Title */}
@@ -72,18 +118,43 @@ export const AssignmentForm = ({
         />
       </div>
 
-      {/* Course Name */}
+      {/* Course Selection */}
       <div>
-        <label className="form-label">Course Name *</label>
-        <input
-          type="text"
-          name="courseName"
-          value={formData.courseName}
-          onChange={handleChange}
-          required
-          placeholder="e.g., Calculus I"
-          className="form-input"
-        />
+        <label className="form-label">Course *</label>
+        {coursesLoading ? (
+          <div className="form-input bg-gray-50">Loading courses...</div>
+        ) : (
+          <>
+            <select 
+              value={isCreatingNewCourse ? '__create_new__' : (courses.find(c => c.name === formData.courseName)?.id || '__create_new__')}
+              onChange={handleCourseSelectionChange}
+              className="form-input"
+              required
+            >
+              <option value="">Select a course</option>
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+              <option value="__create_new__">+ Create new course</option>
+            </select>
+            
+            {isCreatingNewCourse && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={newCourseName}
+                  onChange={handleNewCourseNameChange}
+                  placeholder="Enter new course name"
+                  className="form-input"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">This will create a new course</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Description */}
