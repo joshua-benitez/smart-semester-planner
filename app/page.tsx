@@ -16,7 +16,7 @@ type Course = {
 export default function HomePage() {
   // Get user session and assignments
   const { data: session } = useSession()
-  const { assignments, loading, deleteAssignment } = useAssignments()
+  const { assignments, loading, deleteAssignment, refresh } = useAssignments()
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>('')
   const [sortBy, setSortBy] = useState<'dueDate' | 'title' | 'difficulty'>('dueDate')
@@ -73,6 +73,58 @@ export default function HomePage() {
     
     return sorted
   }, [assignments, selectedCourseId, sortBy])
+
+  // Handle bulk status updates
+  const handleBulkStatusUpdate = async (ids: string[], status: string) => {
+    try {
+      const promises = ids.map(id => 
+        fetch('/api/assignments', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status })
+        })
+      )
+      
+      const results = await Promise.all(promises)
+      const failed = results.filter(r => !r.ok)
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to update ${failed.length} assignments`)
+      }
+      
+      // Refresh assignments to get updated data
+      await refresh()
+    } catch (error) {
+      console.error('Bulk update error:', error)
+      throw error
+    }
+  }
+
+  // Handle bulk delete
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      const promises = ids.map(id => 
+        fetch('/api/assignments', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        })
+      )
+      
+      const results = await Promise.all(promises)
+      const failed = results.filter(r => !r.ok)
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} assignments`)
+      }
+      
+      // Refresh assignments to get updated data
+      await refresh()
+    } catch (error) {
+      console.error('Bulk delete error:', error)
+      throw error
+    }
+  }
 
   return (
     <div className="page-container">
@@ -161,6 +213,8 @@ export default function HomePage() {
             assignments={filteredAndSortedAssignments} 
             loading={loading} 
             onDeleteAssignment={deleteAssignment}
+            onBulkStatusUpdate={handleBulkStatusUpdate}
+            onBulkDelete={handleBulkDelete}
           />
         </div>
       </div>

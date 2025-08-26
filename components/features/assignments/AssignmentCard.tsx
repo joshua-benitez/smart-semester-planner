@@ -11,24 +11,35 @@ interface AssignmentCardProps {
   assignment: Assignment
   onDelete: (id: string) => void
   index?: number
+  isSelected?: boolean
+  onSelect?: (id: string) => void
 }
 
-export const AssignmentCard = ({ assignment, onDelete, index = 0 }: AssignmentCardProps) => {
+export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = false, onSelect }: AssignmentCardProps) => {
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this assignment?')) {
       try {
         await onDelete(assignment.id)
-        alert('Assignment deleted successfully!')
       } catch (error) {
         console.error('Failed to delete assignment:', error)
-        alert('Failed to delete assignment')
       }
     }
   }
 
   return (
-    <Card animate delay={index * 0.1}>
+    <Card animate delay={index * 0.1} className={isSelected ? 'ring-2 ring-blue-500' : ''}>
       <div className="mobile-stack">
+        {/* Selection Checkbox */}
+        {onSelect && (
+          <div className="flex items-start pt-1">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onSelect(assignment.id)}
+              className="w-4 h-4 rounded border-slate-400 bg-slate-700 text-blue-500"
+            />
+          </div>
+        )}
         <div className="flex-1">
           <h3 className="text-xl font-bold text-slate-100 mb-2">
             {assignment.title}

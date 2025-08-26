@@ -7,6 +7,7 @@ export type Assignment = {
   type: string
   difficulty: string
   weight: number
+  status: string
   courseId: string
   course: { id: string; name: string; color?: string }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import type { AssignmentFormData } from '@/types/assignment'
 
@@ -17,9 +17,17 @@ interface SyllabusParserProps {
 }
 
 // @ts-ignore - Function props are fine for client components
+type Course = {
+  id: string
+  name: string
+  color?: string
+}
+
 export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserProps) => {
   const [syllabusText, setSyllabusText] = useState('')
-  const [courseName, setCourseName] = useState('CSC-151')
+  const [courseName, setCourseName] = useState('')
+  const [courses, setCourses] = useState<Course[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const [parsedAssignments, setParsedAssignments] = useState<ParsedAssignment[]>([])
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -118,7 +126,34 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
     return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T23:59` // 11:59 PM default
   }
 
+  // Fetch courses when component mounts
+  React.useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/courses')
+        if (response.ok) {
+          const data = await response.json()
+          setCourses(data)
+          // Auto-select first course if available
+          if (data.length > 0) {
+            setCourseName(data[0].name)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error)
+      } finally {
+        setCoursesLoading(false)
+      }
+    }
+    fetchCourses()
+  }, [])
+
   const handleParse = () => {
+    if (!courseName.trim()) {
+      alert('Please select a course first!')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -166,14 +201,38 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
 
               <div className="space-y-4">
                 <div>
-                  <label className="form-label">Course Name</label>
-                  <input
-                    type="text"
-                    value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
-                    className="form-input"
-                    placeholder="e.g., CSC-151"
-                  />
+                  <label className="form-label">Select Course *</label>
+                  {coursesLoading ? (
+                    <div className="form-input bg-gray-50">Loading your courses...</div>
+                  ) : courses.length === 0 ? (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <p className="text-yellow-800 font-medium">No courses found!</p>
+                      <p className="text-yellow-700 text-sm mt-1">
+                        Please create a course first in the 
+                        <a href="/courses" className="underline font-medium">Courses page</a>, 
+                        then come back to parse your syllabus.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={courseName}
+                        onChange={(e) => setCourseName(e.target.value)}
+                        className="form-input"
+                        required
+                      >
+                        <option value="">Choose a course...</option>
+                        {courses.map(course => (
+                          <option key={course.id} value={course.name}>
+                            {course.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Assignments will be added to this course
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 <div>
