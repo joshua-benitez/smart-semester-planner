@@ -130,6 +130,7 @@ export async function PUT(request: Request) {
     if (isNonEmptyString(data.type)) updateData.type = data.type
     if (isNonEmptyString(data.difficulty)) updateData.difficulty = data.difficulty
     if (typeof data.weight === 'number') updateData.weight = data.weight
+    if (isNonEmptyString(data.status)) updateData.status = data.status
     if (data.dueDate !== undefined) {
       const parsed = parseDateSafe(data.dueDate)
       if (!parsed) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })

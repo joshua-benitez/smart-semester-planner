@@ -13,9 +13,10 @@ interface AssignmentCardProps {
   index?: number
   isSelected?: boolean
   onSelect?: (id: string) => void
+  onStatusUpdate?: (id: string, status: string) => void
 }
 
-export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = false, onSelect }: AssignmentCardProps) => {
+export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = false, onSelect, onStatusUpdate }: AssignmentCardProps) => {
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this assignment?')) {
       try {
@@ -23,6 +24,17 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
       } catch (error) {
         console.error('Failed to delete assignment:', error)
       }
+    }
+  }
+
+  const handleStatusToggle = async () => {
+    if (!onStatusUpdate) return
+    
+    const newStatus = assignment.status === 'completed' ? 'not_started' : 'completed'
+    try {
+      await onStatusUpdate(assignment.id, newStatus)
+    } catch (error) {
+      console.error('Failed to update assignment status:', error)
     }
   }
 
@@ -61,6 +73,18 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           )}
 
           <div className="flex gap-3 flex-wrap">
+            <span className={`status-badge ${
+              assignment.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+              assignment.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+              'bg-gray-500/20 text-gray-400 border-gray-500/30'
+            }`}>
+              {assignment.status === 'completed' ? 'Completed' :
+               assignment.status === 'in_progress' ? 'In Progress' :
+               assignment.status === 'submitted' ? 'Submitted' :
+               assignment.status === 'graded' ? 'Graded' :
+               assignment.status === 'missed' ? 'Missed' :
+               'Not Started'}
+            </span>
             <span className="status-badge" style={{
               background: 'rgba(59, 130, 246, 0.2)',
               color: '#60a5fa',
@@ -87,6 +111,14 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
         </div>
 
         <div className="flex gap-2">
+          {onStatusUpdate && (
+            <Button 
+              variant={assignment.status === 'completed' ? 'secondary' : 'success'}
+              onClick={handleStatusToggle}
+            >
+              {assignment.status === 'completed' ? '↻ Undo' : '✓ Complete'}
+            </Button>
+          )}
           <Link 
             href={`/assignments/${assignment.id}/edit`}
           >

@@ -11,15 +11,17 @@ interface AssignmentListProps {
   onDeleteAssignment: (id: string) => void
   onBulkStatusUpdate?: (ids: string[], status: string) => void
   onBulkDelete?: (ids: string[]) => void
+  onStatusUpdate?: (id: string, status: string) => void
 }
 
-export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete }: AssignmentListProps) => {
+export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete, onStatusUpdate }: AssignmentListProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showCompleted, setShowCompleted] = useState(true)
   const [bulkLoading, setBulkLoading] = useState(false)
 
   // Filter assignments based on show completed toggle
-  const filteredAssignments = showCompleted ? assignments : assignments.filter(a => a.status !== 'completed')
+  const completedStatuses = ['completed', 'submitted', 'graded']
+  const filteredAssignments = showCompleted ? assignments : assignments.filter(a => !completedStatuses.includes(a.status))
 
   const handleSelectAll = () => {
     if (selectedIds.size === filteredAssignments.length) {
@@ -177,6 +179,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
           index={index}
           isSelected={selectedIds.has(assignment.id)}
           onSelect={handleSelectOne}
+          onStatusUpdate={onStatusUpdate}
         />
       ))}
     </div>

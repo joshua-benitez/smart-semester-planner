@@ -83,6 +83,27 @@ export default function HomePage() {
     return sorted
   }, [assignments, selectedCourseId, sortBy])
 
+  // Handle individual status update
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update assignment status')
+      }
+      
+      // Refresh assignments to get updated data
+      await refresh()
+    } catch (error) {
+      console.error('Status update error:', error)
+      throw error
+    }
+  }
+
   // Handle bulk status updates
   const handleBulkStatusUpdate = async (ids: string[], status: string) => {
     try {
@@ -224,6 +245,7 @@ export default function HomePage() {
             onDeleteAssignment={deleteAssignment}
             onBulkStatusUpdate={handleBulkStatusUpdate}
             onBulkDelete={handleBulkDelete}
+            onStatusUpdate={handleStatusUpdate}
           />
         </div>
       </div>

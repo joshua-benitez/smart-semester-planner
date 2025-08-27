@@ -6,11 +6,15 @@ const isNonEmptyString = (value: any): value is string => {
 }
 // Add createOrFindUser function (copy from assignments route.ts)
 const createOrFindUser = async () => {
-  // Placeholder: In real implementation, get user from auth/session
-  const email = 'student@example.com'
-  let user = await prisma.user.findUnique({ where: { email } })
+  // For now I'm hardcoding one user since I don't have auth yet
+  let user = await prisma.user.findFirst()
   if (!user) {
-    user = await prisma.user.create({ data: { email } })
+    user = await prisma.user.create({
+      data: {
+        email: 'student@example.com',
+        name: 'Student'
+      }
+    })
   }
   return user
 }
