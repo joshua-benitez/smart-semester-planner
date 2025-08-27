@@ -62,14 +62,36 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
         continue
       }
       
-      // Pattern 2: CSC-151 format - assignment name on one line, dates on following lines  
-      if (line.includes('Quiz') || line.includes('Project') || line.includes('Exam') || line.includes('Chapter') || line.includes('hapter')) {
+      // Pattern 2: Assignment detection - look for various assignment keywords
+      const assignmentKeywords = [
+        'Quiz', 'Project', 'Exam', 'Chapter', 'hapter',
+        'Lab assignment', 'Lab', 'Participation activities', 'Challenge questions',
+        'Practice Quiz', 'Programming Project', 'Final Exam', 'activities', 'assignment',
+        'Attendance Assignment', 'WebAssign', 'Complete Test', 'Complete Final', 'HW Assignment',
+        'Test', 'EVA', 'Read through', 'Read book',
+        'Content Quiz', 'Chapter Discussion', 'Speech', 'Self-Evaluation', 'Research Assignment',
+        'Topic & Purpose Statement', 'Outline', 'DUE', 'Slides'
+      ]
+      
+      const hasAssignmentKeyword = assignmentKeywords.some(keyword => 
+        line.toLowerCase().includes(keyword.toLowerCase())
+      )
+      
+      if (hasAssignmentKeyword) {
         console.log('  -> Found potential assignment line')
-        // Determine assignment type
+        // Determine assignment type with better detection
         let type: ParsedAssignment['type'] = 'homework'
-        if (line.toLowerCase().includes('quiz')) type = 'quiz'
-        if (line.toLowerCase().includes('project')) type = 'project'  
-        if (line.toLowerCase().includes('exam')) type = 'exam'
+        const lowerLine = line.toLowerCase()
+        if (lowerLine.includes('quiz')) type = 'quiz'
+        if (lowerLine.includes('project')) type = 'project'  
+        if (lowerLine.includes('exam') || lowerLine.includes('complete test') || lowerLine.includes('complete final')) type = 'exam'
+        if (lowerLine.includes('lab assignment') || lowerLine.includes('lab')) type = 'homework'
+        if (lowerLine.includes('participation activities') || lowerLine.includes('challenge questions')) type = 'homework'
+        if (lowerLine.includes('webassign') || lowerLine.includes('hw assignment') || lowerLine.includes('attendance assignment')) type = 'homework'
+        if (lowerLine.includes('read through') || lowerLine.includes('read book')) type = 'homework'
+        if (lowerLine.includes('content quiz') || lowerLine.includes('chapter discussion')) type = 'quiz'
+        if (lowerLine.includes('speech') || lowerLine.includes('outline') || lowerLine.includes('research assignment')) type = 'project'
+        if (lowerLine.includes('self-evaluation') || lowerLine.includes('topic & purpose statement')) type = 'homework'
         
         // Look ahead for date lines (but don't skip other assignments)
         let j = i + 1
@@ -78,11 +100,35 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
         // Collect all dates within the next few lines
         while (j < lines.length && j < i + 5) {
           const nextLine = lines[j]
-          const datePattern = /\d{1,2}\/\d{1,2}\/\d{2}/g
-          let dateMatch
           
-          while ((dateMatch = datePattern.exec(nextLine)) !== null) {
+          // Pattern 1: MM/DD/YY format (CSC-151 style)
+          const datePattern1 = /\d{1,2}\/\d{1,2}\/\d{2}/g
+          let dateMatch
+          while ((dateMatch = datePattern1.exec(nextLine)) !== null) {
             dates.push(dateMatch[0])
+          }
+          
+          // Pattern 2: "Aug 26", "Sept 2", "Dec 9" format (CSC-249 style)
+          const datePattern2 = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Oct|Nov|Dec)\s+(\d{1,2})/gi
+          while ((dateMatch = datePattern2.exec(nextLine)) !== null) {
+            dates.push(dateMatch[0])
+          }
+          
+          // Pattern 3: "Sun. 8/24", "Fri 12/12" format (MAT-271 style)
+          const datePattern3 = /(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\.?\s+(\d{1,2})\/(\d{1,2})/gi
+          while ((dateMatch = datePattern3.exec(nextLine)) !== null) {
+            // Extract just the date part (8/24 from "Sun. 8/24")
+            const datePart = `${dateMatch[2]}/${dateMatch[3]}`
+            dates.push(datePart)
+          }
+          
+          // Pattern 4: DUE format
+          if (nextLine.includes('DUE') && nextLine.includes('(') && nextLine.includes(')')) {
+            const match = nextLine.match(/\((\d{1,2})\/(\d{1,2})\)/)
+            if (match) {
+              const datePart = `${match[1]}/${match[2]}`
+              dates.push(datePart)
+            }
           }
           
           // Stop if we hit another assignment line (but don't consume it)
@@ -119,11 +165,45 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
   }
 
 
-  // Helper to convert MM/DD/YY to ISO format
+  // Helper to convert various date formats to ISO format
   const convertToISO = (dateStr: string): string => {
-    const [month, day, year] = dateStr.split('/')
-    const fullYear = `20${year}` // Assumes 20xx
-    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T23:59` // 11:59 PM default
+    // Check if it's MM/DD/YY format (with year)
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/')
+      if (parts.length === 3) {
+        const [month, day, year] = parts
+        const fullYear = `20${year}` // Assumes 20xx
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T23:59`
+      } else if (parts.length === 2) {
+        // MM/DD format (MAT-271 style) - assume current academic year
+        const [month, day] = parts
+        const year = parseInt(month) >= 8 ? '2024' : '2025' // Aug-Dec = 2024, Jan-Jul = 2025
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T23:59`
+      }
+    }
+    
+    // Handle "Aug 26", "Sept 2", "Dec 9" format
+    const monthMap: { [key: string]: string } = {
+      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+      'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
+      'sept': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+    }
+    
+    const parts = dateStr.toLowerCase().split(' ')
+    if (parts.length === 2) {
+      const monthName = parts[0]
+      const day = parts[1]
+      const month = monthMap[monthName]
+      
+      if (month) {
+        // Assume current year (2025 for fall semester)
+        const year = '2025'
+        return `${year}-${month}-${day.padStart(2, '0')}T23:59`
+      }
+    }
+    
+    // Fallback - return original string with default time
+    return `2025-01-01T23:59`
   }
 
   // Fetch courses when component mounts

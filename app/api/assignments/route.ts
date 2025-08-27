@@ -27,12 +27,26 @@ async function createOrFindUserAndCourse(courseName: string) {
     where: { name: courseName, userId: user.id }
   })
   if (!course) {
-    course = await prisma.course.create({
-      data: {
-        name: courseName,
-        userId: user.id
+    try {
+      course = await prisma.course.create({
+        data: {
+          name: courseName,
+          userId: user.id
+        }
+      })
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        // Unique constraint failed, course was created by another request
+        course = await prisma.course.findFirst({
+          where: { name: courseName, userId: user.id }
+        })
+        if (!course) {
+          throw new Error('Course creation failed and could not find existing course')
+        }
+      } else {
+        throw error
       }
-    })
+    }
   }
 
   return { user, course }

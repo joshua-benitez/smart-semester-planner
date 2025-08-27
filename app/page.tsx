@@ -52,7 +52,16 @@ export default function HomePage() {
     
     // Filter by course if selected
     if (selectedCourseId) {
+      // First try filtering by courseId
       filtered = assignments.filter(assignment => assignment.courseId === selectedCourseId)
+      
+      // If no matches, try filtering by course name (fallback)
+      if (filtered.length === 0) {
+        const selectedCourse = courses.find(c => c.id === selectedCourseId)
+        if (selectedCourse) {
+          filtered = assignments.filter(assignment => assignment.course?.name === selectedCourse.name)
+        }
+      }
     }
     
     // Sort assignments
