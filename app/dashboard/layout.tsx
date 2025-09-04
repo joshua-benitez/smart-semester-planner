@@ -1,15 +1,7 @@
-// app/dashboard/layout.tsx
-import Sidebar from "@/components/layout/Sidebar"
+"use client"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6">{children}</main>
-    </div>
-  )
+import DashboardLayout from "@/components/layout/DashboardLayout"
+
+export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  return <DashboardLayout>{children}</DashboardLayout>
 }

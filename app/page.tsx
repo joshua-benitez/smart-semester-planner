@@ -1,10 +1,13 @@
-"use client"
-
 import Link from "next/link"
-import { useSession } from "next-auth/react"
+import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
 
-export default function LandingPage() {
-  const { data: session } = useSession()
+export default async function LandingPage() {
+  const session = await getServerSession()
+
+  if (session) {
+    redirect("/dashboard") // logged-in users skip landing
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#050a30] text-white px-6">
@@ -16,29 +19,12 @@ export default function LandingPage() {
 
       {/* Call to Action */}
       <div className="flex gap-4">
-        {session ? (
-          <Link
-            href="/dashboard"
-            className="btn-primary"
-          >
-            Go to Dashboard
-          </Link>
-        ) : (
-          <>
-            <Link
-              href="/auth/signin"
-              className="btn-primary"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="btn-secondary"
-            >
-              Sign Up
-            </Link>
-          </>
-        )}
+        <Link href="/auth/signin" className="btn-primary">
+          Sign In
+        </Link>
+        <Link href="/auth/signup" className="btn-secondary">
+          Sign Up
+        </Link>
       </div>
     </div>
   )
