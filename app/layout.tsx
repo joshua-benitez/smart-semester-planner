@@ -5,8 +5,8 @@ import Providers from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Smart Semester Planner',
-  description: 'Gamified assignment tracker for students',
+  title: 'CourseFlow',
+  description: 'Assignment tracker for students',
 }
 
 export default function RootLayout({
