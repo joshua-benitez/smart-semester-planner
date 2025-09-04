@@ -1,9 +1,15 @@
-import DashboardLayout from "@/components/layout/DashboardLayout"
+// app/dashboard/layout.tsx
+import Sidebar from "@/components/layout/Sidebar"
 
-export default function DashboardRootLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 p-6">{children}</main>
+    </div>
+  )
 }
