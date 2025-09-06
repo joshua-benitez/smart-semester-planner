@@ -1,3 +1,4 @@
+// components/ui/Logo.tsx
 import Image from "next/image";
 
 type LogoProps = {
@@ -6,10 +7,20 @@ type LogoProps = {
   showTagline?: boolean;
 };
 
-export default function Logo({ size = 32, showText = true, showTagline = false }: LogoProps) {
+export default function Logo({
+  size = 32,
+  showText = true,
+  showTagline = false,
+}: LogoProps) {
   return (
     <div className="flex items-center gap-3">
-      <Image src="/images/logo.png" alt="CourseFlow Logo" width={size} height={size} />
+      <Image
+        src="/images/logo.png"
+        alt="CourseFlow Logo"
+        width={size}
+        height={size}
+        priority
+      />
       {showText && (
         <div className="leading-tight">
           <span className="text-xl font-bold">CourseFlow</span>

@@ -8,36 +8,25 @@
 @layer base {
   body {
     background: #050a30;
-    color: #FFFFFF;
+    color: #ffffff;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     line-height: 1.6;
     min-height: 100vh;
   }
 
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #FFFFFF;
-  }
+  h1 { font-size: 2.5rem; font-weight: 700; color: #ffffff; }
+  h2, h3, h4, h5, h6 { font-weight: 600; color: #ffffff; }
 
-  h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    color: #FFFFFF;
-  }
-
-  p {
-    margin: 0.5rem 0;
-  }
+  p { margin: 0.5rem 0; }
 
   a {
-    color: #0166FE;
+    color: #0166fe;
     font-weight: 500;
     text-decoration: none;
   }
-
   a:hover {
-    color: #004bbf; /* darker shade of #0166FE */
-    text-decoration: none;
+    color: #004bbf; /* darker shade */
+    text-decoration: none; /* no underline on hover */
   }
 }
 
@@ -48,12 +37,11 @@
   /* Landing Page CTA (special) */
   .btn-cta {
     @apply px-8 py-3 rounded-full font-semibold shadow-lg transition border;
-    background: #0166FE;
-    border-color: #0166FE;
-    color: #FFFFFF;
+    background: #0166fe;
+    border-color: #0166fe;
+    color: #ffffff;
     font-size: 1.125rem; /* slightly larger */
   }
-
   .btn-cta:hover {
     background: #004bbf;
     border-color: #004bbf;
@@ -64,12 +52,11 @@
   /* Primary Button (dashboard actions) */
   .btn-primary {
     @apply px-6 py-3 rounded-full font-semibold shadow-md transition border;
-    background: #0166FE;
-    border-color: #0166FE;
-    color: #FFFFFF;
+    background: #0166fe;
+    border-color: #0166fe;
+    color: #ffffff;
     font-size: 1rem;
   }
-
   .btn-primary:hover {
     background: #004bbf;
     border-color: #004bbf;
@@ -80,14 +67,13 @@
   /* Secondary Button */
   .btn-secondary {
     @apply px-6 py-3 rounded-full font-semibold border transition;
-    border-color: #0166FE;
-    color: #0166FE;
+    border-color: #0166fe;
+    color: #0166fe;
     font-size: 1rem;
   }
-
   .btn-secondary:hover {
-    background: #0166FE;
-    color: #FFFFFF;
+    background: #0166fe;
+    color: #ffffff;
   }
 
   /* Card */
@@ -102,53 +88,27 @@
     @apply w-full px-4 py-2 rounded-md border transition-colors;
     background: #0f173d;
     border-color: rgba(255, 255, 255, 0.15);
-    color: #FFFFFF;
+    color: #ffffff;
   }
-
   .form-input:focus {
-    border-color: #0166FE;
+    border-color: #0166fe;
     outline: none;
     box-shadow: 0 0 0 2px rgba(1, 102, 254, 0.5);
   }
-
-  .form-input::placeholder {
-    color: #B0B0B0;
-  }
+  .form-input::placeholder { color: #b0b0b0; }
 
   /* Status Badges */
-  .status-badge {
-    @apply px-2 py-1 rounded-md text-xs font-medium;
-  }
-
-  .status-easy {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
-  }
-
-  .status-moderate {
-    background: rgba(251, 191, 36, 0.2);
-    color: #fbbf24;
-  }
-
-  .status-brutal {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-  }
+  .status-badge { @apply px-2 py-1 rounded-md text-xs font-medium; }
+  .status-easy { background: rgba(34,197,94,.2); color: #4ade80; }
+  .status-moderate { background: rgba(251,191,36,.2); color: #fbbf24; }
+  .status-brutal { background: rgba(239,68,68,.2); color: #f87171; }
 }
 
 /* ===========================================
    UTILITIES (extra helpers)
    ========================================== */
 @layer utilities {
-  .container {
-    @apply max-w-6xl mx-auto px-6;
-  }
-
-  .section-title {
-    @apply text-3xl font-bold mb-4;
-  }
-
-  .muted {
-    color: #B0B0B0;
-  }
+  .container { @apply max-w-6xl mx-auto px-6; }
+  .section-title { @apply text-3xl font-bold mb-4; }
+  .muted { color: #b0b0b0; }
 }
