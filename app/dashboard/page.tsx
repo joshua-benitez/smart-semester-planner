@@ -1,7 +1,8 @@
- 'use client'
+'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import Logo from "@/components/ui/Logo"
 import { useSession, signOut } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { useAssignments } from '@/hooks/useAssignments'
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('')
   const [sortBy, setSortBy] = useState<'dueDate' | 'title' | 'difficulty'>('dueDate')
   const searchParams = useSearchParams()
-  
+
   // Check for course filter from URL
   useEffect(() => {
     const courseParam = searchParams.get('course')
@@ -49,12 +50,12 @@ export default function DashboardPage() {
   // Filter and sort assignments
   const filteredAndSortedAssignments = useMemo(() => {
     let filtered = assignments
-    
+
     // Filter by course if selected
     if (selectedCourseId) {
       // First try filtering by courseId
       filtered = assignments.filter(assignment => assignment.courseId === selectedCourseId)
-      
+
       // If no matches, try filtering by course name (fallback)
       if (filtered.length === 0) {
         const selectedCourse = courses.find(c => c.id === selectedCourseId)
@@ -63,7 +64,7 @@ export default function DashboardPage() {
         }
       }
     }
-    
+
     // Sort assignments
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -73,13 +74,13 @@ export default function DashboardPage() {
           return a.title.localeCompare(b.title)
         case 'difficulty':
           const difficultyOrder = { 'easy': 1, 'moderate': 2, 'crushing': 3, 'brutal': 4 }
-          return (difficultyOrder[a.difficulty as keyof typeof difficultyOrder] || 0) - 
-                 (difficultyOrder[b.difficulty as keyof typeof difficultyOrder] || 0)
+          return (difficultyOrder[a.difficulty as keyof typeof difficultyOrder] || 0) -
+            (difficultyOrder[b.difficulty as keyof typeof difficultyOrder] || 0)
         default:
           return 0
       }
     })
-    
+
     return sorted
   }, [assignments, selectedCourseId, sortBy])
 
@@ -91,11 +92,11 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status })
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to update assignment status')
       }
-      
+
       // Refresh assignments to get updated data
       await refresh()
     } catch (error) {
@@ -107,21 +108,21 @@ export default function DashboardPage() {
   // Handle bulk status updates
   const handleBulkStatusUpdate = async (ids: string[], status: string) => {
     try {
-      const promises = ids.map(id => 
+      const promises = ids.map(id =>
         fetch('/api/assignments', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, status })
         })
       )
-      
+
       const results = await Promise.all(promises)
       const failed = results.filter(r => !r.ok)
-      
+
       if (failed.length > 0) {
         throw new Error(`Failed to update ${failed.length} assignments`)
       }
-      
+
       // Refresh assignments to get updated data
       await refresh()
     } catch (error) {
@@ -133,21 +134,21 @@ export default function DashboardPage() {
   // Handle bulk delete
   const handleBulkDelete = async (ids: string[]) => {
     try {
-      const promises = ids.map(id => 
+      const promises = ids.map(id =>
         fetch('/api/assignments', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         })
       )
-      
+
       const results = await Promise.all(promises)
       const failed = results.filter(r => !r.ok)
-      
+
       if (failed.length > 0) {
         throw new Error(`Failed to delete ${failed.length} assignments`)
       }
-      
+
       // Refresh assignments to get updated data
       await refresh()
     } catch (error) {
@@ -157,99 +158,43 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        {/* Header Section */}
-        <div className="header-card animate-fade-in">
-          <div className="page-header">
-            <div>
-              <h1 className="page-title animate-float">CourseFlow</h1>
-              <p className="page-description">Own your education. Find your Flow.</p>
-            </div>
-            <div className="flex gap-3 items-center">
-              {session ? (
-                <>
-                  <div className="text-slate-300 mr-2">
-                    Welcome, {session.user?.name || session.user?.email}!
-                  </div>
-                  <Link href="/courses" className="nav-link">
-                    Manage Courses
-                  </Link>
-                  <Link href="/assignments/new" className="btn-primary">
-                    Add Assignment
-                  </Link>
-                  <button
-                    onClick={() => signOut()}
-                    className="btn-danger"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <div className="flex gap-3">
-                  <Link href="/auth/signin" className="btn-primary">
-                    Sign In
-                  </Link>
-                  <Link href="/auth/signup" className="nav-link">
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="p-8 space-y-8">
+      {/* Top bar */}
+      <header className="flex items-center justify-between">
+        <div className="flex gap-3">
+          <Link
+            href="/courses"
+            className="bg-blue-600 hover:bg-blue-700 rounded-xl px-5 py-3 text-white font-semibold shadow-md transition"
+          >
+            Manage Courses
+          </Link>
+          <Link
+            href="/assignments/new"
+            className="bg-green-600 hover:bg-green-700 rounded-xl px-5 py-3 text-white font-semibold shadow-md transition"
+          >
+            + New Assignment
+          </Link>
+          <button
+            onClick={() => signOut()}
+            className="bg-red-600 hover:bg-red-700 rounded-xl px-5 py-3 text-white font-semibold shadow-md transition"
+          >
+            Sign Out
+          </button>
         </div>
+      </header>
 
-        {/* Assignments Section */}
-        <div className="page-card animate-slide-up">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <h2 className="section-title mb-4 md:mb-0">Your Assignments</h2>
-            
-            {/* Filters and Sorting */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Course Filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Course:</label>
-                <select 
-                  value={selectedCourseId} 
-                  onChange={(e) => setSelectedCourseId(e.target.value)}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Courses</option>
-                  {courses.map(course => (
-                    <option key={course.id} value={course.id}>
-                      {course.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Sort Options */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">Sort by:</label>
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'title' | 'difficulty')}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="dueDate">Due Date</option>
-                  <option value="title">Title</option>
-                  <option value="difficulty">Difficulty</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          <AssignmentList 
-            assignments={filteredAndSortedAssignments} 
-            loading={loading} 
-            onDeleteAssignment={deleteAssignment}
-            onBulkStatusUpdate={handleBulkStatusUpdate}
-            onBulkDelete={handleBulkDelete}
-            onStatusUpdate={handleStatusUpdate}
-          />
-        </div>
-      </div>
+      {/* Assignments */}
+      <section className="bg-[#0a0f3d] rounded-xl p-6 shadow-lg">
+        <h2 className="text-xl font-bold text-white mb-4">Your Assignments</h2>
+        <AssignmentList
+          assignments={filteredAndSortedAssignments}
+          loading={loading}
+          onDeleteAssignment={deleteAssignment}
+          onBulkStatusUpdate={handleBulkStatusUpdate}
+          onBulkDelete={handleBulkDelete}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      </section>
     </div>
   )
 }
-  

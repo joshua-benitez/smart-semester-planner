@@ -3,63 +3,97 @@
 @tailwind utilities;
 
 /* ===========================================
-   GLOBAL BASE
+   GLOBAL BASE (default tag styles)
    ========================================== */
 @layer base {
   body {
-    background: #050a30; /* solid dark background */
-    color: #FFFFFF;      /* white text by default */
+    background: #050a30;
+    color: #FFFFFF;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     line-height: 1.6;
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+
+  h2, h3, h4, h5, h6 {
     font-weight: 600;
     color: #FFFFFF;
   }
 
+  p {
+    margin: 0.5rem 0;
+  }
+
   a {
-    color: #004CFF;
+    color: #0166FE;
     font-weight: 500;
     text-decoration: none;
   }
 
   a:hover {
-    text-decoration: underline;
+    color: #004bbf; /* darker shade of #0166FE */
+    text-decoration: none;
   }
 }
 
 /* ===========================================
-   COMPONENT STYLES
+   COMPONENT STYLES (reusable classes)
    ========================================== */
 @layer components {
-  /* Buttons */
-  .btn-primary {
-    @apply px-4 py-2 rounded-md font-semibold transition-colors;
-    background: #004CFF;
+  /* Landing Page CTA (special) */
+  .btn-cta {
+    @apply px-8 py-3 rounded-full font-semibold shadow-lg transition border;
+    background: #0166FE;
+    border-color: #0166FE;
     color: #FFFFFF;
+    font-size: 1.125rem; /* slightly larger */
+  }
+
+  .btn-cta:hover {
+    background: #004bbf;
+    border-color: #004bbf;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(1, 102, 254, 0.4);
+  }
+
+  /* Primary Button (dashboard actions) */
+  .btn-primary {
+    @apply px-6 py-3 rounded-full font-semibold shadow-md transition border;
+    background: #0166FE;
+    border-color: #0166FE;
+    color: #FFFFFF;
+    font-size: 1rem;
   }
 
   .btn-primary:hover {
-    background: #0036cc; /* darker shade */
+    background: #004bbf;
+    border-color: #004bbf;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(1, 102, 254, 0.4);
   }
 
+  /* Secondary Button */
   .btn-secondary {
-    @apply px-4 py-2 rounded-md font-semibold border transition-colors;
-    border-color: #004CFF;
-    color: #004CFF;
+    @apply px-6 py-3 rounded-full font-semibold border transition;
+    border-color: #0166FE;
+    color: #0166FE;
+    font-size: 1rem;
   }
 
   .btn-secondary:hover {
-    background: #004CFF;
+    background: #0166FE;
     color: #FFFFFF;
   }
 
-  /* Cards */
+  /* Card */
   .card {
     @apply rounded-lg p-6 border;
-    background: #0a1045; /* slightly lighter than main background */
+    background: #0a1045;
     border-color: rgba(255, 255, 255, 0.1);
   }
 
@@ -72,9 +106,9 @@
   }
 
   .form-input:focus {
-    border-color: #004CFF;
+    border-color: #0166FE;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 76, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(1, 102, 254, 0.5);
   }
 
   .form-input::placeholder {
@@ -103,7 +137,7 @@
 }
 
 /* ===========================================
-   UTILITIES
+   UTILITIES (extra helpers)
    ========================================== */
 @layer utilities {
   .container {
