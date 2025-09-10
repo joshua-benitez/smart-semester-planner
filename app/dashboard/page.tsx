@@ -70,7 +70,7 @@ export default function DashboardPage() {
         case "difficulty": {
           const order = { easy: 1, moderate: 2, crushing: 3, brutal: 4 }
           return (order[a.difficulty as keyof typeof order] || 0) -
-                 (order[b.difficulty as keyof typeof order] || 0)
+            (order[b.difficulty as keyof typeof order] || 0)
         }
         default:
           return 0
@@ -132,58 +132,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container py-8 space-y-8">
-      {/* Top bar */}
-      <header className="flex justify-end gap-3">
-        <Link href="/courses" className="btn-secondary">Manage Courses</Link>
-        <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
-        <button
-          onClick={() => signOut()}
-          className="px-6 py-3 rounded-full font-semibold border border-white/15 text-white/80 hover:text-white hover:bg-white/5 transition"
-        >
-          Sign Out
-        </button>
+    <div className="container py-10 space-y-10">
+      {/* Top actions */}
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h1 className="text-2xl font-bold">Welcome back{session?.user?.name}</h1>
+        <div className="flex gap-3">
+          <Link href="/courses" className="btn-secondary">Manage Courses</Link>
+          <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
+          <button
+            onClick={() => signOut()}
+            className="px-6 py-3 rounded-full font-semibold border border-white/15 text-white/80 hover:text-white hover:bg-white/5 transition"
+          >
+            Sign Out
+          </button>
+        </div>
       </header>
 
-      {/* Optional greeting */}
-      {session?.user?.name && (
-        <p className="text-white/70 text-lg">Welcome back, {session.user.name} 👋</p>
-      )}
-
-      {/* Assignments */}
+      {/* Assignments card */}
       <section className="card">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>
-
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-white/80">Course:</label>
-              <select
-                value={selectedCourseId}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="form-input px-3 py-2"
-              >
-                <option value="">All Courses</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-white/80">Sort by:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "dueDate" | "title" | "difficulty")}
-                className="form-input px-3 py-2"
-              >
-                <option value="dueDate">Due Date</option>
-                <option value="title">Title</option>
-                <option value="difficulty">Difficulty</option>
-              </select>
-            </div>
-          </div>
+          {/* filters here */}
         </div>
 
         <AssignmentList
@@ -205,5 +174,6 @@ export default function DashboardPage() {
         )}
       </section>
     </div>
+
   )
 }

@@ -20,12 +20,12 @@
   p { margin: 0.5rem 0; }
 
   a {
-    color: #0166fe;
+    color: inherit;
     font-weight: 500;
     text-decoration: none;
   }
   a:hover {
-    color: #004bbf; /* darker shade */
+    color: #ffffff; /* darker shade */
     text-decoration: none; /* no underline on hover */
   }
 }
