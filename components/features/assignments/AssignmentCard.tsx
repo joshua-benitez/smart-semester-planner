@@ -40,7 +40,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
   }
 
   return (
-    <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-blue-500' : ''} space-y-3`}>
+    <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-blue-500' : ''} space-y-3 border-l-4 border-brandPrimary`}>
       <div className="mobile-stack">
         {/* Selection Checkbox */}
         {onSelect && (

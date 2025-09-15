@@ -25,6 +25,9 @@ async function findOrCreateCourseForUser(userId: string, courseName: string) {
       }
     }
   }
+  if (!course) {
+    throw new Error('Course not found after creation attempt')
+  }
   return course
 }
 
@@ -32,7 +35,9 @@ async function findOrCreateCourseForUser(userId: string, courseName: string) {
 const AssignmentCreateSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().default(''),
-  dueDate: z.coerce.date({ required_error: 'dueDate is required' }),
+  dueDate: z.union([z.string(), z.date()])
+    .transform((v) => (typeof v === 'string' ? new Date(v) : v))
+    .refine((d) => d instanceof Date && !isNaN(d.getTime()), { message: 'Invalid dueDate' }),
   type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
   weight: z.number().min(0.1).max(5).optional(),

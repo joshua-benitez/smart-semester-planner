@@ -163,7 +163,7 @@ export default function DashboardPage() {
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-          <p className="text-white/70 text-sm mt-1">
+          <p className="text-white text-sm mt-1">
             {session?.user?.name ? `Welcome back, ${session.user.name}` : "Welcome back"}
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                 router.replace('/auth/signin')
               }
             }}
-            className="btn-secondary"
+            className="btn-primary"
           >
             Sign Out
           </button>
@@ -187,14 +187,14 @@ export default function DashboardPage() {
       </header>
 
       {/* Mini Calendar Strip */}
-      <section className="card">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
         <h2 className="text-xl font-bold mb-4">This Week</h2>
         <div className="grid grid-cols-7 gap-3 text-center">
           {weekDays.map((day) => (
             <div
               key={day.date}
               className={`p-3 rounded-lg ${
-                day.hasAssignment ? "bg-brandPrimary text-white" : "bg-panelBg text-white/70"
+                day.hasAssignment ? "bg-brandPrimary text-white" : "bg-brandPrimary/10 text-white"
               }`}
             >
               <div className="text-sm">{day.label}</div>
@@ -205,14 +205,14 @@ export default function DashboardPage() {
       </section>
 
       {/* Priority Assignments */}
-      <section className="card">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
         <h2 className="text-xl font-bold mb-4">Priority Assignments</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {priorityAssignments.map((a) => (
-            <div key={a.id} className="p-4 bg-panelBg rounded-lg border border-white/10 shadow-md">
+            <div key={a.id} className="p-4 rounded-lg border-2 border-brandPrimary bg-brandPrimary/20">
               <h3 className="font-semibold">{a.title}</h3>
-              <p className="text-sm text-white/70">{a.course?.name}</p>
-              <p className="text-sm text-slate-400">Due {new Date(a.dueDate).toLocaleDateString()}</p>
+              <p className="text-sm text-white">{a.course?.name}</p>
+              <p className="text-sm text-white">Due {new Date(a.dueDate).toLocaleDateString()}</p>
               <span className={`status-badge status-${a.difficulty}`}>{a.difficulty}</span>
             </div>
           ))}
@@ -220,7 +220,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Full Assignment List */}
-      <section className="card">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>
         </div>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
         />
 
         {!loading && filteredAndSortedAssignments.length === 0 && (
-          <div className="text-center py-10 text-white/70">
+          <div className="text-center py-10 text-white">
             No assignments yet.{" "}
             <Link href="/assignments/new" className="text-brandPrimary hover:opacity-90">
               Create your first one

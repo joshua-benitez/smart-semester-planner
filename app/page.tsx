@@ -12,20 +12,18 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brandBg bg-[#050a30] text-white">
-      <div className="px-6 sm:px-8 pt-6 sm:pt-8">
-        {/* Logo / Brand */}
-        <div className="mb-14">
-          <Logo size={400} />
-        </div>
+    <div className="relative min-h-screen bg-brandBg text-white">
+      {/* Top-left brand header (fixed padding, absolute for precise placement) */}
+      <header className="absolute top-4 left-4">
+        <Logo size={400} />
+      </header>
 
-        {/* Call to Action */}
-        <div>
-          <Link href="/auth/signin" className="btn-cta">
-            Get Started
-          </Link>
-        </div>
-      </div>
+      {/* Hero actions */}
+      <main className="px-6 sm:px-10 pt-48 sm:pt-56">
+        <Link href="/auth/signin" className="btn-cta">
+          Get Started
+        </Link>
+      </main>
     </div>
   );
 }

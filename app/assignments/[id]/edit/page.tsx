@@ -162,7 +162,7 @@ export default function EditAssignment() {
                         {!data && !loading && !error && (
                             <div className="empty-state">
                                 <p className="empty-title">Assignment not found.</p>
-                                <p className="empty-description">The assignment you're looking for doesn't exist.</p>
+                                <p className="empty-description">The assignment you&apos;re looking for doesn&apos;t exist.</p>
                             </div>
                         )}
                         

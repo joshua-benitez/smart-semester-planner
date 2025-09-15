@@ -183,10 +183,10 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-medium text-blue-900 mb-2">Enhanced Parser Features:</h3>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Understands natural language dates ("Sun. 8/24", "Sept 2", "next Wed 11:59pm")</li>
+                    <li>• Understands natural language dates (&quot;Sun. 8/24&quot;, &quot;Sept 2&quot;, &quot;next Wed 11:59pm&quot;)</li>
                     <li>• Smart assignment detection with confidence scoring</li>
                     <li>• Handles wrapped lines and bullet points automatically</li>
-                    <li>• Missing dates become "TBD" for you to edit later</li>
+                    <li>• Missing dates become &quot;TBD&quot; for you to edit later</li>
                     <li>• Automatic deduplication and type inference</li>
                     <li>• Preview shows confidence levels - review low-confidence items</li>
                   </ul>

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { AssignmentCard } from './AssignmentCard'
 import type { Assignment } from '@/types/assignment'
+import { Button } from '@/components/ui/Button'
 
 interface AssignmentListProps {
   assignments: Assignment[]
@@ -102,7 +103,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   return (
     <div className="space-y-6">
       {/* Bulk Actions Header */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-600">
+      <div className="rounded-lg p-4 border-2 border-brandPrimary bg-brandPrimary/20">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -110,16 +111,16 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
                 type="checkbox"
                 checked={selectedIds.size === filteredAssignments.length && filteredAssignments.length > 0}
                 onChange={handleSelectAll}
-                className="w-4 h-4 rounded border-slate-400 bg-slate-700 text-blue-500"
+                className="w-4 h-4 rounded border-brandPrimary bg-transparent accent-brandPrimary"
               />
-              <span className="text-slate-300 text-sm">
+              <span className="text-white text-sm">
                 {selectedIds.size === 0 ? 'Select all' : `${selectedIds.size} selected`}
               </span>
             </div>
             
             <button
               onClick={() => setShowCompleted(!showCompleted)}
-              className="text-sm text-slate-400 hover:text-slate-300 underline"
+              className="text-sm text-white underline"
             >
               {showCompleted ? 'Hide completed' : 'Show completed'}
             </button>
@@ -128,43 +129,26 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
           {/* Bulk Action Buttons */}
           {selectedIds.size > 0 && onBulkStatusUpdate && (
             <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => handleBulkAction('completed')}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors disabled:opacity-50"
-              >
+              <Button size="sm" variant="primary" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
                 Mark Completed
-              </button>
-              <button
-                onClick={() => handleBulkAction('in_progress')}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => handleBulkAction('in_progress')} disabled={bulkLoading}>
                 Mark In Progress
-              </button>
-              <button
-                onClick={() => handleBulkAction('not_started')}
-                disabled={bulkLoading}
-                className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-md transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => handleBulkAction('not_started')} disabled={bulkLoading}>
                 Mark Not Started
-              </button>
-              
+              </Button>
+
               {/* Separator */}
-              <div className="w-px h-6 bg-slate-600"></div>
-              
-              {/* Bulk Delete */}
+              <div className="w-px h-6 bg-white/20"></div>
+
               {onBulkDelete && (
-                <button
-                  onClick={handleBulkDelete}
-                  disabled={bulkLoading}
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors disabled:opacity-50"
-                >
+                <Button size="sm" variant="danger" onClick={handleBulkDelete} disabled={bulkLoading}>
                   Delete Selected
-                </button>
+                </Button>
               )}
-              
-              {bulkLoading && <span className="text-slate-400 text-sm py-1.5">Processing...</span>}
+
+              {bulkLoading && <span className="text-white/80 text-sm py-1.5">Processing...</span>}
             </div>
           )}
         </div>
