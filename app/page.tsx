@@ -16,7 +16,7 @@ export default async function LandingPage() {
       <div className="px-8 sm:px-12 pt-16 sm:pt-20">
         {/* Logo / Brand */}
         <div className="mb-14">
-          <Logo size={72} showText showTagline />
+          <Logo size={64} showText showTagline brandClass="text-brandLg" taglineClass="text-taglineLg" />
         </div>
 
         {/* Call to Action */}

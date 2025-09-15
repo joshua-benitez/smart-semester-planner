@@ -6,11 +6,13 @@ type LogoProps = {
   showText?: boolean;
   showTagline?: boolean;
   className?: string;
+  brandClass?: string;
+  taglineClass?: string;
 };
 
-export default function Logo({ size = 32, showText = true, showTagline = false, className = "" }: LogoProps) {
-  const brandTextClass = size >= 72 ? "text-4xl" : size >= 56 ? "text-2xl" : "text-xl";
-  const taglineTextClass = size >= 72 ? "text-base" : size >= 56 ? "text-sm" : "text-xs";
+export default function Logo({ size = 32, showText = true, showTagline = false, className = "", brandClass, taglineClass }: LogoProps) {
+  const brandTextClass = brandClass ?? (size >= 72 ? "text-4xl" : size >= 56 ? "text-2xl" : "text-xl");
+  const taglineTextClass = taglineClass ?? (size >= 72 ? "text-base" : size >= 56 ? "text-sm" : "text-xs");
 
   return (
     <div className={`flex items-center gap-4 ${className}`}>

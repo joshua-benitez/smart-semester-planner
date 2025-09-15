@@ -19,7 +19,7 @@ export default function Sidebar() {
       {/* Logo / Brand */}
       <div className="px-6 pt-8 pb-6 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <Logo size={72} showText showTagline />
+          <Logo size={64} showText showTagline brandClass="text-brandLg" taglineClass="text-taglineLg" />
         </Link>
       </div>
 

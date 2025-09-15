@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import type { Assignment } from '@/types/assignment'
 
@@ -73,28 +74,10 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           )}
 
           <div className="flex gap-2 md:gap-3 flex-wrap">
-            <span className={`status-badge ${
-              assignment.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-              assignment.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-              'bg-gray-500/20 text-gray-400 border-gray-500/30'
-            }`}>
-              {assignment.status === 'completed' ? 'Completed' :
-               assignment.status === 'in_progress' ? 'In Progress' :
-               assignment.status === 'submitted' ? 'Submitted' :
-               assignment.status === 'graded' ? 'Graded' :
-               assignment.status === 'missed' ? 'Missed' :
-               'Not Started'}
-            </span>
-            <span className="status-badge bg-blue-500/20 text-blue-300 border border-blue-500/30 capitalize">{assignment.type}</span>
-            <span className={`status-badge ${
-              assignment.difficulty === 'easy' ? 'status-easy' :
-              assignment.difficulty === 'moderate' ? 'status-moderate' :
-              assignment.difficulty === 'crushing' ? 'status-crushing' :
-              'status-brutal'
-            }`}>
-              <span className="capitalize">{assignment.difficulty}</span>
-            </span>
-            <span className="status-badge bg-slate-500/20 text-slate-300 border border-slate-500/30">Weight: {assignment.weight}</span>
+            <Badge variant="status" value={assignment.status} />
+            <Badge variant="type" value={assignment.type} />
+            <Badge variant="difficulty" value={assignment.difficulty} />
+            <Badge variant="meta">Weight: {assignment.weight}</Badge>
           </div>
         </div>
 
