@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
+import Logo from "@/components/ui/Logo"
 
 type Course = {
   id: string
@@ -44,6 +45,31 @@ export default function DashboardPage() {
     fetchCourses()
   }, [])
 
+  // Build current week (Sunday–Saturday)
+  const weekDays = useMemo(() => {
+    const start = new Date()
+    start.setDate(start.getDate() - start.getDay())
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      return {
+        date: d.toISOString(),
+        label: d.toLocaleDateString("en-US", { weekday: "short" }),
+        dayNum: d.getDate(),
+        hasAssignment: assignments.some(a =>
+          new Date(a.dueDate).toDateString() === d.toDateString()
+        )
+      }
+    })
+  }, [assignments])
+
+  // Pick top 3 urgent assignments
+  const priorityAssignments = useMemo(() => {
+    return [...assignments]
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 3)
+  }, [assignments])
+
   // Filter and sort assignments
   const filteredAndSortedAssignments = useMemo(() => {
     let filtered = assignments
@@ -78,7 +104,7 @@ export default function DashboardPage() {
     })
 
     return sorted
-  }, [assignments, selectedCourseId, sortBy])
+  }, [assignments, selectedCourseId, sortBy, courses])
 
   // Handlers
   const handleStatusUpdate = async (id: string, status: string) => {
@@ -133,10 +159,16 @@ export default function DashboardPage() {
 
   return (
     <div className="container py-10 space-y-10">
-      {/* Top actions */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold">Welcome back{session?.user?.name}</h1>
-        <div className="flex gap-3">
+      {/* Top bar */}
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="flex items-center gap-3">
+          <Logo size={40} showText showTagline />
+          <span className="text-white/70 text-sm">
+            {session?.user?.name ? `Welcome back, ${session.user.name}` : "Welcome back"}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-4">
           <Link href="/courses" className="btn-secondary">Manage Courses</Link>
           <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
           <button
@@ -148,11 +180,43 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Assignments card */}
+      {/* Mini Calendar Strip */}
+      <section className="card">
+        <h2 className="text-xl font-bold mb-4">This Week</h2>
+        <div className="grid grid-cols-7 gap-3 text-center">
+          {weekDays.map((day) => (
+            <div
+              key={day.date}
+              className={`p-3 rounded-lg ${
+                day.hasAssignment ? "bg-[#0166FE] text-white" : "bg-[#0f173d] text-white/70"
+              }`}
+            >
+              <div className="text-sm">{day.label}</div>
+              <div className="text-lg font-bold">{day.dayNum}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Priority Assignments */}
+      <section className="card">
+        <h2 className="text-xl font-bold mb-4">Priority Assignments</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {priorityAssignments.map((a) => (
+            <div key={a.id} className="p-4 bg-[#0f173d] rounded-lg border border-white/10 shadow-md">
+              <h3 className="font-semibold">{a.title}</h3>
+              <p className="text-sm text-white/70">{a.course?.name}</p>
+              <p className="text-sm text-slate-400">Due {new Date(a.dueDate).toLocaleDateString()}</p>
+              <span className={`status-badge status-${a.difficulty}`}>{a.difficulty}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Full Assignment List */}
       <section className="card">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>
-          {/* filters here */}
         </div>
 
         <AssignmentList
@@ -174,6 +238,5 @@ export default function DashboardPage() {
         )}
       </section>
     </div>
-
   )
 }

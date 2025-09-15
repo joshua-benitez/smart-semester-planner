@@ -7,30 +7,21 @@ type LogoProps = {
   showTagline?: boolean;
 };
 
-export default function Logo({
-  size = 32,
-  showText = true,
-  showTagline = false,
-}: LogoProps) {
+export default function Logo({ size = 32, showText = true, showTagline = false }: LogoProps) {
   return (
     <div className="flex items-center gap-3">
-      <Image
-        src="/images/logo.png"
-        alt="CourseFlow Logo"
-        width={size}
-        height={size}
-        priority
-      />
+      <Image src="/images/logo.png" alt="CourseFlow Logo" width={size} height={size} />
       {showText && (
-        <div className="leading-tight">
+        <div className="flex flex-col leading-snug">
           <span className="text-xl font-bold">CourseFlow</span>
           {showTagline && (
-            <p className="text-xs text-slate-300">
-              Own your education. <span className="font-medium">Find your Flow.</span>
-            </p>
+            <div className="flex flex-col text-slate-300 text-xs">
+              <span>Own your education.</span>
+              <span className="font-medium">Find your Flow.</span>
+            </div>
           )}
         </div>
       )}
     </div>
-  );
+  )
 }
