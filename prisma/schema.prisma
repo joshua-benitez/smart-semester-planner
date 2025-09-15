@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AssignmentType {
+  homework
+  quiz
+  project
+  exam
+}
+
+enum Difficulty {
+  easy
+  moderate
+  crushing
+  brutal
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -79,8 +93,8 @@ model Assignment {
   title        String
   description  String?
   dueDate      DateTime
-  type         String   // 'homework', 'quiz', 'project', 'exam'
-  difficulty   String   // 'easy', 'moderate', 'crushing', 'brutal'
+  type         AssignmentType
+  difficulty   Difficulty
   weight       Float    @default(1.0)
   priority     Int?
   status       String   @default("not_started") // 'not_started', 'in_progress', 'submitted', 'graded', 'missed'

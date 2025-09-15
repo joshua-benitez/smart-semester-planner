@@ -1,29 +1,26 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-// Add validation helpers (copy isNonEmptyString from assignments route.ts)
-const isNonEmptyString = (value: any): value is string => {
-  return typeof value === 'string' && value.trim().length > 0
-}
-// Add createOrFindUser function (copy from assignments route.ts)
-const createOrFindUser = async () => {
-  // For now I'm hardcoding one user since I don't have auth yet
-  let user = await prisma.user.findFirst()
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: 'student@example.com',
-        name: 'Student'
-      }
-    })
-  }
-  return user
-}
+import { requireAuth } from '@/lib/get-current-user'
+import { z } from 'zod'
+
+// Zod schemas
+const CourseCreateSchema = z.object({
+  name: z.string().min(1, 'Course name is required').trim(),
+  color: z.string().regex(/^#([0-9A-Fa-f]{3}){1,2}$/).optional(),
+})
+
+const CourseUpdateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().optional(),
+  color: z.string().regex(/^#([0-9A-Fa-f]{3}){1,2}$/).optional(),
+})
+
+const CourseDeleteSchema = z.object({ id: z.string().min(1) })
 
 // GET method - fetch all courses for the user
 export async function GET() {
   try {
-    // Get the user
-    const user = await createOrFindUser()
+    const user = await requireAuth()
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
@@ -45,24 +42,21 @@ export async function GET() {
 // POST method - create new course
 export async function POST(request: Request) {
   try {
-    // Get JSON data from request
-    const data = await request.json()
-    const { name, color } = data
-    // Validate course name is provided
-    const validName = isNonEmptyString(name) ? name.trim() : null
-    if (!validName) {
-      return NextResponse.json({ error: 'Course name is required' }, { status: 400 })
+    const body = await request.json()
+    const parsed = CourseCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const user = await createOrFindUser()
+    const user = await requireAuth()
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
     //Create new course with name and color (default color if not provided)
     const newCourse = await prisma.course.create({
       data: {
-        name: validName,
-        color: isNonEmptyString(color) ? color.trim() : '#3b82f6', // Default blue color
+        name: parsed.data.name,
+        color: parsed.data.color ?? '#3b82f6',
         userId: user.id
       }
     })
@@ -76,24 +70,22 @@ export async function POST(request: Request) {
 // PUT method - update course name/color
 export async function PUT(request: Request) {
   try {
-    // Get JSON data from request
-    const data = await request.json()
-    const { id, name, color } = data
-    // Validate course ID is provided
-    if (!isNonEmptyString(id)) {
-      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 })
+    const body = await request.json()
+    const parsed = CourseUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
     // Find existing course by ID
-    const existingCourse = await prisma.course.findUnique({ where: { id } })
+    const existingCourse = await prisma.course.findUnique({ where: { id: parsed.data.id } })
     if (!existingCourse) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
     // Update course with new name/color
     const updatedCourse = await prisma.course.update({
-      where: { id },
+      where: { id: parsed.data.id },
       data: {
-        name: isNonEmptyString(name) ? name.trim() : existingCourse.name,
-        color: isNonEmptyString(color) ? color.trim() : existingCourse.color
+        name: parsed.data.name ?? existingCourse.name,
+        color: parsed.data.color ?? existingCourse.color
       }
     })
     return NextResponse.json(updatedCourse)
@@ -106,16 +98,14 @@ export async function PUT(request: Request) {
 // DELETE method - remove course (only if no assignments)
 export async function DELETE(request: Request) {
   try {
-    // Get JSON data from request
-    const data = await request.json()
-    const { id } = data
-    // Validate course ID is provided
-    if (!isNonEmptyString(id)) {
-      return NextResponse.json({ error: 'Course ID is required' }, { status: 400 })
+    const body = await request.json()
+    const parsed = CourseDeleteSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
     // Find course by ID and include assignments
     const course = await prisma.course.findUnique({
-      where: { id },
+      where: { id: parsed.data.id },
       include: { assignments: true }
     })
     // Check if course has assignments - if yes, return error
@@ -129,7 +119,7 @@ export async function DELETE(request: Request) {
       )
     }
     // Delete the course
-    await prisma.course.delete({ where: { id } })
+    await prisma.course.delete({ where: { id: parsed.data.id } })
     return NextResponse.json({ message: 'Course deleted successfully' })
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

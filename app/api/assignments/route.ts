@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/get-current-user'
+import { z } from 'zod'
 
 // Lightweight runtime validation helper
 function isNonEmptyString(x: any): x is string {
@@ -10,52 +12,51 @@ function parseDateSafe(s: any): Date | null {
   return isNaN(d.getTime()) ? null : d
 }
 
-async function createOrFindUserAndCourse(courseName: string) {
-  // For now I'm hardcoding one user since I don't have auth yet
-  let user = await prisma.user.findFirst()
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: 'student@example.com',
-        name: 'Student'
-      }
-    })
-  }
-
-  // Find or create the course for this user
-  let course = await prisma.course.findFirst({
-    where: { name: courseName, userId: user.id }
-  })
+async function findOrCreateCourseForUser(userId: string, courseName: string) {
+  let course = await prisma.course.findFirst({ where: { name: courseName, userId } })
   if (!course) {
     try {
-      course = await prisma.course.create({
-        data: {
-          name: courseName,
-          userId: user.id
-        }
-      })
+      course = await prisma.course.create({ data: { name: courseName, userId } })
     } catch (error: any) {
       if (error.code === 'P2002') {
-        // Unique constraint failed, course was created by another request
-        course = await prisma.course.findFirst({
-          where: { name: courseName, userId: user.id }
-        })
-        if (!course) {
-          throw new Error('Course creation failed and could not find existing course')
-        }
+        course = await prisma.course.findFirst({ where: { name: courseName, userId } })
       } else {
         throw error
       }
     }
   }
-
-  return { user, course }
+  return course
 }
+
+// Zod schemas
+const AssignmentCreateSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional().default(''),
+  dueDate: z.coerce.date({ required_error: 'dueDate is required' }),
+  type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
+  difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
+  weight: z.number().min(0.1).max(5).optional(),
+  courseName: z.string().min(1)
+})
+
+const AssignmentUpdateSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  dueDate: z.union([z.string(), z.date()]).optional(),
+  type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
+  difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
+  weight: z.number().min(0.1).max(5).optional(),
+  status: z.string().optional(),
+  courseName: z.string().optional(),
+})
 
 // GET: fetch all assignments (with course)
 export async function GET() {
   try {
+    const user = await requireAuth()
     const assignments = await prisma.assignment.findMany({
+      where: { userId: user.id },
       include: { course: true },
       orderBy: { dueDate: 'asc' }
     })
@@ -69,30 +70,24 @@ export async function GET() {
 // POST: create new assignment
 export async function POST(request: Request) {
   try {
-    const data = await request.json()
-
-    // Basic validation
-    if (!isNonEmptyString(data?.title) || !isNonEmptyString(data?.courseName)) {
-      return NextResponse.json({ error: 'Missing required fields: title or courseName' }, { status: 400 })
+    const user = await requireAuth()
+    const json = await request.json()
+    const parsed = AssignmentCreateSchema.safeParse(json)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const dueDate = parseDateSafe(data?.dueDate)
-    if (!dueDate) {
-      return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
-    }
-
-    const { user, course } = await createOrFindUserAndCourse(data.courseName)
-
+    const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
     const assignment = await prisma.assignment.create({
       data: {
-        title: data.title,
-        description: data.description ?? '',
-        dueDate,
-        type: data.type ?? null,
-        difficulty: data.difficulty ?? null,
-        weight: typeof data.weight === 'number' ? data.weight : null,
+        title: parsed.data.title,
+        description: parsed.data.description ?? '',
+        dueDate: parsed.data.dueDate,
+        type: parsed.data.type ?? 'homework',
+        difficulty: parsed.data.difficulty ?? 'moderate',
+        weight: parsed.data.weight ?? 1.0,
         userId: user.id,
-        courseId: course.id
+        courseId: course.id,
       }
     })
 
@@ -109,15 +104,16 @@ export async function POST(request: Request) {
 // PUT: update an assignment
 export async function PUT(request: Request) {
   try {
-    const data = await request.json()
-
-    if (!isNonEmptyString(data?.id)) {
-      return NextResponse.json({ error: 'Missing assignment id' }, { status: 400 })
+    const user = await requireAuth()
+    const json = await request.json()
+    const parsed = AssignmentUpdateSchema.safeParse(json)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
     // Find assignment by ID
     const existing = await prisma.assignment.findUnique({
-      where: { id: data.id }
+      where: { id: parsed.data.id }
     })
     if (!existing) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
@@ -125,26 +121,26 @@ export async function PUT(request: Request) {
 
     // Build update payload only with provided fields
     const updateData: any = {}
-    if (isNonEmptyString(data.title)) updateData.title = data.title
-    if (typeof data.description === 'string') updateData.description = data.description
-    if (isNonEmptyString(data.type)) updateData.type = data.type
-    if (isNonEmptyString(data.difficulty)) updateData.difficulty = data.difficulty
-    if (typeof data.weight === 'number') updateData.weight = data.weight
-    if (isNonEmptyString(data.status)) updateData.status = data.status
-    if (data.dueDate !== undefined) {
-      const parsed = parseDateSafe(data.dueDate)
-      if (!parsed) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
-      updateData.dueDate = parsed
+    if (parsed.data.title !== undefined) updateData.title = parsed.data.title
+    if (parsed.data.description !== undefined) updateData.description = parsed.data.description
+    if (parsed.data.type !== undefined) updateData.type = parsed.data.type
+    if (parsed.data.difficulty !== undefined) updateData.difficulty = parsed.data.difficulty
+    if (parsed.data.weight !== undefined) updateData.weight = parsed.data.weight
+    if (parsed.data.status !== undefined) updateData.status = parsed.data.status
+    if (parsed.data.dueDate !== undefined) {
+      const d = typeof parsed.data.dueDate === 'string' ? new Date(parsed.data.dueDate) : parsed.data.dueDate
+      if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
+      updateData.dueDate = d
     }
 
     // If courseName was supplied, find or create that course then set courseId
-    if (isNonEmptyString(data.courseName)) {
-      const { course } = await createOrFindUserAndCourse(data.courseName)
+    if (parsed.data.courseName) {
+      const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
       updateData.courseId = course.id
     }
 
     const updatedAssignment = await prisma.assignment.update({
-      where: { id: data.id },
+      where: { id: parsed.data.id },
       data: updateData
     })
 
@@ -158,16 +154,15 @@ export async function PUT(request: Request) {
 // DELETE: remove an assignment
 export async function DELETE(request: Request) {
   try {
-    const data = await request.json()
-
-    // I need to validate the assignment ID was provided
-    if (!isNonEmptyString(data?.id)) {
+    const json = await request.json()
+    const id = json?.id
+    if (!isNonEmptyString(id)) {
       return NextResponse.json({ error: 'Missing assignment id' }, { status: 400 })
     }
 
     // Check if the assignment exists before trying to delete it
     const existing = await prisma.assignment.findUnique({
-      where: { id: data.id }
+      where: { id }
     })
     if (!existing) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
@@ -175,7 +170,7 @@ export async function DELETE(request: Request) {
 
     // Delete the assignment from the database
     await prisma.assignment.delete({
-      where: { id: data.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Assignment deleted successfully' })
@@ -184,4 +179,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
   }
 }
-

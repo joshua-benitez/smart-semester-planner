@@ -6,26 +6,39 @@ Gamified assignment tracker for students with RP-based ranking system.
 
 ```bash
 npm install
-npm run db:push  # Set up database
+npm run db:push  # Set up database (SQLite dev by default)
 npm run dev      # Start development server
 ```
+
+## Database Configuration
+
+- Development uses SQLite by default via `DATABASE_URL=file:./dev.db`.
+- For production, configure `DATABASE_URL` to a PostgreSQL connection string and switch the Prisma datasource provider to `postgresql` if desired.
+
+Example `.env` entries are provided in `.env.example`.
 
 ## Tech Stack
 
 - Next.js 14 (App Router)
 - TypeScript
-- Prisma + PostgreSQL  
+- Prisma + SQLite (dev) / PostgreSQL (prod)
 - NextAuth.js
 - TailwindCSS
 - React Query
 
 ## Features
 
-- Assignment tracking with urgency scoring
-- RP-based ranking system (Copper to Pink Diamond)
+- Assignment tracking (create, edit, delete, list)
+- Syllabus parsing with natural language dates (chrono)
+- Basic dashboard and course management
+- Auth via NextAuth (credentials), protected routes
+- In-app calendar view (basic)
+
+Roadmap
+- RP-based ranking system and history
 - Daily check-ins for accountability
 - Grade tracking and projections
-- In-app calendar view
+- Tests for parser, ranking, and APIs
 
 ## Project Structure
 
@@ -37,7 +50,7 @@ smart-semester-planner/
 │   ├── (dashboard)/                 # Dashboard route group
 │   │   └── page.tsx                 # Main dashboard
 │   ├── api/                         # API routes
-│   │   ├── assignments/             # Assignment CRUD
+│   │   ├── assignments/             # Assignment CRUD (list/create/update/delete)
 │   │   ├── auth/[...nextauth]/      # NextAuth.js
 │   │   ├── daily-check/             # Daily accountability
 │   │   └── rp-history/              # RP history
@@ -74,13 +87,10 @@ smart-semester-planner/
 │   └── validators.ts               # Input validation
 │
 ├── prisma/                         # Database
-│   ├── schema.prisma               # Database schema
-│   └── seed.ts                     # Sample data
+│   ├── schema.prisma               # Database schema (SQLite dev; Postgres prod)
+│   └── seed.ts                     # Sample data (optional)
 │
-├── tests/                          # Test files
-│   ├── rank.test.ts
-│   ├── rp.test.ts
-│   └── urgency.test.ts
+├── tests/                          # Test files (planned)
 │
 ├── types/                          # TypeScript types
 │   └── index.ts
@@ -96,4 +106,3 @@ smart-semester-planner/
     ├── tailwind.config.js          # TailwindCSS config
     └── tsconfig.json               # TypeScript config
 ```
-
