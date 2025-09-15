@@ -31,18 +31,13 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`group relative block px-4 py-2.5 rounded-md font-medium transition-colors ${
+              className={`block px-4 py-2.5 rounded-md font-medium border-b-2 transition-colors ${
                 isActive
-                  ? "text-white"
-                  : "text-white/80 hover:text-white"
+                  ? "text-white border-brandPrimary"
+                  : "text-white/80 border-transparent hover:text-white hover:border-brandPrimary"
               }`}
             >
-              <span className="relative z-10">{label}</span>
-              <span
-                className={`pointer-events-none absolute left-0 right-0 bottom-0.5 h-0.5 bg-brandPrimary transition-all duration-200 origin-left ${
-                  isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100'
-                }`}
-              />
+              {label}
             </Link>
           )
         })}

@@ -143,9 +143,7 @@ export default function CoursesPage() {
               <h1 className="page-title">My Courses</h1>
               <p className="page-description">Organize and manage your semester courses.</p>
             </div>
-            <Link href="/" className="nav-link">
-              ← Back to Dashboard
-            </Link>
+            <Link href="/dashboard" className="nav-link">← Back to Dashboard</Link>
           </div>
         </div>
 
@@ -200,35 +198,23 @@ export default function CoursesPage() {
             
             {/* Sorting Controls */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Sort by:</label>
+              <label className="text-sm font-medium text-white">Sort by:</label>
               <div className="flex gap-1">
                 <button
                   onClick={() => toggleSort('name')}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    sortBy === 'name' 
-                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
-                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
-                  }`}
+                  className={`btn-sm ${sortBy === 'name' ? 'btn-primary' : 'btn-secondary'}`}
                 >
                   Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </button>
                 <button
                   onClick={() => toggleSort('assignments')}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    sortBy === 'assignments' 
-                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
-                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
-                  }`}
+                  className={`btn-sm ${sortBy === 'assignments' ? 'btn-primary' : 'btn-secondary'}`}
                 >
                   Assignments {sortBy === 'assignments' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </button>
                 <button
                   onClick={() => toggleSort('created')}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                    sortBy === 'created' 
-                      ? 'bg-blue-100 text-blue-800 border border-blue-300' 
-                      : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
-                  }`}
+                  className={`btn-sm ${sortBy === 'created' ? 'btn-primary' : 'btn-secondary'}`}
                 >
                   Created {sortBy === 'created' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </button>
@@ -258,15 +244,15 @@ export default function CoursesPage() {
                         title={`Course color: ${course.color}`}
                       ></div>
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900">{course.name}</h3>
-                        <p className="text-gray-600">
+                        <h3 className="text-xl font-semibold text-white">{course.name}</h3>
+                        <p className="text-white/70">
                           {course._count?.assignments || 0} assignment{(course._count?.assignments || 0) !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex gap-2">
-                      <Link href={`/?course=${course.id}`} className="nav-link">
+                      <Link href={`/dashboard?course=${course.id}`} className="nav-link">
                         View Assignments
                       </Link>
                       <button

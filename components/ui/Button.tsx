@@ -28,7 +28,8 @@ export const Button = ({
 
   const sizeClasses = size === 'sm' ? 'btn-sm' : ''
 
-  const buttonClass = `${baseClasses[variant]} ${sizeClasses} ${className}`.trim()
+  const focusRing = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brandBg'
+  const buttonClass = `${baseClasses[variant]} ${sizeClasses} ${focusRing} ${className}`.trim()
   const isDisabled = disabled || loading
 
   return (

@@ -27,7 +27,7 @@
     text-decoration: none;
   }
   a:hover {
-    color: #ffffff; /* darker shade */
+    color: #ffffffcc; /* slightly brighter */
     text-decoration: none; /* no underline on hover */
   }
 }
@@ -61,11 +61,16 @@
 
   /* Secondary Button */
   .btn-secondary {
-    @apply px-6 py-3 rounded-full font-semibold transition border-2 bg-brandPrimary border-brandPrimary text-white;
+    @apply px-6 py-3 rounded-full font-semibold transition border-2 bg-transparent text-brandPrimary border-brandPrimary;
     font-size: 1rem;
   }
   .btn-secondary:hover {
-    @apply bg-brandPrimaryDark border-brandPrimaryDark text-white;
+    @apply bg-brandPrimary text-white;
+  }
+
+  /* Focus-visible for accessibility */
+  .btn-primary, .btn-secondary, .btn-cta {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brandBg;
   }
 
   /* Small button size helper */

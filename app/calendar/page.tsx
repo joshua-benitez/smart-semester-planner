@@ -76,6 +76,9 @@ export default function CalendarPage() {
           <button className="btn-primary" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
             ← Prev
           </button>
+          <button className="btn-secondary" onClick={() => setCursor(new Date())}>
+            Today
+          </button>
           <div className="px-3 py-2 rounded-md bg-brandPrimary text-white border-2 border-brandPrimary">{monthLabel}</div>
           <button className="btn-primary" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
             Next →
@@ -141,7 +144,7 @@ export default function CalendarPage() {
               <li
                 key={a.id}
                 className="flex items-center justify-between bg-brandPrimary/20 border-2 border-brandPrimary rounded-md p-2"
-                style={{ borderLeft: '4px solid var(--tw-brandPrimary, #0166fe)' }}
+                style={{ borderLeft: '4px solid #0166FE' }}
               >
                 <div className="truncate pr-2">
                   <div className="font-medium truncate">{a.title}</div>

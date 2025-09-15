@@ -48,15 +48,16 @@ export default function EditAssignment() {
 
 
 
-    // useEffect to fetch the assignment data when the page loads
+    // Fetch by id
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
-                const response = await fetch('/api/assignments')
-                const assignments = await response.json()
-                const assignment = assignments.find((assignment: { id: string }) => {
-                    return assignment.id === assignmentId
-                })
+                const response = await fetch(`/api/assignments/${assignmentId}`)
+                if (!response.ok) {
+                    const body = await response.json().catch(() => ({}))
+                    throw new Error(body?.error || 'Failed to fetch assignment')
+                }
+                const assignment: Assignment = await response.json()
                 setData(assignment)
             } catch (error) {
                 setError(error instanceof Error ? error : String(error))
@@ -64,8 +65,7 @@ export default function EditAssignment() {
                 setLoading(false)
             }
         }
-
-        fetchAssignment()
+        if (assignmentId) fetchAssignment()
     }, [assignmentId])
 
     // useEffect to populate form when data loads
@@ -90,7 +90,7 @@ export default function EditAssignment() {
         if (!formData.dueDate) return 'Due date is required'
         const d = new Date(formData.dueDate)
         if (isNaN(d.getTime())) return 'Due date is invalid'
-        if (formData.weight < 1) return 'Weight must be at least 1'
+        if (formData.weight < 0.1 || formData.weight > 5) return 'Weight must be between 0.1 and 5.0'
         return null
     }
 
@@ -113,7 +113,7 @@ export default function EditAssignment() {
                 return
             }
             // Success! Go back to the dashboard
-            router.push('/')
+            router.push('/dashboard')
         } catch (error) {
             console.error('Network error:', error)
             alert('Network error updating assignment')
@@ -212,7 +212,7 @@ export default function EditAssignment() {
                                     name="dueDate"
                                     value={formData.dueDate}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="form-input"
                                     required
                                 />
                             </div>
@@ -222,7 +222,7 @@ export default function EditAssignment() {
                                     name="type"
                                     value={formData.type}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="form-input"
                                 >
                                     <option value="homework">Homework</option>
                                     <option value="project">Project</option>
@@ -241,7 +241,7 @@ export default function EditAssignment() {
                                     name="difficulty"
                                     value={formData.difficulty}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="form-input"
                                 >
                                     <option value="easy">Easy</option>
                                     <option value="moderate">Moderate</option>
@@ -256,18 +256,18 @@ export default function EditAssignment() {
                                     name="weight"
                                     value={formData.weight}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    min={1}
+                                    className="form-input"
+                                    min={0.1}
                                     max={5}
                                     step={0.1}
                                     required
                                 />
-                                <p className="text-sm text-gray-500 mt-1">How important this assignment is (0.1 - 5.0)</p>
+                                <p className="text-sm text-white/70 mt-1">How important this assignment is (0.1 - 5.0)</p>
                             </div>
                         </div>
 
                         {/* Submit Button */}
-                        <div className="pt-6 border-t border-gray-200">
+                        <div className="pt-6 border-t border-brandPrimary/40">
                             <div className="flex gap-4">
                                 <button
                                     type="submit"
@@ -278,7 +278,7 @@ export default function EditAssignment() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => router.push('/')}
+                                    onClick={() => router.push('/dashboard')}
                                     className="btn-secondary"
                                 >
                                     Cancel
