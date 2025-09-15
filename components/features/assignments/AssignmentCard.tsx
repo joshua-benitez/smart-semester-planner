@@ -39,7 +39,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
   }
 
   return (
-    <Card animate delay={index * 0.1} className={isSelected ? 'ring-2 ring-blue-500' : ''}>
+    <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-blue-500' : ''} space-y-3`}>
       <div className="mobile-stack">
         {/* Selection Checkbox */}
         {onSelect && (
@@ -53,16 +53,16 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           </div>
         )}
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-slate-100 mb-2">
+          <h3 className="text-xl font-bold text-slate-100 mb-3">
             {assignment.title}
           </h3>
           
-          <div className="flex flex-wrap items-center gap-4 mb-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4">
             <span className="text-blue-400 font-semibold bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30">
               {assignment.course?.name ?? 'No course'}
             </span>
             <span className="text-slate-300 bg-slate-500/20 px-3 py-1.5 rounded-lg border border-slate-500/30">
-              Due: {formatDate(assignment.dueDate)}
+              <span className="text-slate-400 mr-1">Due:</span> {formatDate(assignment.dueDate)}
             </span>
           </div>
 
@@ -72,7 +72,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
             </p>
           )}
 
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-2 md:gap-3 flex-wrap">
             <span className={`status-badge ${
               assignment.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
               assignment.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
@@ -85,28 +85,16 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
                assignment.status === 'missed' ? 'Missed' :
                'Not Started'}
             </span>
-            <span className="status-badge" style={{
-              background: 'rgba(59, 130, 246, 0.2)',
-              color: '#60a5fa',
-              border: '1px solid rgba(59, 130, 246, 0.3)'
-            }}>
-              {assignment.type}
-            </span>
+            <span className="status-badge bg-blue-500/20 text-blue-300 border border-blue-500/30 capitalize">{assignment.type}</span>
             <span className={`status-badge ${
               assignment.difficulty === 'easy' ? 'status-easy' :
               assignment.difficulty === 'moderate' ? 'status-moderate' :
               assignment.difficulty === 'crushing' ? 'status-crushing' :
               'status-brutal'
             }`}>
-              {assignment.difficulty}
+              <span className="capitalize">{assignment.difficulty}</span>
             </span>
-            <span className="status-badge" style={{
-              background: 'rgba(100, 116, 139, 0.2)',
-              color: '#94a3b8',
-              border: '1px solid rgba(100, 116, 139, 0.3)'
-            }}>
-              Weight: {assignment.weight}
-            </span>
+            <span className="status-badge bg-slate-500/20 text-slate-300 border border-slate-500/30">Weight: {assignment.weight}</span>
           </div>
         </div>
 

@@ -5,19 +5,23 @@ type LogoProps = {
   size?: number;
   showText?: boolean;
   showTagline?: boolean;
+  className?: string;
 };
 
-export default function Logo({ size = 32, showText = true, showTagline = false }: LogoProps) {
+export default function Logo({ size = 32, showText = true, showTagline = false, className = "" }: LogoProps) {
+  const brandTextClass = size >= 72 ? "text-4xl" : size >= 56 ? "text-2xl" : "text-xl";
+  const taglineTextClass = size >= 72 ? "text-base" : size >= 56 ? "text-sm" : "text-xs";
+
   return (
-    <div className="flex items-center gap-3">
-      <Image src="/images/logo.png" alt="CourseFlow Logo" width={size} height={size} />
+    <div className={`flex items-center gap-4 ${className}`}>
+      <Image src="/images/logo.png" alt="CourseFlow Logo" width={size} height={size} priority />
       {showText && (
-        <div className="flex flex-col leading-snug">
-          <span className="text-xl font-bold">CourseFlow</span>
+        <div className="leading-snug">
+          <div className={`${brandTextClass} font-bold`}>CourseFlow</div>
           {showTagline && (
-            <div className="flex flex-col text-slate-300 text-xs">
-              <span>Own your education.</span>
-              <span className="font-medium">Find your Flow.</span>
+            <div className="mt-1">
+              <div className={`text-slate-300 ${taglineTextClass}`}>Own your education.</div>
+              <div className={`text-slate-300 ${taglineTextClass} font-medium`}>Find your Flow.</div>
             </div>
           )}
         </div>

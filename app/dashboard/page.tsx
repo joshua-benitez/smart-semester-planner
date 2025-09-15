@@ -6,7 +6,6 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
-import Logo from "@/components/ui/Logo"
 
 type Course = {
   id: string
@@ -160,18 +159,18 @@ export default function DashboardPage() {
 
   return (
     <div className="container py-10 space-y-10">
-      {/* Top bar */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div className="flex items-center gap-3">
-          <Logo size={40} showText showTagline />
-          <span className="text-white/70 text-sm">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+          <p className="text-white/70 text-sm mt-1">
             {session?.user?.name ? `Welcome back, ${session.user.name}` : "Welcome back"}
-          </span>
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-3">
           <Link href="/courses" className="btn-secondary">Manage Courses</Link>
-          <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
+          <Link href="/assignments/new" className="btn-secondary">+ New Assignment</Link>
           <button
             onClick={async () => {
               try {
@@ -180,7 +179,7 @@ export default function DashboardPage() {
                 router.replace('/auth/signin')
               }
             }}
-            className="px-6 py-3 rounded-full font-semibold border border-white/15 text-white/80 hover:text-white hover:bg-white/5 transition"
+            className="btn-secondary"
           >
             Sign Out
           </button>

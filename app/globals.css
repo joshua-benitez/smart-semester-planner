@@ -68,12 +68,13 @@
   /* Secondary Button */
   .btn-secondary {
     @apply px-6 py-3 rounded-full font-semibold border transition;
-    border-color: #0166fe;
-    color: #0166fe;
+    border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.85);
     font-size: 1rem;
   }
   .btn-secondary:hover {
     background: #0166fe;
+    border-color: #0166fe;
     color: #ffffff;
   }
 
