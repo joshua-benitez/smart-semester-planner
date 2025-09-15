@@ -11,6 +11,11 @@ module.exports = {
         border: "hsl(var(--border))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brandBg: '#050a30',
+        brandPrimary: '#0166fe',
+        brandPrimaryDark: '#004bbf',
+        cardBg: '#0a1045',
+        panelBg: '#0f173d',
       },
       fontSize: {
         brand: ["2.25rem", { lineHeight: "1.1" }],      // ~36px

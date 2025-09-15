@@ -7,8 +7,10 @@
    ========================================== */
 @layer base {
   body {
+    /* Fallback hex to guard against stale JIT */
     background: #050a30;
     color: #ffffff;
+    @apply bg-brandBg text-white;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     line-height: 1.6;
     min-height: 100vh;
@@ -37,30 +39,22 @@
   /* Buttons */
   /* Landing Page CTA (special) */
   .btn-cta {
-    @apply px-8 py-3 rounded-full font-semibold shadow-lg transition border;
-    background: #0166fe;
-    border-color: #0166fe;
-    color: #ffffff;
+    @apply px-10 py-4 rounded-full font-semibold shadow-lg transition bg-brandPrimary text-white border-2 border-brandPrimary;
     font-size: 1.125rem; /* slightly larger */
   }
   .btn-cta:hover {
-    background: #004bbf;
-    border-color: #004bbf;
+    @apply bg-brandPrimaryDark border-brandPrimaryDark;
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(1, 102, 254, 0.4);
   }
 
   /* Primary Button (dashboard actions) */
   .btn-primary {
-    @apply px-6 py-3 rounded-full font-semibold shadow-md transition border;
-    background: #0166fe;
-    border-color: #0166fe;
-    color: #ffffff;
+    @apply px-6 py-3 rounded-full font-semibold shadow-md transition border bg-brandPrimary border-brandPrimary text-white;
     font-size: 1rem;
   }
   .btn-primary:hover {
-    background: #004bbf;
-    border-color: #004bbf;
+    @apply bg-brandPrimaryDark border-brandPrimaryDark;
     transform: translateY(-1px);
     box-shadow: 0 6px 12px rgba(1, 102, 254, 0.4);
   }
@@ -73,10 +67,11 @@
     font-size: 1rem;
   }
   .btn-secondary:hover {
-    background: #0166fe;
-    border-color: #0166fe;
-    color: #ffffff;
+    @apply bg-brandPrimary border-brandPrimary text-white;
   }
+
+  /* Small button size helper */
+  .btn-sm { @apply px-3 py-1.5 text-sm rounded-md; }
 
   /* Success Button */
   .btn-success {
@@ -98,8 +93,7 @@
 
   /* Card */
   .card {
-    @apply rounded-lg p-6 border;
-    background: #0a1045;
+    @apply rounded-lg p-6 border bg-cardBg;
     border-color: rgba(255, 255, 255, 0.1);
   }
 
@@ -111,14 +105,11 @@
 
   /* Form Inputs */
   .form-input {
-    @apply w-full px-4 py-2 rounded-md border transition-colors;
-    background: #0f173d;
+    @apply w-full px-4 py-2 rounded-md border transition-colors bg-panelBg text-white;
     border-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
   }
   .form-input:focus {
-    border-color: #0166fe;
-    outline: none;
+    @apply border-brandPrimary outline-none;
     box-shadow: 0 0 0 2px rgba(1, 102, 254, 0.5);
   }
   .form-input::placeholder { color: #b0b0b0; }
@@ -131,7 +122,7 @@
   .status-brutal { background: rgba(239,68,68,.2); color: #f87171; }
 
   /* Page scaffolding */
-  .page-container { @apply min-h-screen bg-[#050a30] text-white; }
+  .page-container { @apply min-h-screen bg-brandBg text-white; }
   .page-content { @apply container py-10; }
   .page-card { @apply card; }
   .page-header { @apply flex items-center justify-between; }

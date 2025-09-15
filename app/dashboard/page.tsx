@@ -194,7 +194,7 @@ export default function DashboardPage() {
             <div
               key={day.date}
               className={`p-3 rounded-lg ${
-                day.hasAssignment ? "bg-[#0166FE] text-white" : "bg-[#0f173d] text-white/70"
+                day.hasAssignment ? "bg-brandPrimary text-white" : "bg-panelBg text-white/70"
               }`}
             >
               <div className="text-sm">{day.label}</div>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
         <h2 className="text-xl font-bold mb-4">Priority Assignments</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {priorityAssignments.map((a) => (
-            <div key={a.id} className="p-4 bg-[#0f173d] rounded-lg border border-white/10 shadow-md">
+            <div key={a.id} className="p-4 bg-panelBg rounded-lg border border-white/10 shadow-md">
               <h3 className="font-semibold">{a.title}</h3>
               <p className="text-sm text-white/70">{a.course?.name}</p>
               <p className="text-sm text-slate-400">Due {new Date(a.dueDate).toLocaleDateString()}</p>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
         {!loading && filteredAndSortedAssignments.length === 0 && (
           <div className="text-center py-10 text-white/70">
             No assignments yet.{" "}
-            <Link href="/assignments/new" className="text-[#0166FE] hover:opacity-90">
+            <Link href="/assignments/new" className="text-brandPrimary hover:opacity-90">
               Create your first one
             </Link>.
           </div>

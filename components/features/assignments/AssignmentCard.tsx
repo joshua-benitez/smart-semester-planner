@@ -58,11 +58,11 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
             {assignment.title}
           </h3>
           
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4">
-            <span className="text-blue-400 font-semibold bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="text-blue-400 font-semibold bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30 whitespace-nowrap">
               {assignment.course?.name ?? 'No course'}
             </span>
-            <span className="text-slate-300 bg-slate-500/20 px-3 py-1.5 rounded-lg border border-slate-500/30">
+            <span className="text-slate-300 bg-slate-500/20 px-3 py-1.5 rounded-lg border border-slate-500/30 whitespace-nowrap">
               <span className="text-slate-400 mr-1">Due:</span> {formatDate(assignment.dueDate)}
             </span>
           </div>
@@ -84,7 +84,8 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
         <div className="flex gap-2">
           {onStatusUpdate && (
             <Button 
-              variant={assignment.status === 'completed' ? 'secondary' : 'success'}
+              variant={assignment.status === 'completed' ? 'secondary' : 'primary'}
+              size="sm"
               onClick={handleStatusToggle}
             >
               {assignment.status === 'completed' ? '↻ Undo' : '✓ Complete'}
@@ -93,9 +94,9 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           <Link 
             href={`/assignments/${assignment.id}/edit`}
           >
-            <Button variant="success">Edit</Button>
+            <Button variant="secondary" size="sm">Edit</Button>
           </Link>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" size="sm" onClick={handleDelete}>
             Delete
           </Button>
         </div>

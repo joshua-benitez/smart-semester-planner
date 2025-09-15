@@ -15,11 +15,11 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-[#050a30] text-white flex flex-col h-screen">
+    <aside className="w-72 bg-brandBg bg-[#050a30] text-white flex flex-col h-screen">
       {/* Logo / Brand */}
-      <div className="px-6 pt-8 pb-6 border-b border-white/10">
+      <div className="px-6 pt-6 pb-4 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <Logo size={64} showText showTagline brandClass="text-brandLg" taglineClass="text-taglineLg" />
+          <Logo size={160} />
         </Link>
       </div>
 
@@ -32,7 +32,7 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={`block px-4 py-2.5 rounded-md font-medium ${isActive
-                  ? "bg-[#0166FE] text-white"
+                  ? "bg-brandPrimary text-white"
                   : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
             >

@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { capitalize } from '@/lib/utils'
 
 type BadgeVariant = 'status' | 'type' | 'difficulty' | 'meta'
 type BadgeSize = 'sm' | 'md'
@@ -15,6 +14,12 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const base = 'inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium'
+
+function toLabel(input?: string): string {
+  if (!input) return ''
+  const cleaned = input.replace(/[_-]+/g, ' ').trim()
+  return cleaned.replace(/\b\w/g, (m) => m.toUpperCase())
+}
 
 function classesFor(variant: BadgeVariant, value?: string): string {
   const v = (value ?? '').toLowerCase()
@@ -53,7 +58,7 @@ export function Badge({ variant = 'meta', value, size = 'sm', children, classNam
     className,
   ].filter(Boolean).join(' ')
 
-  const content = children ?? (value ? capitalize(value) : null)
+  const content = children ?? (value ? toLabel(value) : null)
 
   return (
     <span className={cls} {...rest}>
@@ -63,4 +68,3 @@ export function Badge({ variant = 'meta', value, size = 'sm', children, classNam
 }
 
 export default Badge
-
