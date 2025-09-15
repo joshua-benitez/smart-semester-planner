@@ -16,7 +16,7 @@ export default function SignIn() {
     const checkSession = async () => {
       const session = await getSession()
       if (session) {
-        router.push('/')
+        router.replace('/dashboard')
       }
     }
     checkSession()
@@ -37,7 +37,7 @@ export default function SignIn() {
       if (result?.error) {
         setError('Invalid email or password')
       } else {
-        router.push('/')
+        router.replace('/dashboard')
       }
     } catch (error) {
       setError('Something went wrong. Please try again.')

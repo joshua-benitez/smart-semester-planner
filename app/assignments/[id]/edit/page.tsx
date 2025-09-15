@@ -228,7 +228,7 @@ export default function EditAssignment() {
                                     <option value="project">Project</option>
                                     <option value="exam">Exam</option>
                                     <option value="quiz">Quiz</option>
-                                    <option value="reading">Reading</option>
+                                    {/* Removed 'reading' to align with Prisma enum */}
                                 </select>
                             </div>
                         </div>

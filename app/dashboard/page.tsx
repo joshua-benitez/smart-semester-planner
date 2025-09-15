@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
 import Logo from "@/components/ui/Logo"
@@ -17,6 +17,7 @@ type Course = {
 export default function DashboardPage() {
   // Get user session and assignments
   const { data: session } = useSession()
+  const router = useRouter()
   const { assignments, loading, deleteAssignment, refresh } = useAssignments()
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
@@ -172,7 +173,13 @@ export default function DashboardPage() {
           <Link href="/courses" className="btn-secondary">Manage Courses</Link>
           <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
           <button
-            onClick={() => signOut()}
+            onClick={async () => {
+              try {
+                await signOut({ redirect: false })
+              } finally {
+                router.replace('/auth/signin')
+              }
+            }}
             className="px-6 py-3 rounded-full font-semibold border border-white/15 text-white/80 hover:text-white hover:bg-white/5 transition"
           >
             Sign Out

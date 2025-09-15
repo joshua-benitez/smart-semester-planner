@@ -52,7 +52,7 @@ export default function SignUp() {
       if (result?.error) {
         setError('Account created but sign in failed. Please sign in manually.')
       } else {
-        router.push('/')
+        router.replace('/dashboard')
       }
     } catch (error) {
       setError('Something went wrong. Please try again.')
