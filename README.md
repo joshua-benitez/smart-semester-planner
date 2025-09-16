@@ -1,6 +1,6 @@
 # Smart Semester Planner
 
-Gamified assignment tracker for students with RP-based ranking system.
+Assignment tracker for students with course management, calendar view, and fast syllabus parsing.
 
 ## Getting Started
 
@@ -30,15 +30,13 @@ Example `.env` entries are provided in `.env.example`.
 
 - Assignment tracking (create, edit, delete, list)
 - Syllabus parsing with natural language dates (chrono)
-- Basic dashboard and course management
+- Dashboard and course management
 - Auth via NextAuth (credentials), protected routes
-- In-app calendar view (basic)
+- In-app calendar view
 
 Roadmap
-- RP-based ranking system and history
-- Daily check-ins for accountability
 - Grade tracking and projections
-- Tests for parser, ranking, and APIs
+- Tests for parser and APIs
 
 ## Project Structure
 
@@ -51,9 +49,7 @@ smart-semester-planner/
 │   │   └── page.tsx                 # Main dashboard
 │   ├── api/                         # API routes
 │   │   ├── assignments/             # Assignment CRUD (list/create/update/delete)
-│   │   ├── auth/[...nextauth]/      # NextAuth.js
-│   │   ├── daily-check/             # Daily accountability
-│   │   └── rp-history/              # RP history
+│   │   └── auth/[...nextauth]/      # NextAuth.js
 │   ├── assignments/                 # Assignment pages
 │   ├── calendar/                    # Calendar view
 │   ├── profile/                     # User profile
@@ -80,17 +76,13 @@ smart-semester-planner/
 ├── lib/                            # Core business logic
 │   ├── auth.ts                     # Authentication config
 │   ├── db.ts                       # Database client
-│   ├── rank.ts                     # Rank calculation
-│   ├── rp.ts                       # RP calculation
-│   ├── urgency.ts                  # Priority algorithm
+│   ├── parser.ts                   # Syllabus parser (chrono-based)
 │   ├── utils.ts                    # Utility functions
-│   └── validators.ts               # Input validation
+│   └── validations.ts              # Input validation
 │
 ├── prisma/                         # Database
 │   ├── schema.prisma               # Database schema (SQLite dev; Postgres prod)
 │   └── seed.ts                     # Sample data (optional)
-│
-├── tests/                          # Test files (planned)
 │
 ├── types/                          # TypeScript types
 │   └── index.ts

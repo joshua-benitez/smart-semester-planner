@@ -5,7 +5,7 @@ import Providers from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'CourseFlow',
+  title: 'Smart Semester Planner',
   description: 'Assignment tracker for students',
 }
 

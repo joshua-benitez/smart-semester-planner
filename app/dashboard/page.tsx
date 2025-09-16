@@ -163,7 +163,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
         <div className="flex items-start gap-3">
-          <Logo size={24} />
+          <Logo width={24} />
           <div className="leading-tight text-white/80 text-sm">
             <div>Own your education.</div>
             <div><span className="font-medium">Find your Flow.</span></div>

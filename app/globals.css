@@ -26,6 +26,9 @@
     font-weight: 500;
     text-decoration: none;
   }
+  a:visited {
+    color: inherit;
+  }
   a:hover {
     color: #ffffffcc; /* slightly brighter */
     text-decoration: none; /* no underline on hover */
@@ -68,9 +71,15 @@
     @apply bg-brandPrimary text-white;
   }
 
+  /* Normalize visited color for anchor-styled buttons */
+  .btn-primary:visited { @apply text-white; }
+  .btn-secondary:visited { @apply text-brandPrimary; }
+  .btn-cta:visited { @apply text-white; }
+
   /* Focus-visible for accessibility */
   .btn-primary, .btn-secondary, .btn-cta {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brandBg;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Small button size helper */

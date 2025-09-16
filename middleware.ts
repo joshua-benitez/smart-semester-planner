@@ -19,7 +19,6 @@ export const config = {
     '/profile/:path*',
     '/api/assignments/:path*',
     '/api/courses/:path*',
-    '/api/daily-check/:path*',
-    '/api/rp-history/:path*'
+    // removed unused routes
   ]
 }

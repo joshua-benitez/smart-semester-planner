@@ -13,9 +13,9 @@ export default async function LandingPage() {
 
   return (
     <div className="relative min-h-screen bg-brandBg text-white">
-      {/* Top-left brand header (fixed padding, absolute for precise placement) */}
-      <header className="absolute top-4 left-4">
-        <Logo size={400} />
+      {/* Top-left brand header (flush to top-left) */}
+      <header className="absolute top-0 left-0">
+        <Logo width={160} unwrapped />
       </header>
 
       {/* Hero actions */}
