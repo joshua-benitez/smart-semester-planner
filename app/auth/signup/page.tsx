@@ -63,8 +63,8 @@ export default function SignUp() {
 
   return (
     <div className="page-container">
-      <div className="page-content max-w-md">
-        <div className="page-card">
+      <div className="page-content min-h-[70vh] flex items-center justify-center">
+        <div className="page-card w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="page-title">Create Account</h1>
             <p className="page-description">Join Smart Semester Planner today</p>
