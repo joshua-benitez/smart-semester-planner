@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
-import Logo from "@/components/ui/Logo"
+// Logo removed to avoid duplicate branding with Sidebar
 
 type Course = {
   id: string
@@ -53,13 +53,16 @@ export default function DashboardPage() {
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(start)
       d.setDate(start.getDate() + i)
+      const today = new Date()
+      const isToday = d.toDateString() === today.toDateString()
+      const count = assignments.filter(a => new Date(a.dueDate).toDateString() === d.toDateString()).length
       return {
         date: d.toISOString(),
         label: d.toLocaleDateString("en-US", { weekday: "short" }),
         dayNum: d.getDate(),
-        hasAssignment: assignments.some(a =>
-          new Date(a.dueDate).toDateString() === d.toDateString()
-        )
+        hasAssignment: count > 0,
+        isToday,
+        count,
       }
     })
   }, [assignments])
@@ -161,18 +164,10 @@ export default function DashboardPage() {
   return (
     <div className="container py-10 space-y-10">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
-        <div className="flex items-start gap-3">
-          <Logo width={24} />
-          <div className="leading-tight text-white/80 text-sm">
-            <div>Own your education.</div>
-            <div><span className="font-medium">Find your Flow.</span></div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <Link href="/courses" className="btn-secondary">Manage Courses</Link>
-          <Link href="/assignments/new" className="btn-primary">+ New Assignment</Link>
+      <header className="flex flex-col md:flex-row md:items-center md:justify-end gap-6 mb-2">
+        <div className="flex flex-wrap gap-4">
+          <Link href="/courses" className="btn-secondary text-white visited:text-white">Manage Courses</Link>
+          <Link href="/assignments/new" className="btn-secondary text-white visited:text-white">+ New Assignment</Link>
           <button
             onClick={async () => {
               try {
@@ -181,7 +176,7 @@ export default function DashboardPage() {
                 router.replace('/auth/signin')
               }
             }}
-            className="btn-secondary"
+            className="btn-secondary text-white"
           >
             Sign Out
           </button>
@@ -189,40 +184,52 @@ export default function DashboardPage() {
       </header>
 
       {/* Mini Calendar Strip */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <h2 className="text-xl font-bold mb-4">This Week</h2>
         <div className="grid grid-cols-7 gap-3 text-center">
           {weekDays.map((day) => (
             <div
               key={day.date}
-              className={`p-3 rounded-lg ${
-                day.hasAssignment ? "bg-brandPrimary text-white" : "bg-brandPrimary/10 text-white"
-              }`}
+              className={`p-3 rounded-xl border-2 transition-colors flex flex-col items-center justify-center relative ${
+                day.isToday
+                  ? 'border-white/70 bg-brandPrimary/20'
+                  : 'border-brandPrimary bg-brandPrimary/10 hover:bg-brandPrimary/20'
+              } text-white`}
             >
               <div className="text-sm">{day.label}</div>
-              <div className="text-lg font-bold">{day.dayNum}</div>
+              <div className="text-lg font-bold leading-none">{day.dayNum}</div>
+              {day.count > 0 && (
+                <span className="absolute top-1.5 right-1.5 inline-flex items-center justify-center text-[10px] px-1.5 py-0.5 rounded-full bg-white text-brandBg font-semibold">
+                  {day.count}
+                </span>
+              )}
             </div>
           ))}
         </div>
       </section>
 
       {/* Priority Assignments */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <h2 className="text-xl font-bold mb-4">Priority Assignments</h2>
         <div className="grid md:grid-cols-3 gap-4">
-          {priorityAssignments.map((a) => (
-            <div key={a.id} className="p-4 rounded-lg border-2 border-brandPrimary bg-brandPrimary/20">
+          {priorityAssignments.map((a) => {
+            const diff = (a.difficulty || '').toLowerCase()
+            const leftColor = diff === 'easy' ? 'border-green-400' : diff === 'moderate' ? 'border-amber-400' : diff === 'crushing' ? 'border-yellow-400' : 'border-red-400'
+            return (
+            <div key={a.id} className={`p-4 rounded-lg border-2 border-brandPrimary bg-brandPrimary/10 relative pl-4`}>
+              <div className={`absolute left-0 top-0 h-full w-1.5 ${leftColor} rounded-l-lg`}></div>
               <h3 className="font-semibold">{a.title}</h3>
               <p className="text-sm text-white">{a.course?.name}</p>
               <p className="text-sm text-white">Due {new Date(a.dueDate).toLocaleDateString()}</p>
               <span className={`status-badge status-${a.difficulty}`}>{a.difficulty}</span>
             </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
       {/* Full Assignment List */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/20">
+      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>
         </div>

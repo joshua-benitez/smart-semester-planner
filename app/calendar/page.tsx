@@ -99,12 +99,17 @@ export default function CalendarPage() {
             const key = cell.date.toDateString()
             const items = byDate.get(key) ?? []
             const isSelected = selectedDate && key === selectedDate.toDateString()
+            const isToday = new Date().toDateString() === key
             return (
               <button
                 key={key}
                 onClick={() => setSelectedDate(new Date(cell.date))}
                 className={`text-left rounded-lg border-2 p-2 min-h-[84px] transition-colors ${
-                  isSelected ? 'border-brandPrimary bg-brandPrimary text-white' : 'border-brandPrimary hover:bg-brandPrimary/20'
+                  isSelected
+                    ? 'border-white/80 bg-brandPrimary/30'
+                    : isToday
+                      ? 'border-white/60 bg-brandPrimary/20'
+                      : 'border-brandPrimary bg-panelBg hover:bg-brandPrimary/10'
                 } text-white`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -133,7 +138,11 @@ export default function CalendarPage() {
 
       {/* Selected day details */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-3">{selectedDate ? selectedDate.toLocaleDateString() : 'Pick a day'}</h2>
+        <div className="-m-6 mb-4 p-4 rounded-t-lg bg-brandPrimary/20 border-b-2 border-brandPrimary">
+          <h2 className="text-lg font-semibold">
+            {selectedDate ? selectedDate.toLocaleDateString() : 'Pick a day'}
+          </h2>
+        </div>
         {loading ? (
           <div className="text-white">Loading assignments…</div>
         ) : selectedItems.length === 0 ? (

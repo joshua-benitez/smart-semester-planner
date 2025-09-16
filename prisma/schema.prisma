@@ -7,19 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AssignmentType {
-  homework
-  quiz
-  project
-  exam
-}
-
-enum Difficulty {
-  easy
-  moderate
-  crushing
-  brutal
-}
+// SQLite does not support native enums; use strings + app-level validation
 
 model User {
   id            String    @id @default(cuid())
@@ -93,8 +81,8 @@ model Assignment {
   title        String
   description  String?
   dueDate      DateTime
-  type         AssignmentType
-  difficulty   Difficulty
+  type         String   @default("homework")
+  difficulty   String   @default("moderate")
   weight       Float    @default(1.0)
   priority     Int?
   status       String   @default("not_started") // 'not_started', 'in_progress', 'submitted', 'graded', 'missed'

@@ -40,7 +40,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
   }
 
   return (
-    <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-blue-500' : ''} space-y-3 border-l-4 border-brandPrimary`}>
+    <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-brandPrimary' : ''} space-y-3`}>
       <div className="mobile-stack">
         {/* Selection Checkbox */}
         {onSelect && (
@@ -59,11 +59,11 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           </h3>
           
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="text-blue-400 font-semibold bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30 whitespace-nowrap">
+            <span className="text-white/90 font-medium bg-panelBg px-3 py-1.5 rounded-lg border border-white/10 whitespace-nowrap">
               {assignment.course?.name ?? 'No course'}
             </span>
-            <span className="text-slate-300 bg-slate-500/20 px-3 py-1.5 rounded-lg border border-slate-500/30 whitespace-nowrap">
-              <span className="text-slate-400 mr-1">Due:</span> {formatDate(assignment.dueDate)}
+            <span className="text-white/80 bg-panelBg px-3 py-1.5 rounded-lg border border-white/10 whitespace-nowrap">
+              <span className="text-white/60 mr-1">Due:</span> {formatDate(assignment.dueDate)}
             </span>
           </div>
 
@@ -73,7 +73,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
             </p>
           )}
 
-          <div className="flex gap-2 md:gap-3 flex-wrap">
+          <div className="flex gap-2 md:gap-3 flex-wrap mb-1">
             <Badge variant="status" value={assignment.status} />
             <Badge variant="type" value={assignment.type} />
             <Badge variant="difficulty" value={assignment.difficulty} />
@@ -81,24 +81,38 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-white/10 sm:mt-0 sm:pt-0 sm:border-0 sm:ml-auto">
           {onStatusUpdate && (
             <Button 
-              variant={assignment.status === 'completed' ? 'secondary' : 'primary'}
+              variant={'secondary'}
               size="sm"
               onClick={handleStatusToggle}
             >
               {assignment.status === 'completed' ? '↻ Undo' : '✓ Complete'}
             </Button>
           )}
-          <Link 
-            href={`/assignments/${assignment.id}/edit`}
+          <Link href={`/assignments/${assignment.id}/edit`} className="btn-secondary btn-sm">Edit</Link>
+          <button
+            onClick={handleDelete}
+            aria-label="Delete assignment"
+            title="Delete"
+            className="inline-flex items-center justify-center h-10 w-10 text-red-500 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-brandBg rounded-md"
           >
-            <Button variant="secondary" size="sm">Edit</Button>
-          </Link>
-          <Button variant="danger" size="sm" onClick={handleDelete}>
-            Delete
-          </Button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="w-6 h-6"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <rect x="6" y="6" width="12" height="14" rx="2" />
+              <path d="M10 10v8M12 10v8M14 10v8" />
+            </svg>
+          </button>
         </div>
       </div>
     </Card>

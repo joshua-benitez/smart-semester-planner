@@ -19,6 +19,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showCompleted, setShowCompleted] = useState(true)
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [selectionMode, setSelectionMode] = useState(false)
 
   // Filter assignments based on show completed toggle
   const completedStatuses = ['completed', 'submitted', 'graded']
@@ -102,45 +103,57 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
 
   return (
     <div className="space-y-6">
-      {/* Bulk Actions Header */}
-      <div className="rounded-lg p-4 border-2 border-brandPrimary bg-brandPrimary/20">
+      {/* Controls */}
+      <div className="card">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedIds.size === filteredAssignments.length && filteredAssignments.length > 0}
-                onChange={handleSelectAll}
-                className="w-4 h-4 rounded border-brandPrimary bg-transparent accent-brandPrimary"
-              />
-              <span className="text-white text-sm">
-                {selectedIds.size === 0 ? 'Select all' : `${selectedIds.size} selected`}
-              </span>
-            </div>
-            
-            <button
-              onClick={() => setShowCompleted(!showCompleted)}
-              className="text-sm text-white underline"
-            >
-              {showCompleted ? 'Hide completed' : 'Show completed'}
-            </button>
+          {/* Left controls */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {!selectionMode ? (
+              <>
+                <Button size="sm" variant="secondary" onClick={() => setSelectionMode(true)}>Select</Button>
+                <Button size="sm" variant="secondary" onClick={() => setShowCompleted(!showCompleted)}>
+                  {showCompleted ? 'Hide completed' : 'Show completed'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === filteredAssignments.length && filteredAssignments.length > 0}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-brandPrimary bg-transparent accent-brandPrimary"
+                  />
+                  <span className="text-white/90 text-sm">
+                    {selectedIds.size === 0 ? 'Select all' : `${selectedIds.size} selected`}
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setSelectionMode(false)
+                    setSelectedIds(new Set())
+                  }}
+                >
+                  Done Selecting
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Bulk Action Buttons */}
-          {selectedIds.size > 0 && onBulkStatusUpdate && (
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" variant="primary" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
+          {selectionMode && selectedIds.size > 0 && onBulkStatusUpdate && (
+            <div className="flex gap-2 flex-wrap items-center">
+              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
                 Mark Completed
               </Button>
-              <Button size="sm" variant="primary" onClick={() => handleBulkAction('in_progress')} disabled={bulkLoading}>
+              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('in_progress')} disabled={bulkLoading}>
                 Mark In Progress
               </Button>
-              <Button size="sm" variant="primary" onClick={() => handleBulkAction('not_started')} disabled={bulkLoading}>
+              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('not_started')} disabled={bulkLoading}>
                 Mark Not Started
               </Button>
-
-              {/* Separator */}
-              <div className="w-px h-6 bg-white/20"></div>
 
               {onBulkDelete && (
                 <Button size="sm" variant="danger" onClick={handleBulkDelete} disabled={bulkLoading}>
@@ -161,8 +174,8 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
           assignment={assignment}
           onDelete={onDeleteAssignment}
           index={index}
-          isSelected={selectedIds.has(assignment.id)}
-          onSelect={handleSelectOne}
+          isSelected={selectionMode && selectedIds.has(assignment.id)}
+          onSelect={selectionMode ? handleSelectOne : undefined}
           onStatusUpdate={onStatusUpdate}
         />
       ))}
