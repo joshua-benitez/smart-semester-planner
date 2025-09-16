@@ -40,7 +40,8 @@ const AssignmentCreateSchema = z.object({
     .refine((d) => d instanceof Date && !isNaN(d.getTime()), { message: 'Invalid dueDate' }),
   type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
-  weight: z.number().min(0.1).max(5).optional(),
+  // Weight as percentage (0-100)
+  weight: z.number().min(0).max(100).optional(),
   courseName: z.string().min(1)
 })
 
@@ -51,7 +52,7 @@ const AssignmentUpdateSchema = z.object({
   dueDate: z.union([z.string(), z.date()]).optional(),
   type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
-  weight: z.number().min(0.1).max(5).optional(),
+  weight: z.number().min(0).max(100).optional(),
   status: z.string().optional(),
   courseName: z.string().optional(),
 })

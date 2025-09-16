@@ -168,20 +168,20 @@ export default function EditAssignment() {
                         
                         {data && !loading && (
                             <form onSubmit={handleSubmit} className="form-group">
-                        <div>
-                            <label className="form-label">Assignment Title *</label>
-                            <input
-                                type="text"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                placeholder="e.g., Math homework Chapter 5"
-                                className="form-input"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">Course Name *</label>
+                            <div>
+                                <label className="form-label">Assignment Title</label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    placeholder="e.g., Math homework Chapter 5"
+                                    className="form-input"
+                                    required
+                                />
+                            </div>
+                            <div>
+                            <label className="form-label">Course Name</label>
                             <input
                                 type="text"
                                 name="courseName"
@@ -191,7 +191,7 @@ export default function EditAssignment() {
                                 className="form-input"
                                 required
                             />
-                        </div>
+                            </div>
                         <div>
                             <label className="form-label">Description</label>
                             <textarea
@@ -206,7 +206,7 @@ export default function EditAssignment() {
                         {/* Due Date and Type Row */}
                         <div className="form-grid">
                             <div>
-                                <label className="form-label">Due Date *</label>
+                                <label className="form-label">Due Date</label>
                                 <input
                                     type="datetime-local"
                                     name="dueDate"
@@ -250,19 +250,19 @@ export default function EditAssignment() {
                                 </select>
                             </div>
                             <div>
-                                <label className="form-label">Weight</label>
+                                <label className="form-label">Category Weight (%)</label>
                                 <input
                                     type="number"
                                     name="weight"
                                     value={formData.weight}
                                     onChange={handleChange}
                                     className="form-input"
-                                    min={0.1}
-                                    max={5}
-                                    step={0.1}
+                                    min={0}
+                                    max={100}
+                                    step={1}
                                     required
                                 />
-                                <p className="text-sm text-white/70 mt-1">How important this assignment is (0.1 - 5.0)</p>
+                                <p className="text-sm text-white/70 mt-1">Percentage weight of this category in your course grade (0–100%)</p>
                             </div>
                         </div>
 

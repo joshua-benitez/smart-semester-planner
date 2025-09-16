@@ -14,7 +14,8 @@ export const validateAssignment = (data: AssignmentFormData): string | null => {
   const parsedDate = parseDateSafe(data.dueDate)
   if (!parsedDate) return 'Due date is invalid'
   
-  if (data.weight < 0.1 || data.weight > 5) return 'Weight must be between 0.1 and 5.0'
+  // Weight now represents category weight as a percentage 0-100
+  if (data.weight < 0 || data.weight > 100) return 'Category weight must be between 0 and 100%'
   
   return null
 }

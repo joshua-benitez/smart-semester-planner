@@ -14,8 +14,13 @@ export default async function LandingPage() {
   return (
     <div className="relative min-h-screen bg-brandBg text-white">
       {/* Top-left brand header (flush to top-left) */}
-      <header className="absolute top-0 left-0">
-        <Logo width={240} unwrapped />
+      <header className="absolute top-2 left-2 flex items-center gap-0 p-2">
+        <Logo width={96} unwrapped imgClassName="block" />
+        <div className="leading-tight select-none -ml-1">
+          <div className="text-3xl md:text-4xl font-extrabold">CourseFlow</div>
+          <div className="text-white/90 text-base">Own your education.</div>
+          <div className="text-white/90 text-base">Find your Flow.</div>
+        </div>
       </header>
 
       {/* Hero */}

@@ -77,7 +77,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
             <Badge variant="status" value={assignment.status} />
             <Badge variant="type" value={assignment.type} />
             <Badge variant="difficulty" value={assignment.difficulty} />
-            <Badge variant="meta">Weight: {assignment.weight}</Badge>
+            <Badge variant="meta">Weight: {assignment.weight}%</Badge>
           </div>
         </div>
 
