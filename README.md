@@ -66,7 +66,7 @@ smart-semester-planner/
 │   ├── AssignmentCard.tsx          # Assignment display
 │   ├── DailyCheckModal.tsx         # Daily check-in modal
 │   ├── Navigation.tsx              # Navigation bar
-│   ├── RankBadge.tsx               # Rank display
+│   ├── features/ladder/            # Productivity ladder UI widgets
 │   └── UrgencyIndicator.tsx        # Priority indicator
 │
 ├── hooks/                          # Custom React hooks
@@ -103,53 +103,41 @@ smart-semester-planner/
 
 What we shipped today so it’s easy to pick up tomorrow:
 
-- Branding and layout
-  - Unified logo + name + tagline blocks on landing and dashboard (tight spacing, consistent sizing).
-  - Landing page hero, feature highlights, and “How it works” section.
-  - Auth pages (Sign In / Create Account) centered and sized consistently.
-  - Sidebar navigation refined (sharp left indicator on active/hover, added Streaks link).
+- Productivity ladder foundation
+  - Added ladder models (`LadderStanding` / `LadderEvent`) and seeded the demo user with sample point history.
+  - Replaced the streak scaffold with `/api/ladder` GET/POST and helper logic for steps/levels.
+  - Hooked the sidebar card to the ladder summary via `useLadder`; shows step, level, progress, and event placeholders.
 
-- Assignments UX
-  - Added `/assignments` index page using the same list component as the dashboard.
-  - “Your Assignments” list: toggleable selection mode (checkboxes only when needed), consistent button sizes, improved spacing, and an outline-only red trash icon.
-  - Priority/sections backgrounds unified to `bg-brandPrimary/10` for visual consistency.
+- Documentation/cleanup
+  - Updated the roadmap with ladder integrity rules (banked rewards, optional submission notes, toggle audits, grace window, event feed, custom badges).
+  - Removed streak pages/hooks/types and pruned middleware/config references.
 
-- Create/Edit Assignment form
-  - Category Weight now uses percent (0–100%) instead of 0.1–5.0.
-  - Due date defaults to Today 11:59 PM with quick buttons for Today/Tomorrow at 11:59 PM.
-  - Cleaned labels (removed asterisks) while keeping required behavior.
+-## Plan (Tomorrow)
 
-- Profile
-  - Built `/profile` page with name update and password change forms.
-  - Added `/api/profile` GET/PUT.
+Focus: Wire ladder scoring into assignments + polish the HUD.
 
-- Auth/Routes/Infra
-  - Removed unused daily-check / rp-history references and cleaned middleware.
-  - Added protected `/streaks` route; included a mock `/api/streaks` endpoint.
-  - Fixed Tailwind layering and PostCSS so custom component classes compile.
+1) Assignment-driven ladder events
+- Fire ladder updates (delta + reason) when assignments are completed, earn early bonuses, incur late penalties, or get manually adjusted.
+- Persist optional submission notes for the bonus and ensure delayed rewards post after due time.
 
-## Plan (Tomorrow)
+2) Integrity workflows
+- Implement the delayed verification job so points bank until due dates pass.
+- Record status toggles after deadlines and apply light penalties / gentle nudges when abuse is detected.
 
-Focus: Streaks v1 (DB-backed) and small quality-of-life boosts.
+3) Ladder HUD polish
+- Render recent ladder events with meaningful copy on the sidebar card.
+- Begin designing the custom ladder badge artwork.
 
-1) Streaks implementation
-- Prisma models:
-  - `StreakLog` (id, userId, date (YYYY-MM-DD), createdAt) with unique (userId, date)
-  - Optional `StreakCounters` (userId, currentStreak, bestStreak, updatedAt) for fast reads
-- API `/api/streaks`
-  - GET: return last 8–12 weeks of days + computed current/best
-  - POST: upsert today (check-in)
-  - DELETE: undo today
-  - Timezone: normalize to user local day (or store as UTC date string)
-- Wire the mocks to Prisma and verify the heatmap + header counters update.
+## Ladder Integrity Rules (draft)
 
-2) Landing polish (optional quick wins)
-- Add a small screenshot or animated GIF strip.
-- Tweak hero copy if needed; finalize logo sizing.
+To keep the ladder meaningful without punishing honest students, we will:
 
-3) Assignments UX
-- Add preset pills for Type and Difficulty.
-- Add “Next Monday 11:59 PM” quick date.
+- **Bank rewards until due time** – completing early logs the intent, but points only post once the due date passes and the item remains completed. If it reopens before then, the reward evaporates (and may trigger a small penalty).
+- **Offer optional submission notes** – a quick “where did you submit?” field grants a tiny bonus and provides personal context without blocking completion.
+- **Audit status toggles** – we will track flips after the deadline; repeated reopenings apply a light integrity penalty and surface a friendly reminder that points finalize when work does.
+- **Respect grace windows** – a 15–30 minute buffer covers portal glitches; same-day late submissions earn reduced credit, while multi-day lateness yields zero points plus the standard deduction.
+- **Surface everything in the event feed** – every award or penalty writes a ladder event (`+22 pts • Lab Report submitted 18h early`, `-10 pts • Problem Set overdue`) so wins feel tangible and cheating looks pointless.
+- **Custom badge art** – ladder badges will use bespoke artwork generated outside the repo so each tier feels intentional.
 - Optional: equal min-width for action buttons for visual symmetry.
 
 4) Seed + Demo

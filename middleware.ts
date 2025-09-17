@@ -16,10 +16,10 @@ export const config = {
     '/dashboard/:path*',
     '/assignments/:path*',
     '/calendar/:path*',
-    '/streaks/:path*',
     '/profile/:path*',
     '/api/assignments/:path*',
     '/api/courses/:path*',
+    '/api/ladder/:path*',
     // removed unused routes
   ]
 }

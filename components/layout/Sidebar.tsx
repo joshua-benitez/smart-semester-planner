@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/ui/Logo";
+import { useLadder } from "@/hooks/useLadder";
+import LadderSidebarCard from "@/components/features/ladder/LadderSidebarCard";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/assignments", label: "Assignments" },
   { href: "/calendar", label: "Calendar" },
-  { href: "/streaks", label: "Streaks" },
   { href: "/profile", label: "Profile" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data, loading, error, refresh } = useLadder();
 
   return (
     <aside className="w-96 bg-brandBg text-white flex flex-col h-screen">
@@ -49,7 +51,13 @@ export default function Sidebar() {
           )
         })}
       </nav>
-    </aside>
 
+      <LadderSidebarCard
+        data={data}
+        loading={loading}
+        error={error}
+        onRefresh={refresh}
+      />
+    </aside>
   );
 }

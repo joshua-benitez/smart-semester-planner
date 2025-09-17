@@ -22,10 +22,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
   
-  assignments Assignment[]
-  courses     Course[]
-  rpEvents    RPEvent[]
-  rank        Rank?
+  assignments    Assignment[]
+  courses        Course[]
+  ladderEvents   LadderEvent[]
+  ladderStanding LadderStanding?
 }
 model Account {
   id                String  @id @default(cuid())
@@ -96,31 +96,31 @@ model Assignment {
   userId   String
   courseId String
   
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  rpEvents RPEvent[]
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  ladderEvents  LadderEvent[]
 }
 
-model RPEvent {
+model LadderEvent {
   id           String   @id @default(cuid())
   userId       String
   assignmentId String?
-  rpChange     Int
+  pointsChange Int
   reason       String
   description  String?
   createdAt    DateTime @default(now())
-  
+
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   assignment Assignment? @relation(fields: [assignmentId], references: [id])
 }
 
-model Rank {
-  id        String @id @default(cuid())
-  userId    String @unique
-  rpTotal   Int    @default(1000)
-  rankName  String @default("Bronze")
-  division  Int?   @default(5)
-  updatedAt DateTime @updatedAt
-  
+model LadderStanding {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  points     Int      @default(1000)
+  stepLabel  String   @default("Initiate")
+  level      Int?     @default(5)
+  updatedAt  DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
