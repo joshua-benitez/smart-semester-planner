@@ -104,14 +104,26 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-soft">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           {/* Left controls */}
           <div className="flex items-center gap-3 flex-wrap">
             {!selectionMode ? (
               <>
-                <Button size="sm" variant="secondary" onClick={() => setSelectionMode(true)}>Select</Button>
-                <Button size="sm" variant="secondary" onClick={() => setShowCompleted(!showCompleted)}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full px-4"
+                  onClick={() => setSelectionMode(true)}
+                >
+                  Select
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full px-4"
+                  onClick={() => setShowCompleted(!showCompleted)}
+                >
                   {showCompleted ? 'Hide completed' : 'Show completed'}
                 </Button>
               </>
@@ -131,6 +143,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
                 <Button
                   size="sm"
                   variant="secondary"
+                  className="rounded-full px-4"
                   onClick={() => {
                     setSelectionMode(false)
                     setSelectedIds(new Set())
@@ -145,18 +158,18 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
           {/* Bulk Action Buttons */}
           {selectionMode && selectedIds.size > 0 && onBulkStatusUpdate && (
             <div className="flex gap-2 flex-wrap items-center">
-              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
+              <Button size="sm" variant="secondary" className="rounded-full px-4" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
                 Mark Completed
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('in_progress')} disabled={bulkLoading}>
+              <Button size="sm" variant="secondary" className="rounded-full px-4" onClick={() => handleBulkAction('in_progress')} disabled={bulkLoading}>
                 Mark In Progress
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => handleBulkAction('not_started')} disabled={bulkLoading}>
+              <Button size="sm" variant="secondary" className="rounded-full px-4" onClick={() => handleBulkAction('not_started')} disabled={bulkLoading}>
                 Mark Not Started
               </Button>
 
               {onBulkDelete && (
-                <Button size="sm" variant="danger" onClick={handleBulkDelete} disabled={bulkLoading}>
+                <Button size="sm" variant="danger" className="rounded-full px-4" onClick={handleBulkDelete} disabled={bulkLoading}>
                   Delete Selected
                 </Button>
               )}

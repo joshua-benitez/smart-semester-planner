@@ -81,35 +81,37 @@ export default function Sidebar() {
   return (
     <aside className="w-96 bg-brandBg text-white flex flex-col h-screen">
       {/* Logo / Brand */}
-      <div className="border-b border-white/10 px-4 py-5">
+      <div className="border-b border-white/10 px-5 py-6">
         <Link href="/dashboard" className="flex items-center gap-0">
           <Logo width={96} unwrapped imgClassName="block" />
-          <div className="leading-tight select-none -ml-1">
-            <div className="text-2xl font-bold">CourseFlow</div>
-            <div className="text-white/90 text-sm">Own your education.</div>
-            <div className="text-white/90 text-sm">Find your Flow.</div>
+          <div className="-ml-1 select-none leading-tight">
+            <div className="text-xl font-semibold tracking-tight">CourseFlow</div>
+            <div className="text-white/80 text-xs uppercase tracking-[0.2em]">Own your education.</div>
+            <div className="text-white/80 text-xs uppercase tracking-[0.2em]">Find your flow.</div>
           </div>
         </Link>
       </div>
 
 
       {/* Navigation */}
-      <nav className="space-y-2 px-4 py-5">
+      <nav className="space-y-2 px-5 py-5">
         {navItems.map(({ href, label, icon }) => {
           const isActive = pathname === href
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${isActive
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-[0.95rem] font-semibold tracking-tight transition ${isActive
                   ? "bg-brandPrimary/15 text-white shadow-inner"
-                  : "text-white/80 hover:text-white hover:bg-white/5"
+                  : "text-white/75 hover:text-white hover:bg-white/5"
                 }`}
             >
-              <span className="shrink-0 text-brandPrimary/80">
+              <span
+                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-brandPrimary ${isActive ? "border-brandPrimary/40 bg-brandPrimary/20 text-white" : "hover:border-brandPrimary/30"}`}
+              >
                 {icon}
               </span>
-              <span className="tracking-tight">{label}</span>
+              <span>{label}</span>
             </Link>
           )
         })}
