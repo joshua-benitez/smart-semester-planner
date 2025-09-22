@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
-import type { Assignment } from '@/types/assignment'
+import type { Assignment, AssignmentStatusUpdateExtras } from '@/types/assignment'
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -14,7 +14,7 @@ interface AssignmentCardProps {
   index?: number
   isSelected?: boolean
   onSelect?: (id: string) => void
-  onStatusUpdate?: (id: string, status: string) => void
+  onStatusUpdate?: (id: string, status: string, extras?: AssignmentStatusUpdateExtras) => void
 }
 
 export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = false, onSelect, onStatusUpdate }: AssignmentCardProps) => {
@@ -30,10 +30,29 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
 
   const handleStatusToggle = async () => {
     if (!onStatusUpdate) return
-    
+
     const newStatus = assignment.status === 'completed' ? 'not_started' : 'completed'
+    const extras: AssignmentStatusUpdateExtras = {}
+
+    if (newStatus === 'completed') {
+      const promptDefault = assignment.submissionNote ?? ''
+      const userInput = window.prompt(
+        'Optional submission note (where or how you submitted it):',
+        promptDefault
+      )
+
+      if (userInput !== null) {
+        const trimmed = userInput.trim()
+        extras.submissionNote = trimmed === '' ? '' : trimmed
+      }
+
+      extras.submittedAt = new Date().toISOString()
+    } else {
+      extras.submittedAt = null
+    }
+
     try {
-      await onStatusUpdate(assignment.id, newStatus)
+      await onStatusUpdate(assignment.id, newStatus, extras)
     } catch (error) {
       console.error('Failed to update assignment status:', error)
     }
@@ -70,6 +89,12 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
           {assignment.description && (
             <p className="text-slate-300 mb-4 leading-relaxed bg-slate-800/30 p-3 rounded-lg border border-slate-600/30">
               {assignment.description}
+            </p>
+          )}
+
+          {assignment.submissionNote && (
+            <p className="text-brandPrimary/90 mb-4 text-sm bg-brandPrimary/10 border border-brandPrimary/30 px-3 py-2 rounded-lg">
+              <span className="font-semibold">Submission note:</span> {assignment.submissionNote}
             </p>
           )}
 

@@ -3,16 +3,21 @@
 import Link from 'next/link'
 import { useAssignments } from '@/hooks/useAssignments'
 import { AssignmentList } from '@/components/features/assignments/AssignmentList'
+import type { AssignmentStatusUpdateExtras } from '@/types/assignment'
 
 export default function AssignmentsIndexPage() {
   const { assignments, loading, deleteAssignment, refresh } = useAssignments()
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = async (
+    id: string,
+    status: string,
+    extras: AssignmentStatusUpdateExtras = {}
+  ) => {
     try {
       const res = await fetch('/api/assignments', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, status, ...extras }),
       })
       if (!res.ok) throw new Error('Failed to update')
       await refresh()
@@ -84,4 +89,3 @@ export default function AssignmentsIndexPage() {
     </div>
   )
 }
-

@@ -108,25 +108,28 @@ What we shipped today so it’s easy to pick up tomorrow:
   - Replaced the streak scaffold with `/api/ladder` GET/POST and helper logic for steps/levels.
   - Hooked the sidebar card to the ladder summary via `useLadder`; shows step, level, progress, and event placeholders.
 
+- Assignment ladder scoring
+  - Assignment status changes now award base points, early bonuses, or late penalties through the new ladder service helpers.
+  - Added optional submission notes and timestamps to assignments, surfaced them in the UI, and render ladder events with friendly copy + relative timing.
+
 - Documentation/cleanup
   - Updated the roadmap with ladder integrity rules (banked rewards, optional submission notes, toggle audits, grace window, event feed, custom badges).
   - Removed streak pages/hooks/types and pruned middleware/config references.
 
--## Plan (Tomorrow)
+## Plan (Tomorrow)
 
-Focus: Wire ladder scoring into assignments + polish the HUD.
+Focus: Integrity workflows + automation.
 
-1) Assignment-driven ladder events
-- Fire ladder updates (delta + reason) when assignments are completed, earn early bonuses, incur late penalties, or get manually adjusted.
-- Persist optional submission notes for the bonus and ensure delayed rewards post after due time.
+1) Delayed verification job
+- Queue ladder intent events until the due date passes, then post the final reward/penalty batch.
+- Add a background worker (or cron-friendly route) to flush banked events.
 
-2) Integrity workflows
-- Implement the delayed verification job so points bank until due dates pass.
-- Record status toggles after deadlines and apply light penalties / gentle nudges when abuse is detected.
+2) Toggle audits & safeguards
+- Track repeat reopenings after deadlines and surface gentle warnings / automatic adjustments.
+- Add moderation tooling to inspect per-assignment ladder history.
 
-3) Ladder HUD polish
-- Render recent ladder events with meaningful copy on the sidebar card.
-- Begin designing the custom ladder badge artwork.
+3) Visual polish
+- Iterate on custom ladder badge concepts and expand the HUD event list for richer history.
 
 ## Ladder Integrity Rules (draft)
 

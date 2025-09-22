@@ -53,6 +53,7 @@ async function main() {
         weight: 10,
         userId: user.id,
         courseId: calculus.id,
+        submissionNote: 'Submitted via Canvas dropbox',
       },
     }),
     prisma.assignment.create({
@@ -65,6 +66,7 @@ async function main() {
         weight: 5,
         userId: user.id,
         courseId: cs.id,
+        submissionNote: null,
       },
     }),
     prisma.assignment.create({
@@ -77,6 +79,7 @@ async function main() {
         weight: 20,
         userId: user.id,
         courseId: cs.id,
+        submissionNote: 'Email draft shared with professor',
       },
     }),
   ])

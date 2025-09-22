@@ -89,6 +89,7 @@ model Assignment {
   awaitingGrade Boolean @default(false)
   grade        Float?
   submittedAt  DateTime?
+  submissionNote String?
   suggestedDate DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

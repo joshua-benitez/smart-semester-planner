@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
+import { applyLadderDelta } from '@/lib/ladder-service'
+import type { LadderReasonCode } from '@/types/ladder'
 import { z } from 'zod'
 
 // Lightweight runtime validation helper
 function isNonEmptyString(x: any): x is string {
   return typeof x === 'string' && x.trim().length > 0
 }
-function parseDateSafe(s: any): Date | null {
-  const d = new Date(s)
-  return isNaN(d.getTime()) ? null : d
-}
-
 async function findOrCreateCourseForUser(userId: string, courseName: string) {
   let course = await prisma.course.findFirst({ where: { name: courseName, userId } })
   if (!course) {
@@ -31,6 +28,29 @@ async function findOrCreateCourseForUser(userId: string, courseName: string) {
   return course
 }
 
+const COMPLETION_REWARD = 40
+const EARLY_BONUS = 15
+const LATE_PENALTY = 20
+const EARLY_THRESHOLD_MS = 12 * 60 * 60 * 1000
+const LATE_GRACE_MS = 30 * 60 * 1000
+const HOUR_IN_MS = 60 * 60 * 1000
+
+type LadderAdjustment = {
+  delta: number
+  reason: LadderReasonCode
+  description: string
+}
+
+function describeOffset(diffMs: number, suffix: 'early' | 'late') {
+  const magnitudeMs = Math.abs(diffMs)
+  const hours = Math.max(1, Math.round(magnitudeMs / HOUR_IN_MS))
+  if (hours >= 24) {
+    const days = Math.max(1, Math.round(hours / 24))
+    return `${days}d ${suffix}`
+  }
+  return `${hours}h ${suffix}`
+}
+
 // Zod schemas
 const AssignmentCreateSchema = z.object({
   title: z.string().min(1),
@@ -42,7 +62,9 @@ const AssignmentCreateSchema = z.object({
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
   // Weight as percentage (0-100)
   weight: z.number().min(0).max(100).optional(),
-  courseName: z.string().min(1)
+  courseName: z.string().min(1),
+  submittedAt: z.union([z.string(), z.date()]).optional(),
+  submissionNote: z.string().max(500).optional(),
 })
 
 const AssignmentUpdateSchema = z.object({
@@ -55,6 +77,8 @@ const AssignmentUpdateSchema = z.object({
   weight: z.number().min(0).max(100).optional(),
   status: z.string().optional(),
   courseName: z.string().optional(),
+  submittedAt: z.union([z.string(), z.date(), z.null()]).optional(),
+  submissionNote: z.string().max(500).nullable().optional(),
 })
 
 // GET: fetch all assignments (with course)
@@ -84,6 +108,22 @@ export async function POST(request: Request) {
     }
 
     const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
+
+    let submittedAt: Date | null = null
+    if (parsed.data.submittedAt) {
+      const value = typeof parsed.data.submittedAt === 'string'
+        ? new Date(parsed.data.submittedAt)
+        : parsed.data.submittedAt
+      if (isNaN(value.getTime())) {
+        return NextResponse.json({ error: 'Invalid submittedAt' }, { status: 400 })
+      }
+      submittedAt = value
+    }
+
+    const submissionNote = parsed.data.submissionNote
+      ? parsed.data.submissionNote.trim()
+      : ''
+
     const assignment = await prisma.assignment.create({
       data: {
         title: parsed.data.title,
@@ -94,6 +134,8 @@ export async function POST(request: Request) {
         weight: parsed.data.weight ?? 1.0,
         userId: user.id,
         courseId: course.id,
+        submittedAt,
+        submissionNote: submissionNote ? submissionNote : null,
       }
     })
 
@@ -127,28 +169,151 @@ export async function PUT(request: Request) {
 
     // Build update payload only with provided fields
     const updateData: any = {}
+    const nextTitle = parsed.data.title ?? existing.title
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title
     if (parsed.data.description !== undefined) updateData.description = parsed.data.description
     if (parsed.data.type !== undefined) updateData.type = parsed.data.type
     if (parsed.data.difficulty !== undefined) updateData.difficulty = parsed.data.difficulty
     if (parsed.data.weight !== undefined) updateData.weight = parsed.data.weight
+
+    const nextStatus = parsed.data.status ?? existing.status
     if (parsed.data.status !== undefined) updateData.status = parsed.data.status
+
+    let nextDueDate = existing.dueDate
     if (parsed.data.dueDate !== undefined) {
       const d = typeof parsed.data.dueDate === 'string' ? new Date(parsed.data.dueDate) : parsed.data.dueDate
       if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
       updateData.dueDate = d
+      nextDueDate = d
     }
 
-    // If courseName was supplied, find or create that course then set courseId
     if (parsed.data.courseName) {
       const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
       updateData.courseId = course.id
+    }
+
+    let nextSubmittedAt: Date | null = existing.submittedAt ? new Date(existing.submittedAt) : null
+    const submittedAtPayload = parsed.data.submittedAt
+    if (submittedAtPayload !== undefined) {
+      if (submittedAtPayload === null) {
+        nextSubmittedAt = null
+        updateData.submittedAt = null
+      } else {
+        const submittedDate = typeof submittedAtPayload === 'string' ? new Date(submittedAtPayload) : submittedAtPayload
+        if (isNaN(submittedDate.getTime())) {
+          return NextResponse.json({ error: 'Invalid submittedAt' }, { status: 400 })
+        }
+        nextSubmittedAt = submittedDate
+        updateData.submittedAt = submittedDate
+      }
+    }
+
+    if (parsed.data.submissionNote !== undefined) {
+      const note = parsed.data.submissionNote
+      if (note === null) {
+        updateData.submissionNote = null
+      } else {
+        const trimmed = note.trim()
+        updateData.submissionNote = trimmed ? trimmed : null
+      }
+    }
+
+    const statusChanged = nextStatus !== existing.status
+
+    if (statusChanged) {
+      if (nextStatus === 'completed' && submittedAtPayload === undefined && !nextSubmittedAt) {
+        nextSubmittedAt = new Date()
+        updateData.submittedAt = nextSubmittedAt
+      }
+
+      if (nextStatus !== 'completed' && submittedAtPayload === undefined) {
+        nextSubmittedAt = null
+        updateData.submittedAt = null
+      }
+    }
+
+    const ladderAdjustments: LadderAdjustment[] = []
+    const existingSubmittedAt = existing.submittedAt ? new Date(existing.submittedAt) : null
+    const awardDeadline = nextDueDate
+    const revertDeadline = existing.dueDate
+
+    if (statusChanged) {
+      if (nextStatus === 'completed') {
+        const effectiveSubmittedAt = nextSubmittedAt ?? new Date()
+        if (!updateData.submittedAt) {
+          updateData.submittedAt = effectiveSubmittedAt
+        }
+
+        const diffMs = awardDeadline.getTime() - effectiveSubmittedAt.getTime()
+        const isLate = diffMs < -LATE_GRACE_MS
+        const qualifiesForEarlyBonus = diffMs > EARLY_THRESHOLD_MS
+
+        ladderAdjustments.push({
+          delta: COMPLETION_REWARD,
+          reason: 'task_completed',
+          description: isLate
+            ? `Completed "${nextTitle}" after the deadline`
+            : `Completed "${nextTitle}"`,
+        })
+
+        if (qualifiesForEarlyBonus) {
+          ladderAdjustments.push({
+            delta: EARLY_BONUS,
+            reason: 'task_early_bonus',
+            description: `Finished ${describeOffset(diffMs, 'early')}`,
+          })
+        } else if (isLate) {
+          ladderAdjustments.push({
+            delta: -LATE_PENALTY,
+            reason: 'task_late_penalty',
+            description: `Submitted ${describeOffset(diffMs, 'late')}`,
+          })
+        }
+      } else if (existing.status === 'completed') {
+        if (updateData.submittedAt === undefined) {
+          updateData.submittedAt = null
+        }
+
+        ladderAdjustments.push({
+          delta: -COMPLETION_REWARD,
+          reason: 'manual_adjustment',
+          description: `Reopened "${nextTitle}"`,
+        })
+
+        if (existingSubmittedAt) {
+          const previousDiffMs = revertDeadline.getTime() - existingSubmittedAt.getTime()
+          if (previousDiffMs > EARLY_THRESHOLD_MS) {
+            ladderAdjustments.push({
+              delta: -EARLY_BONUS,
+              reason: 'manual_adjustment',
+              description: `Removed early bonus for "${nextTitle}"`,
+            })
+          } else if (previousDiffMs < -LATE_GRACE_MS) {
+            ladderAdjustments.push({
+              delta: LATE_PENALTY,
+              reason: 'manual_adjustment',
+              description: `Late penalty cleared for "${nextTitle}"`,
+            })
+          }
+        }
+      }
     }
 
     const updatedAssignment = await prisma.assignment.update({
       where: { id: parsed.data.id },
       data: updateData
     })
+
+    for (const adjustment of ladderAdjustments) {
+      if (!adjustment.delta) continue
+      await applyLadderDelta({
+        userId: user.id,
+        delta: adjustment.delta,
+        reason: adjustment.reason,
+        description: adjustment.description,
+        assignmentId: updatedAssignment.id,
+      })
+    }
 
     return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
   } catch (error) {

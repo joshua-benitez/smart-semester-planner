@@ -23,6 +23,8 @@ export type LadderSummary = {
     label: string
     createdAt: string
     description?: string
+    relativeTime: string
+    reason: LadderReasonCode
   }>
 }
 
@@ -39,3 +41,9 @@ export type LadderThreshold = {
   maxPoints?: number
   hasLevels: boolean
 }
+
+export type LadderReasonCode =
+  | 'task_completed'
+  | 'task_early_bonus'
+  | 'task_late_penalty'
+  | 'manual_adjustment'

@@ -103,7 +103,8 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
       ...parsed,
       courseName,
       description: '',
-      weight: 1
+      weight: 1,
+      submissionNote: '',
     }))
 
     onAssignmentsParsed(assignments)

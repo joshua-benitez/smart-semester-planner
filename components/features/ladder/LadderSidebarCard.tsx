@@ -89,8 +89,12 @@ export function LadderSidebarCard({ data, loading, error, onRefresh }: LadderSid
                   {data.recentEvents.slice(0, 3).map((event) => (
                     <li key={event.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                       <div className="space-y-1">
-                        <p className="font-medium text-white/80">{event.label}</p>
-                        {event.description && <p className="text-[0.65rem] text-white/50">{event.description}</p>}
+                        <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.2em] text-white/50">
+                          <span>{event.label}</span>
+                          <span aria-hidden="true">•</span>
+                          <span>{event.relativeTime}</span>
+                        </div>
+                        {event.description && <p className="text-[0.7rem] text-white/70">{event.description}</p>}
                       </div>
                       <span className={`text-[0.7rem] font-semibold ${event.pointsChange >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
                         {event.pointsChange >= 0 ? '+' : ''}{event.pointsChange} pts

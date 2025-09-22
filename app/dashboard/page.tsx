@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
+import type { AssignmentStatusUpdateExtras } from "@/types/assignment"
 // Logo removed to avoid duplicate branding with Sidebar
 
 type Course = {
@@ -156,12 +157,16 @@ export default function DashboardPage() {
   }, [assignments, selectedCourseId, sortBy, courses])
 
   // Handlers
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = async (
+    id: string,
+    status: string,
+    extras: AssignmentStatusUpdateExtras = {}
+  ) => {
     try {
       const res = await fetch("/api/assignments", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, status, ...extras }),
       })
       if (!res.ok) throw new Error("Failed to update assignment status")
       await refresh()

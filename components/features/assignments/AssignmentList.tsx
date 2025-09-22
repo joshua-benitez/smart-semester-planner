@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { AssignmentCard } from './AssignmentCard'
-import type { Assignment } from '@/types/assignment'
+import type { Assignment, AssignmentStatusUpdateExtras } from '@/types/assignment'
 import { Button } from '@/components/ui/Button'
 
 interface AssignmentListProps {
@@ -12,7 +12,7 @@ interface AssignmentListProps {
   onDeleteAssignment: (id: string) => void
   onBulkStatusUpdate?: (ids: string[], status: string) => void
   onBulkDelete?: (ids: string[]) => void
-  onStatusUpdate?: (id: string, status: string) => void
+  onStatusUpdate?: (id: string, status: string, extras?: AssignmentStatusUpdateExtras) => void
 }
 
 export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete, onStatusUpdate }: AssignmentListProps) => {

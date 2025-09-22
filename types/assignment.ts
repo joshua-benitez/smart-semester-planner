@@ -10,6 +10,8 @@ export type Assignment = {
   status: string
   courseId: string
   course: { id: string; name: string; color?: string }
+  submittedAt: string | null
+  submissionNote: string | null
 }
 
 export type AssignmentFormData = {
@@ -20,7 +22,13 @@ export type AssignmentFormData = {
   difficulty: string
   courseName: string
   weight: number
+  submissionNote?: string
 }
 
 export type AssignmentType = 'homework' | 'quiz' | 'project' | 'exam'
 export type DifficultyLevel = 'easy' | 'moderate' | 'crushing' | 'brutal'
+
+export type AssignmentStatusUpdateExtras = {
+  submittedAt?: string | null
+  submissionNote?: string | null
+}

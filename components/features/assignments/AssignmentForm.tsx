@@ -43,7 +43,8 @@ export const AssignmentForm = ({
     difficulty: initialData.difficulty || 'moderate',
     courseName: initialData.courseName || '',
     // Weight now represents category weight as percentage 0-100
-    weight: initialData.weight !== undefined ? initialData.weight : 20
+    weight: initialData.weight !== undefined ? initialData.weight : 20,
+    submissionNote: initialData.submissionNote || '',
   })
   const [isCreatingNewCourse, setIsCreatingNewCourse] = useState(false)
   const [newCourseName, setNewCourseName] = useState('')
@@ -177,6 +178,20 @@ export const AssignmentForm = ({
           placeholder="Any additional details about this assignment..."
           className="form-input"
         />
+      </div>
+
+      {/* Submission Note */}
+      <div>
+        <label className="form-label">Submission Note (optional)</label>
+        <textarea
+          name="submissionNote"
+          value={formData.submissionNote ?? ''}
+          onChange={handleChange}
+          rows={3}
+          placeholder="Where did you submit it? Add quick context for future you."
+          className="form-input"
+        />
+        <p className="text-sm text-gray-500 mt-1">Notes boost early bonuses when you complete work ahead of the deadline.</p>
       </div>
 
       {/* Due Date and Type */}
