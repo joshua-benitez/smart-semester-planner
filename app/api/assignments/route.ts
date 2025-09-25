@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/get-current-user'
 import { applyLadderDelta } from '@/lib/ladder-service'
 import type { LadderReasonCode } from '@/types/ladder'
 import { z } from 'zod'
+import { UnauthorizedError } from '@/lib/errors'
 
 // Lightweight runtime validation helper
 function isNonEmptyString(x: any): x is string {
@@ -93,6 +94,9 @@ export async function GET() {
     return NextResponse.json(assignments)
   } catch (error) {
     console.error('Error fetching assignments:', error)
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
   }
 }
@@ -145,6 +149,9 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Error creating assignment:', error)
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 })
   }
 }
@@ -160,8 +167,8 @@ export async function PUT(request: Request) {
     }
 
     // Find assignment by ID
-    const existing = await prisma.assignment.findUnique({
-      where: { id: parsed.data.id }
+    const existing = await prisma.assignment.findFirst({
+      where: { id: parsed.data.id, userId: user.id }
     })
     if (!existing) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
@@ -318,6 +325,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
   } catch (error) {
     console.error('Error updating assignment:', error)
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Failed to update assignment' }, { status: 500 })
   }
 }
@@ -325,6 +335,7 @@ export async function PUT(request: Request) {
 // DELETE: remove an assignment
 export async function DELETE(request: Request) {
   try {
+    const user = await requireAuth()
     const json = await request.json()
     const id = json?.id
     if (!isNonEmptyString(id)) {
@@ -332,8 +343,8 @@ export async function DELETE(request: Request) {
     }
 
     // Check if the assignment exists before trying to delete it
-    const existing = await prisma.assignment.findUnique({
-      where: { id }
+    const existing = await prisma.assignment.findFirst({
+      where: { id, userId: user.id }
     })
     if (!existing) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
@@ -347,6 +358,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Assignment deleted successfully' })
   } catch (error) {
     console.error('Error deleting assignment:', error)
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
   }
 }
