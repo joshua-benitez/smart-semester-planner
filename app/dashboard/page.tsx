@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
+import { useLadder } from "@/hooks/useLadder"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
 import type { AssignmentStatusUpdateExtras } from "@/types/assignment"
 // Logo removed to avoid duplicate branding with Sidebar
@@ -53,9 +54,11 @@ export default function DashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const { assignments, loading, deleteAssignment, refresh } = useAssignments()
+  const { refresh: refreshLadder } = useLadder()
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [sortBy, setSortBy] = useState<"dueDate" | "title" | "difficulty">("dueDate")
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const searchParams = useSearchParams()
   const firstName = session?.user?.name?.split(" ")?.[0] ?? "there"
 
@@ -137,6 +140,22 @@ export default function DashboardPage() {
       }
     }
 
+    // Auto-hide completed assignments after 24 hours
+    const now = new Date()
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    
+    filtered = filtered.filter((assignment) => {
+      // Keep non-completed assignments
+      if (assignment.status !== 'completed') return true
+      
+      // Keep completed assignments without submittedAt (shouldn't happen but safety check)
+      if (!assignment.submittedAt) return true
+      
+      // Keep completed assignments that are less than 24 hours old
+      const submittedDate = new Date(assignment.submittedAt)
+      return submittedDate > twentyFourHoursAgo
+    })
+
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "dueDate":
@@ -162,16 +181,46 @@ export default function DashboardPage() {
     status: string,
     extras: AssignmentStatusUpdateExtras = {}
   ) => {
+    // Prevent duplicate calls for same assignment
+    if (updatingIds.has(id)) {
+      console.log('Already updating assignment:', id);
+      return;
+    }
+
+    const startTime = performance.now();
+    console.log('Starting status update at:', startTime, { id, status, extras });
+    
+    // Add to updating set
+    setUpdatingIds(prev => new Set(prev).add(id));
+    
     try {
+      const apiStart = performance.now();
       const res = await fetch("/api/assignments", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status, ...extras }),
       })
+      const apiEnd = performance.now();
+      console.log('API call took:', apiEnd - apiStart, 'ms');
+      
       if (!res.ok) throw new Error("Failed to update assignment status")
-      await refresh()
+      
+      const refreshStart = performance.now();
+      await Promise.all([refresh(), refreshLadder()]);
+      const refreshEnd = performance.now();
+      console.log('Refresh took:', refreshEnd - refreshStart, 'ms');
+      
+      const totalTime = performance.now() - startTime;
+      console.log('Total time:', totalTime, 'ms');
     } catch (err) {
       console.error("Status update error:", err)
+    } finally {
+      // Remove from updating set
+      setUpdatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
 

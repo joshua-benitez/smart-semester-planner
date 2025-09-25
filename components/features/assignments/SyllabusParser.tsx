@@ -18,7 +18,6 @@ interface SyllabusParserProps {
   onClose: () => void
 }
 
-// @ts-ignore - Function props are fine for client components
 type Course = {
   id: string
   name: string

@@ -311,8 +311,12 @@ export async function PUT(request: Request) {
       data: updateData
     })
 
+    console.log('Processing ladder adjustments:', ladderAdjustments.length, ladderAdjustments);
+    const adjustmentStart = performance.now();
+
     for (const adjustment of ladderAdjustments) {
       if (!adjustment.delta) continue
+      const singleStart = performance.now();
       await applyLadderDelta({
         userId: user.id,
         delta: adjustment.delta,
@@ -320,7 +324,12 @@ export async function PUT(request: Request) {
         description: adjustment.description,
         assignmentId: updatedAssignment.id,
       })
+      const singleEnd = performance.now();
+      console.log('Single ladder delta took:', singleEnd - singleStart, 'ms');
     }
+
+    const adjustmentEnd = performance.now();
+    console.log('All ladder adjustments took:', adjustmentEnd - adjustmentStart, 'ms');
 
     return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
   } catch (error) {
