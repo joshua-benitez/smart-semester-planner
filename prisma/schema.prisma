@@ -16,6 +16,7 @@ model User {
   password      String?
   emailVerified DateTime?
   image         String?
+  preferences   String?   @default("{}")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

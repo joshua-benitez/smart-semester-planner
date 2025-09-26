@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AssignmentCard } from './AssignmentCard'
 import type { Assignment, AssignmentStatusUpdateExtras } from '@/types/assignment'
 import { Button } from '@/components/ui/Button'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
 
 interface AssignmentListProps {
   assignments: Assignment[]
@@ -17,9 +18,17 @@ interface AssignmentListProps {
 
 export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete, onStatusUpdate }: AssignmentListProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [showCompleted, setShowCompleted] = useState(true)
   const [bulkLoading, setBulkLoading] = useState(false)
   const [selectionMode, setSelectionMode] = useState(false)
+  const { preferences, updatePreferences } = useUserPreferences()
+
+  // Get show completed preference (default to true if preferences not loaded)
+  const showCompleted = preferences?.hideCompletedAssignments === false
+
+  // Toggle hide completed preference
+  const toggleShowCompleted = () => {
+    updatePreferences({ hideCompletedAssignments: !preferences?.hideCompletedAssignments })
+  }
 
   // Filter assignments based on show completed toggle
   const completedStatuses = ['completed', 'submitted', 'graded']
@@ -122,7 +131,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
                   size="sm"
                   variant="secondary"
                   className="rounded-full px-4"
-                  onClick={() => setShowCompleted(!showCompleted)}
+                  onClick={toggleShowCompleted}
                 >
                   {showCompleted ? 'Hide completed' : 'Show completed'}
                 </Button>
