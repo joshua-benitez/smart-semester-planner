@@ -10,23 +10,21 @@ import { UnauthorizedError } from '@/lib/errors'
 function isNonEmptyString(x: any): x is string {
   return typeof x === 'string' && x.trim().length > 0
 }
-async function findOrCreateCourseForUser(userId: string, courseName: string) {
-  let course = await prisma.course.findFirst({ where: { name: courseName, userId } })
-  if (!course) {
-    try {
-      course = await prisma.course.create({ data: { name: courseName, userId } })
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        course = await prisma.course.findFirst({ where: { name: courseName, userId } })
-      } else {
-        throw error
-      }
-    }
+async function findOrCreateCourseForUser(userId: string, rawCourseName: string) {
+  const name = rawCourseName.trim()
+  if (!name) {
+    throw new Error('Course name is required')
   }
-  if (!course) {
-    throw new Error('Course not found after creation attempt')
-  }
-  return course
+
+  return prisma.course.upsert({
+    where: { userId_name: { userId, name } },
+    update: {},
+    create: {
+      name,
+      color: '#3b82f6',
+      userId,
+    },
+  })
 }
 
 const COMPLETION_REWARD = 40
@@ -63,7 +61,9 @@ const AssignmentCreateSchema = z.object({
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
   // Weight as percentage (0-100)
   weight: z.number().min(0).max(100).optional(),
-  courseName: z.string().min(1),
+  courseName: z.string()
+    .transform((val) => val.trim())
+    .refine((val) => val.length > 0, { message: 'Course name is required' }),
   submittedAt: z.union([z.string(), z.date()]).optional(),
   submissionNote: z.string().max(500).optional(),
 })
@@ -77,7 +77,10 @@ const AssignmentUpdateSchema = z.object({
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
   weight: z.number().min(0).max(100).optional(),
   status: z.string().optional(),
-  courseName: z.string().optional(),
+  courseName: z.string()
+    .transform((val) => val.trim())
+    .refine((val) => val.length > 0, { message: 'Course name is required' })
+    .optional(),
   submittedAt: z.union([z.string(), z.date(), z.null()]).optional(),
   submissionNote: z.string().max(500).nullable().optional(),
 })
@@ -93,10 +96,10 @@ export async function GET() {
     })
     return NextResponse.json(assignments)
   } catch (error) {
-    console.error('Error fetching assignments:', error)
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.error('Error fetching assignments:', error)
     return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
   }
 }
@@ -111,7 +114,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
+    const courseName = parsed.data.courseName.trim()
+    if (!courseName) {
+      return NextResponse.json({ error: 'Course name is required' }, { status: 400 })
+    }
+    const course = await findOrCreateCourseForUser(user.id, courseName)
 
     let submittedAt: Date | null = null
     if (parsed.data.submittedAt) {
@@ -148,10 +155,10 @@ export async function POST(request: Request) {
       assignment
     })
   } catch (error) {
-    console.error('Error creating assignment:', error)
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.error('Error creating assignment:', error)
     return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 })
   }
 }
@@ -195,7 +202,11 @@ export async function PUT(request: Request) {
     }
 
     if (parsed.data.courseName) {
-      const course = await findOrCreateCourseForUser(user.id, parsed.data.courseName)
+      const nextCourseName = parsed.data.courseName.trim()
+      if (!nextCourseName) {
+        return NextResponse.json({ error: 'Course name is required' }, { status: 400 })
+      }
+      const course = await findOrCreateCourseForUser(user.id, nextCourseName)
       updateData.courseId = course.id
     }
 
@@ -311,12 +322,8 @@ export async function PUT(request: Request) {
       data: updateData
     })
 
-    console.log('Processing ladder adjustments:', ladderAdjustments.length, ladderAdjustments);
-    const adjustmentStart = performance.now();
-
     for (const adjustment of ladderAdjustments) {
       if (!adjustment.delta) continue
-      const singleStart = performance.now();
       await applyLadderDelta({
         userId: user.id,
         delta: adjustment.delta,
@@ -324,19 +331,14 @@ export async function PUT(request: Request) {
         description: adjustment.description,
         assignmentId: updatedAssignment.id,
       })
-      const singleEnd = performance.now();
-      console.log('Single ladder delta took:', singleEnd - singleStart, 'ms');
     }
-
-    const adjustmentEnd = performance.now();
-    console.log('All ladder adjustments took:', adjustmentEnd - adjustmentStart, 'ms');
 
     return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
   } catch (error) {
-    console.error('Error updating assignment:', error)
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.error('Error updating assignment:', error)
     return NextResponse.json({ error: 'Failed to update assignment' }, { status: 500 })
   }
 }
@@ -359,17 +361,35 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
     }
 
-    // Delete the assignment from the database
+    const ladderEvents = await prisma.ladderEvent.findMany({
+      where: {
+        assignmentId: id,
+        userId: user.id,
+      },
+    })
+
+    for (const event of ladderEvents) {
+      if (!event.pointsChange) continue
+      await applyLadderDelta({
+        userId: user.id,
+        delta: -event.pointsChange,
+        reason: 'manual_adjustment',
+        description: `Reversed ${event.reason} after deleting "${existing.title}"`,
+      })
+    }
+
+    await prisma.ladderEvent.deleteMany({ where: { assignmentId: id, userId: user.id } })
+
     await prisma.assignment.delete({
       where: { id }
     })
 
     return NextResponse.json({ message: 'Assignment deleted successfully' })
   } catch (error) {
-    console.error('Error deleting assignment:', error)
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.error('Error deleting assignment:', error)
     return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
   }
 }

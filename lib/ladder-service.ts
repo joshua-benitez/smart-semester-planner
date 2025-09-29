@@ -144,9 +144,6 @@ export async function applyLadderDelta(input: LadderDeltaInput): Promise<LadderS
     throw new Error('Invalid ladder delta')
   }
 
-  const transactionStart = performance.now();
-  console.log('Starting ladder delta transaction:', { userId, delta, reason });
-
   return prisma.$transaction(async (tx) => {
     let standing = await tx.ladderStanding.findUnique({ where: { userId } })
 
@@ -200,10 +197,6 @@ export async function applyLadderDelta(input: LadderDeltaInput): Promise<LadderS
         createdAt: event.createdAt,
       })),
     })
-
-    const transactionEnd = performance.now();
-    console.log('Ladder delta transaction completed in:', transactionEnd - transactionStart, 'ms');
-    
     return summary;
   })
 }

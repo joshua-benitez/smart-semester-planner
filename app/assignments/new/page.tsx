@@ -24,11 +24,11 @@ export default function NewAssignment() {
       throw new Error(body?.error || 'Failed to create assignment')
     }
 
-    router.push('/')
+    router.push('/assignments')
   }
 
   const handleCancel = () => {
-    router.push('/')
+    router.push('/assignments')
   }
 
   const handleBatchCreate = async (assignments: AssignmentFormData[]) => {
@@ -54,7 +54,7 @@ export default function NewAssignment() {
       
       alert(`Successfully created ${assignments.length} assignments!`)
       setShowSyllabusParser(false)
-      router.push('/')
+      router.push('/assignments')
     } catch (error) {
       console.error('Batch creation error:', error)
       alert('Some assignments failed to create. Please try again.')

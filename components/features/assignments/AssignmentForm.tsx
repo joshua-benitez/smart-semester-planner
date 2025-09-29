@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { validateAssignment } from '@/lib/validations'
-import type { AssignmentFormData, AssignmentType, DifficultyLevel } from '@/types/assignment'
+import type { AssignmentFormData } from '@/types/assignment'
 
 type Course = {
   id: string
@@ -48,6 +48,7 @@ export const AssignmentForm = ({
   })
   const [isCreatingNewCourse, setIsCreatingNewCourse] = useState(false)
   const [newCourseName, setNewCourseName] = useState('')
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +61,11 @@ export const AssignmentForm = ({
 
     setLoading(true)
     try {
-      await onSubmit(formData)
+      const payload: AssignmentFormData = {
+        ...formData,
+        courseName: formData.courseName.trim(),
+      }
+      await onSubmit(payload)
     } catch (error) {
       console.error('Form submission error:', error)
     } finally {
@@ -84,6 +89,9 @@ export const AssignmentForm = ({
         if (response.ok) {
           const data = await response.json()
           setCourses(data)
+          if (data.length === 0) {
+            setIsCreatingNewCourse(true)
+          }
         }
       } catch (error) {
         console.error('Error fetching courses:', error)
@@ -94,15 +102,30 @@ export const AssignmentForm = ({
     fetchCourses()
   }, [])
 
+  useEffect(() => {
+    if (isCreatingNewCourse) return
+    if (!formData.courseName) {
+      setSelectedCourseId('')
+      return
+    }
+    const match = courses.find((course) => course.name === formData.courseName)
+    if (match) {
+      setSelectedCourseId(match.id)
+    }
+  }, [courses, formData.courseName, isCreatingNewCourse])
+
   const handleCourseSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
     if (value === '__create_new__') {
       setIsCreatingNewCourse(true)
+      setSelectedCourseId('')
+      setNewCourseName('')
       setFormData(prev => ({ ...prev, courseName: '' }))
     } else {
       setIsCreatingNewCourse(false)
+      setSelectedCourseId(value)
       const selectedCourse = courses.find(c => c.id === value)
-      setFormData(prev => ({ ...prev, courseName: selectedCourse?.name || value }))
+      setFormData(prev => ({ ...prev, courseName: selectedCourse?.name ?? '' }))
     }
   }
 
@@ -136,7 +159,7 @@ export const AssignmentForm = ({
         ) : (
           <>
             <select 
-              value={isCreatingNewCourse ? '__create_new__' : (courses.find(c => c.name === formData.courseName)?.id || '__create_new__')}
+              value={isCreatingNewCourse ? '__create_new__' : selectedCourseId}
               onChange={handleCourseSelectionChange}
               className="form-input"
               required

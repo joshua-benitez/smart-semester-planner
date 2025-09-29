@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
+import { UnauthorizedError } from '@/lib/errors'
 
 export async function GET() {
   try {
@@ -10,9 +11,16 @@ export async function GET() {
       where: { id: user.id },
       select: { id: true, email: true, name: true, createdAt: true }
     })
+    if (!data) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
     return NextResponse.json(data)
   } catch (err) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (err instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Error fetching profile:', err)
+    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
   }
 }
 
@@ -56,7 +64,10 @@ export async function PUT(request: Request) {
     })
     return NextResponse.json({ message: 'Profile updated', user: updated })
   } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Error updating profile:', err)
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 }
-

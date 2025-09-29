@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
+import { UnauthorizedError } from '@/lib/errors'
 import { z } from 'zod'
 
 // Zod schemas
@@ -21,10 +22,7 @@ const CourseDeleteSchema = z.object({ id: z.string().min(1) })
 export async function GET() {
   try {
     const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-    // Fetch courses from database with assignments count
+
     const courses = await prisma.course.findMany({
       where: { userId: user.id },
       include: {
@@ -34,7 +32,9 @@ export async function GET() {
     })
     return NextResponse.json(courses)
   } catch (error) {
-    // Handle errors and return 500 status
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -49,9 +49,6 @@ export async function POST(request: Request) {
     }
 
     const user = await requireAuth()
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
     //Create new course with name and color (default color if not provided)
     const newCourse = await prisma.course.create({
       data: {
@@ -62,7 +59,9 @@ export async function POST(request: Request) {
     })
     return NextResponse.json(newCourse)
   } catch (error) {
-    // Handle errors and return 500 status
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -70,13 +69,16 @@ export async function POST(request: Request) {
 // PUT method - update course name/color
 export async function PUT(request: Request) {
   try {
+    const user = await requireAuth()
     const body = await request.json()
     const parsed = CourseUpdateSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
     // Find existing course by ID
-    const existingCourse = await prisma.course.findUnique({ where: { id: parsed.data.id } })
+    const existingCourse = await prisma.course.findFirst({
+      where: { id: parsed.data.id, userId: user.id },
+    })
     if (!existingCourse) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
@@ -91,6 +93,9 @@ export async function PUT(request: Request) {
     return NextResponse.json(updatedCourse)
     // Return success response
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
@@ -98,6 +103,7 @@ export async function PUT(request: Request) {
 // DELETE method - remove course (only if no assignments)
 export async function DELETE(request: Request) {
   try {
+    const user = await requireAuth()
     const body = await request.json()
     const parsed = CourseDeleteSchema.safeParse(body)
     if (!parsed.success) {
@@ -109,7 +115,7 @@ export async function DELETE(request: Request) {
       include: { assignments: true }
     })
     // Check if course has assignments - if yes, return error
-    if (!course) {
+    if (!course || course.userId !== user.id) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
     if (course.assignments.length > 0) {
@@ -122,6 +128,9 @@ export async function DELETE(request: Request) {
     await prisma.course.delete({ where: { id: parsed.data.id } })
     return NextResponse.json({ message: 'Course deleted successfully' })
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

@@ -35,21 +35,23 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
 
   // parsing logic - uses the robust chrono-based parser with pipeline approach
   const parseSyllabus = (text: string): ParsedAssignment[] => {
-    // Use the new robust parser with options for academic year
+    const referenceDate = new Date()
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC'
+
     const parsed = parseWithChrono(text, {
-      referenceDate: new Date("2025-08-15"), // start of academic year
-      defaultDueTime: "23:59",
-      timezone: "America/New_York",
+      referenceDate,
+      defaultDueTime: '23:59',
+      timezone,
       acceptPastDates: true,
     })
     
     // Convert to the format expected by the UI
-    return parsed.map(assignment => ({
+    return parsed.map((assignment) => ({
       title: assignment.title,
-      dueDate: assignment.dueDate === "TBD" ? "2025-01-01T23:59" : assignment.dueDate,
+      dueDate: assignment.dueDate === 'TBD' ? '' : assignment.dueDate,
       type: assignment.type,
       difficulty: assignment.difficulty,
-      confidence: assignment.confidence
+      confidence: assignment.confidence,
     }))
   }
 
@@ -98,6 +100,11 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
   }
 
   const handleConfirm = () => {
+    if (parsedAssignments.some((assignment) => !assignment.dueDate)) {
+      alert('Please provide a due date for each assignment before creating them.')
+      return
+    }
+
     const assignments: AssignmentFormData[] = parsedAssignments.map(parsed => ({
       ...parsed,
       courseName,

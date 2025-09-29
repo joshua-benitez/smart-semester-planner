@@ -22,12 +22,13 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   const [selectionMode, setSelectionMode] = useState(false)
   const { preferences, updatePreferences } = useUserPreferences()
 
-  // Get show completed preference (default to true if preferences not loaded)
-  const showCompleted = preferences?.hideCompletedAssignments === false
+  // Respect user preference but default to showing completed assignments on first load
+  const hideCompleted = preferences?.hideCompletedAssignments ?? false
+  const showCompleted = !hideCompleted
 
   // Toggle hide completed preference
   const toggleShowCompleted = () => {
-    updatePreferences({ hideCompletedAssignments: !preferences?.hideCompletedAssignments })
+    updatePreferences({ hideCompletedAssignments: !hideCompleted })
   }
 
   // Filter assignments based on show completed toggle

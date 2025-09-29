@@ -129,8 +129,17 @@ function extractISO(dateText: string, opts: Required<ParseOptions>): string | nu
   // Choose the *last* resolved date on the line (common pattern: open -> due)
   const last = results[results.length - 1];
   const d = last.start.date(); // JS Date
+
+  if (!last.start.isCertain('year')) {
+    const month = last.start.get('month') ?? (d.getMonth() + 1);
+    const assumedStartYear = opts.assumeAcademicYear;
+    let inferredYear = assumedStartYear;
+    if (opts.semesterStartMonth && month < opts.semesterStartMonth) {
+      inferredYear = assumedStartYear + 1;
+    }
+    d.setFullYear(inferredYear);
+  }
   // Force default due time if only date provided
-  const [Y, M, D] = [d.getFullYear(), d.getMonth() + 1, d.getDate()];
   const [hh, mm] = opts.defaultDueTime.split(":").map(Number);
   d.setHours(hh, mm, 0, 0);
   const iso = toLocalISO(d);

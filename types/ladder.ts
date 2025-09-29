@@ -30,7 +30,7 @@ export type LadderSummary = {
 
 export type LadderUpdatePayload = {
   delta: number
-  reason: string
+  reason: LadderReasonCode
   description?: string
 }
 

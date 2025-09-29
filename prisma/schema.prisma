@@ -119,7 +119,7 @@ model LadderEvent {
 model LadderStanding {
   id         String   @id @default(cuid())
   userId     String   @unique
-  points     Int      @default(1000)
+  points     Int      @default(0)
   stepLabel  String   @default("Initiate")
   level      Int?     @default(5)
   updatedAt  DateTime @updatedAt
