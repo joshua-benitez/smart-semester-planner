@@ -10,7 +10,9 @@
     "type-check": "tsc --noEmit",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "verify:env": "node scripts/check-env.mjs",
+    "smoke:check": "npm run verify:env && npm run build && node scripts/smoke-report.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

@@ -175,3 +175,10 @@ To keep the ladder meaningful without punishing honest students, we will:
   - Defaults are fine (`next build`). `@prisma/client` will generate during build.
 - Optional
   - Seed production DB with a small dataset for a richer demo.
+
+### Pre-deploy validation helpers
+
+- `npm run verify:env` — confirms `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, and `DATABASE_URL` are supplied either via your shell or local env files.
+- `npm run smoke:check` — runs the env validation, performs a production build, and prints a manual smoke checklist covering API/auth flows.
+
+Run the smoke checklist locally, then repeat the same steps against your deployed Vercel preview to prove stability to reviewers.
