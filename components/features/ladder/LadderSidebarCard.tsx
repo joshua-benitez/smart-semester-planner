@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import type { LadderSummary } from '@/types/ladder'
 
+// card that lives in the sidebar and gives a quick ladder snapshot
 interface LadderSidebarCardProps {
   data?: LadderSummary
   loading: boolean

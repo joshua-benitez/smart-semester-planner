@@ -34,7 +34,7 @@ function classesFor(variant: BadgeVariant, value?: string): string {
   }
 
   if (variant === 'type') {
-    // homework, quiz, project, exam
+    // treat homework/quiz/project/exam the same in the UI for now
     return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
   }
 
@@ -46,7 +46,7 @@ function classesFor(variant: BadgeVariant, value?: string): string {
     return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
   }
 
-  // meta
+  // catch-all badges (weight, etc.)
   return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
 }
 

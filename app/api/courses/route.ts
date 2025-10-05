@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/get-current-user'
 import { UnauthorizedError } from '@/lib/errors'
 import { z } from 'zod'
 
-// Zod schemas
+// schema guardrails so the course routes stay honest
 const CourseCreateSchema = z.object({
   name: z.string().min(1, 'Course name is required').trim(),
   color: z.string().regex(/^#([0-9A-Fa-f]{3}){1,2}$/).optional(),
@@ -18,7 +18,7 @@ const CourseUpdateSchema = z.object({
 
 const CourseDeleteSchema = z.object({ id: z.string().min(1) })
 
-// GET method - fetch all courses for the user
+// GET -> list every course for the logged-in student
 export async function GET() {
   try {
     const user = await requireAuth()
@@ -39,7 +39,7 @@ export async function GET() {
   }
 }
 
-// POST method - create new course
+// POST -> drop in a new course (and default the color if they skip it)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     const user = await requireAuth()
-    //Create new course with name and color (default color if not provided)
+    // create the course; default color keeps the UI from breaking
     const newCourse = await prisma.course.create({
       data: {
         name: parsed.data.name,
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT method - update course name/color
+// PUT -> rename or recolor a course after checking ownership
 export async function PUT(request: Request) {
   try {
     const user = await requireAuth()
@@ -75,14 +75,14 @@ export async function PUT(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
-    // Find existing course by ID
+    // make sure the course belongs to this user first
     const existingCourse = await prisma.course.findFirst({
       where: { id: parsed.data.id, userId: user.id },
     })
     if (!existingCourse) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
-    // Update course with new name/color
+    // apply the updates, but fall back to the existing data when fields are missing
     const updatedCourse = await prisma.course.update({
       where: { id: parsed.data.id },
       data: {
@@ -91,7 +91,7 @@ export async function PUT(request: Request) {
       }
     })
     return NextResponse.json(updatedCourse)
-    // Return success response
+    // done
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -100,7 +100,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE method - remove course (only if no assignments)
+// DELETE -> kill the course if it doesn't have assignments tied to it
 export async function DELETE(request: Request) {
   try {
     const user = await requireAuth()
@@ -109,12 +109,12 @@ export async function DELETE(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
-    // Find course by ID and include assignments
+    // include assignments so we can block deletes when they're still linked
     const course = await prisma.course.findUnique({
       where: { id: parsed.data.id },
       include: { assignments: true }
     })
-    // Check if course has assignments - if yes, return error
+    // if it isn't the user's course or still has assignments, bail out
     if (!course || course.userId !== user.id) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
@@ -124,7 +124,7 @@ export async function DELETE(request: Request) {
         { status: 400 }
       )
     }
-    // Delete the course
+    // finally delete
     await prisma.course.delete({ where: { id: parsed.data.id } })
     return NextResponse.json({ message: 'Course deleted successfully' })
   } catch (error) {

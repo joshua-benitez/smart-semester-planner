@@ -3,9 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Assignment } from '@/types/assignment'
 
-/**
- * Custom hook to manage assignments data and operations using React Query
- */
+// wraps the assignments API with React Query so every screen can share the same cache
 export const useAssignments = () => {
   const queryClient = useQueryClient()
 

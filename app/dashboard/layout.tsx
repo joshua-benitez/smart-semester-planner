@@ -1,4 +1,4 @@
-// app/dashboard/layout.tsx
+// dashboard layout keeps the sidebar persistent across pages
 import Sidebar from "@/components/layout/Sidebar";
 
 export default function DashboardRouteLayout({

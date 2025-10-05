@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 import { useState } from 'react'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  // keep a single QueryClient + SessionProvider around the entire app shell
   const [queryClient] = useState(
     () =>
       new QueryClient({

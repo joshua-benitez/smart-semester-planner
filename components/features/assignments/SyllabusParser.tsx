@@ -33,7 +33,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // parsing logic - uses the robust chrono-based parser with pipeline approach
+  // run the chrono-based parser and massage the output into something the form likes
   const parseSyllabus = (text: string): ParsedAssignment[] => {
     const referenceDate = new Date()
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC'
@@ -45,7 +45,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
       acceptPastDates: true,
     })
     
-    // Convert to the format expected by the UI
+    // shape the parsed data for the assignment form
     return parsed.map((assignment) => ({
       title: assignment.title,
       dueDate: assignment.dueDate === 'TBD' ? '' : assignment.dueDate,
@@ -55,9 +55,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
     }))
   }
 
-
-
-  // Fetch courses when component mounts
+  // populate the course dropdown on mount
   React.useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -65,7 +63,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
         if (response.ok) {
           const data = await response.json()
           setCourses(data)
-          // Auto-select first course if available
+          // auto-select the first course to save a click
           if (data.length > 0) {
             setCourseName(data[0].name)
           }
@@ -127,7 +125,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {!isPreviewMode ? (
-            // Input Phase
+            {/* input phase */}
             <>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Syllabus Parser</h2>
@@ -215,7 +213,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
               </div>
             </>
           ) : (
-            // Preview Phase
+            {/* preview phase */}
             <>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -237,7 +235,7 @@ export const SyllabusParser = ({ onAssignmentsParsed, onClose }: SyllabusParserP
                 <>
                   <div className="space-y-4 mb-6">
                     {parsedAssignments
-                      .sort((a, b) => (b.confidence || 0) - (a.confidence || 0)) // Sort by confidence, highest first
+                      .sort((a, b) => (b.confidence || 0) - (a.confidence || 0)) // bubble the confident matches to the top
                       .map((assignment, index) => (
                       <div key={index} className={`border rounded-lg p-4 ${
                         (assignment.confidence || 0) < 0.5 

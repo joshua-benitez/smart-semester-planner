@@ -6,6 +6,7 @@ import type { LadderSummary, LadderUpdatePayload } from '@/types/ladder'
 const LADDER_QUERY_KEY = ['ladder']
 
 export function useLadder() {
+  // shared hook so every component talks to the same ladder cache
   const qc = useQueryClient()
 
   const ladderQuery = useQuery<LadderSummary>({

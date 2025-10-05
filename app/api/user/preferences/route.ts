@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
     }
     const updates = parsed.data
     
-    // Get current preferences
+    // grab whatever we already saved for this user
     const userData = await prisma.user.findUnique({
       where: { id: user.id },
       select: { preferences: true }
@@ -71,10 +71,10 @@ export async function PUT(request: NextRequest) {
 
     const currentPreferences = mergeStoredPreferences(userData?.preferences)
 
-    // Merge with updates on top of defaults to keep shape predictable
+    // layer defaults -> stored prefs -> new updates so we never break the schema
     const newPreferences: UserPreferences = { ...DEFAULT_USER_PREFERENCES, ...currentPreferences, ...updates }
 
-    // Save to database
+    // persist the merged blob
     await prisma.user.update({
       where: { id: user.id },
       data: { preferences: JSON.stringify(newPreferences) }

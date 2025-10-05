@@ -1,6 +1,8 @@
 import './globals.css'
 import Providers from './providers'
 
+// root layout wraps the app with shared providers + base styles
+
 export const metadata = {
   title: 'Smart Semester Planner',
   description: 'Assignment tracker for students',

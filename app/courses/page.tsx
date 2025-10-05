@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-// Add type for Course
+// shape the course object returned by the API
 type Course = {
   id: string
   name: string
@@ -12,20 +12,19 @@ type Course = {
   createdAt: string
   updatedAt: string
   _count: { assignments: number }
-  assignments: { id: string }[] // Include assignments array
+  assignments: { id: string }[] // need this to block deletes when assignments exist
 }
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([]) // Add state for courses list
-  const [loading, setLoading] = useState(true) // Add state for loading status
-  const [newCourseName, setNewCourseName] = useState('') // Add state for form data (new course name and color)
-  const [newCourseColor, setNewCourseColor] = useState('#3b82f6') // Default to blue
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newCourseName, setNewCourseName] = useState('')
+  const [newCourseColor, setNewCourseColor] = useState('#3b82f6') // default blue keeps the UI consistent
   const [sortBy, setSortBy] = useState<'name' | 'assignments' | 'created'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
-  // Add useEffect to fetch courses when page loads
+  // fetch courses on load so the list isn't empty
   useEffect(() => {
-    // Create async function to fetch courses from /api/courses
     const fetchCourses = async () => {
       try {
         const response = await fetch('/api/courses')
@@ -35,18 +34,16 @@ export default function CoursesPage() {
         } else {
           console.error('Failed to fetch courses')
         }
-      }
-      // Set courses state with response data
-      catch (error) {
+      } catch (error) {
         console.error('Error fetching courses:', error)
       } finally {
-        setLoading(false) // Set loading to false after fetch completes
+        setLoading(false)
       }
     }
     fetchCourses()
   }, [])
 
-  // Sort courses based on selected criteria
+  // sort helper for the list view
   const sortedCourses = React.useMemo(() => {
     const sorted = [...courses].sort((a, b) => {
       switch (sortBy) {
@@ -76,15 +73,13 @@ export default function CoursesPage() {
     }
   }
 
-  // Add function to handle creating new course
+  // handle create course from the form
   const handleCreateCourse = async (e: React.FormEvent) => {
-    e.preventDefault() // Prevent default form submission
-    // Validate course name is not empty
+    e.preventDefault()
     if (!newCourseName.trim()) {
       alert('Course name is required')
       return
     }
-    // Send POST request to /api/courses with name and color
     try {
       const response = await fetch('/api/courses', {
         method: 'POST',
@@ -93,9 +88,9 @@ export default function CoursesPage() {
       })
       if (response.ok) {
         const createdCourse = await response.json()
-        setCourses([...courses, createdCourse]) // Add new course to courses state
-        setNewCourseName('') // Clear form
-        setNewCourseColor('#3b82f6') // Reset to default color
+        setCourses([...courses, createdCourse])
+        setNewCourseName('')
+        setNewCourseColor('#3b82f6')
       } else {
         console.error('Failed to create course')
       }
@@ -104,19 +99,16 @@ export default function CoursesPage() {
     }
   }
 
-  // Add function to handle deleting a course
+  // delete course after double checking there are no assignments tied to it
   const handleDeleteCourse = async (courseId: string) => {
-    // Show confirmation dialog
     if (!confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
       return
     }
-    // Validate course has no assignments before deleting
     const course = courses.find(c => c.id === courseId)
     if (course && course._count.assignments > 0) {
       alert('Cannot delete course with existing assignments. Please delete assignments first.')
       return
     }
-    // Send DELETE request to /api/courses with course ID
     try {
       const response = await fetch('/api/courses', {
         method: 'DELETE',
@@ -124,7 +116,7 @@ export default function CoursesPage() {
         body: JSON.stringify({ id: courseId })
       })
       if (response.ok) {
-        setCourses(courses.filter(c => c.id !== courseId)) // Remove deleted course from courses state
+        setCourses(courses.filter(c => c.id !== courseId))
       } else {
         console.error('Failed to delete course')
       }
@@ -136,7 +128,7 @@ export default function CoursesPage() {
     return (
     <div className="page-container">
       <div className="page-content">
-        {/* Header Section */}
+        {/* header section */}
         <div className="header-card">
           <div className="page-header">
             <div>
@@ -147,7 +139,7 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Add New Course Section */}
+        {/* add new course */}
         <div className="page-card mb-8">
           <h2 className="section-title">Add New Course</h2>
           <form onSubmit={handleCreateCourse} className="form-group">
@@ -191,12 +183,12 @@ export default function CoursesPage() {
           </form>
         </div>
 
-        {/* Your Courses Section */}
+        {/* course list */}
         <div className="page-card">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
             <h2 className="section-title mb-4 md:mb-0">Your Courses</h2>
             
-            {/* Sorting Controls */}
+            {/* sorting buttons */}
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-white">Sort by:</label>
               <div className="flex gap-1">

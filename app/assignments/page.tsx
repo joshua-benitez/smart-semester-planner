@@ -6,6 +6,7 @@ import { AssignmentList } from '@/components/features/assignments/AssignmentList
 import type { AssignmentStatusUpdateExtras } from '@/types/assignment'
 
 export default function AssignmentsIndexPage() {
+  // main assignments hub: wraps the list hook with bulk helpers
   const { assignments, loading, deleteAssignment, refresh } = useAssignments()
 
   const handleStatusUpdate = async (

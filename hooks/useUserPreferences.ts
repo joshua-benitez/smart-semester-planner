@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { UserPreferences } from '@/types/user'
 
 export function useUserPreferences() {
+  // central cache for preference toggles so the UI stays consistent
   const queryClient = useQueryClient()
 
   const preferencesQuery = useQuery<UserPreferences>({

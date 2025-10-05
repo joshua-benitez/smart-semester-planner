@@ -7,6 +7,7 @@ import Logo from "@/components/ui/Logo";
 import { useLadder } from "@/hooks/useLadder";
 import LadderSidebarCard from "@/components/features/ladder/LadderSidebarCard";
 
+// sticky sidebar that drives nav + shows the live ladder card
 const navItems: Array<{ href: string; label: string; icon: ReactNode }> = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
   { href: "/assignments", label: "Assignments", icon: <AssignmentsIcon /> },

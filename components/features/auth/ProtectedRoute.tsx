@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter()
 
   useEffect(() => {
-    if (status === 'loading') return // Still loading
+    if (status === 'loading') return // wait until next-auth tells us what's up
     if (!session) {
       router.push('/auth/signin')
     }
@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!session) {
-    return null // Will redirect to sign in
+    return null // router push above handles the redirect
   }
 
   return <>{children}</>

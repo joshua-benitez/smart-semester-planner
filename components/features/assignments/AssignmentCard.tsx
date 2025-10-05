@@ -36,11 +36,11 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
 
     const newStatus = assignment.status === 'completed' ? 'not_started' : 'completed'
 
-    // If completing, show modal for submission note
+    // when marking complete, pop the modal for a submission note
     if (newStatus === 'completed') {
       setShowSubmissionModal(true)
     } else {
-      // If uncompleting, just update directly
+      // if reopening, clear the submission metadata
       const extras: AssignmentStatusUpdateExtras = { submittedAt: null }
       onStatusUpdate(assignment.id, newStatus, extras)
     }
@@ -61,7 +61,7 @@ export const AssignmentCard = ({ assignment, onDelete, index = 0, isSelected = f
     <>
       <Card animate delay={index * 0.1} className={`${isSelected ? 'ring-2 ring-brandPrimary' : ''} space-y-3`}>
         <div className="mobile-stack">
-          {/* Selection Checkbox */}
+          {/* checkbox for bulk actions */}
           {onSelect && (
             <div className="flex items-start pt-1">
               <input

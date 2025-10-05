@@ -37,7 +37,7 @@ export async function PUT(request: Request) {
     }
 
     if (newPassword) {
-      // verify current password if set on user
+      // double-check the existing password before letting anyone swap it
       const stored = await prisma.user.findUnique({ where: { id: user.id } })
       if (!stored) return NextResponse.json({ error: 'User not found' }, { status: 404 })
       if (stored.password) {

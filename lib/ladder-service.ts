@@ -1,6 +1,8 @@
+// ladder brain: thresholds, summaries, and transactional point updates
 import { prisma } from '@/lib/db'
 import type { LadderReasonCode, LadderSummary, LadderThreshold } from '@/types/ladder'
 
+// single source of truth for how many points each ladder step spans
 export const LADDER_STEPS: LadderThreshold[] = [
   { step: 'initiate', label: 'Initiate', minPoints: 0, maxPoints: 499, hasLevels: true },
   { step: 'trailblazer', label: 'Trailblazer', minPoints: 500, maxPoints: 999, hasLevels: true },
@@ -12,6 +14,7 @@ export const LADDER_STEPS: LadderThreshold[] = [
   { step: 'icon', label: 'Icon', minPoints: 3500, hasLevels: false },
 ]
 
+// whitelist of reason codes the API will accept
 export const LADDER_REASON_CODES: LadderReasonCode[] = [
   'task_completed',
   'task_early_bonus',
@@ -30,6 +33,7 @@ const LADDER_REASON_LABELS: Record<LadderReasonCode, string> = {
   manual_adjustment: 'Manual adjustment',
 }
 
+// make event timestamps read nicely in the sidebar/feed
 function computeRelativeTime(from: Date, to: Date = new Date()): string {
   const diffSeconds = Math.round((from.getTime() - to.getTime()) / 1000)
   const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
@@ -55,6 +59,7 @@ function computeRelativeTime(from: Date, to: Date = new Date()): string {
   return rtf.format(duration, 'years')
 }
 
+// figure out which ladder step someone belongs to based on points
 export function resolveLadderStep(pointTotal: number): LadderThreshold {
   const ordered = [...LADDER_STEPS].sort((a, b) => b.minPoints - a.minPoints)
   for (const threshold of ordered) {
@@ -65,6 +70,7 @@ export function resolveLadderStep(pointTotal: number): LadderThreshold {
   return LADDER_STEPS[0]
 }
 
+// break a step into five mini-levels so progress feels smoother
 export function computeLevel(pointTotal: number, threshold: LadderThreshold): number | null {
   if (!threshold.hasLevels || threshold.maxPoints === undefined) {
     return null
@@ -91,6 +97,7 @@ type LadderSummaryInput = {
   }[]
 }
 
+// convert raw ladder data into the compact summary the UI consumes
 export function buildLadderSummary({ pointTotal, events }: LadderSummaryInput): LadderSummary {
   const clampedPoints = Math.max(0, Math.floor(pointTotal))
   const step = resolveLadderStep(clampedPoints)
@@ -137,6 +144,7 @@ type LadderDeltaInput = {
   assignmentId?: string
 }
 
+// transactionally apply a delta and return the fresh summary
 export async function applyLadderDelta(input: LadderDeltaInput): Promise<LadderSummary> {
   const { userId, delta, reason, description, assignmentId } = input
 

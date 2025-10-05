@@ -8,7 +8,7 @@ import { useAssignments } from "@/hooks/useAssignments"
 import { useLadder } from "@/hooks/useLadder"
 import { AssignmentList } from "@/components/features/assignments/AssignmentList"
 import type { AssignmentStatusUpdateExtras } from "@/types/assignment"
-// Logo removed to avoid duplicate branding with Sidebar
+// skipping the hero logo so the sidebar version stays unique
 
 type Course = {
   id: string
@@ -50,7 +50,7 @@ const difficultyThemes: Record<string, { border: string; background: string; gra
 }
 
 export default function DashboardPage() {
-  // Get user session and assignments
+  // pull session + data hooks up front
   const { data: session } = useSession()
   const router = useRouter()
   const { assignments, loading, deleteAssignment, refresh } = useAssignments()
@@ -62,13 +62,13 @@ export default function DashboardPage() {
   const searchParams = useSearchParams()
   const firstName = session?.user?.name?.split(" ")?.[0] ?? "there"
 
-  // Check for course filter from URL
+  // hydrate course filter from the query string when people share links
   useEffect(() => {
     const courseParam = searchParams.get("course")
     if (courseParam) setSelectedCourseId(courseParam)
   }, [searchParams])
 
-  // Fetch courses
+  // initial course fetch for the dropdown
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -84,7 +84,7 @@ export default function DashboardPage() {
     fetchCourses()
   }, [])
 
-  // Build current week (Sunday–Saturday)
+  // build the current week (Sunday–Saturday) for the mini calendar
   const weekDays = useMemo(() => {
     const start = new Date()
     start.setDate(start.getDate() - start.getDay())
@@ -116,14 +116,14 @@ export default function DashboardPage() {
     })
   }, [assignments])
 
-  // Pick top 3 urgent assignments
+  // grab the next three deadlines for the priority row
   const priorityAssignments = useMemo(() => {
     return [...assignments]
       .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
       .slice(0, 3)
   }, [assignments])
 
-  // Filter and sort assignments
+  // filter + sort assignments based on course selection and sort option
   const filteredAndSortedAssignments = useMemo(() => {
     let filtered = assignments
 
@@ -140,18 +140,18 @@ export default function DashboardPage() {
       }
     }
 
-    // Auto-hide completed assignments after 24 hours
+    // autohide completed items after 24 hours so the list stays focused
     const now = new Date()
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     
     filtered = filtered.filter((assignment) => {
-      // Keep non-completed assignments
+      // always keep anything that's not completed yet
       if (assignment.status !== 'completed') return true
       
-      // Keep completed assignments without submittedAt (shouldn't happen but safety check)
+      // fallback guard: if somehow no submittedAt, keep it visible
       if (!assignment.submittedAt) return true
       
-      // Keep completed assignments that are less than 24 hours old
+      // otherwise keep it only if it was finished in the last day
       const submittedDate = new Date(assignment.submittedAt)
       return submittedDate > twentyFourHoursAgo
     })
@@ -175,13 +175,13 @@ export default function DashboardPage() {
     return sorted
   }, [assignments, selectedCourseId, sortBy, courses])
 
-  // Handlers
+  // handlers
   const handleStatusUpdate = async (
     id: string,
     status: string,
     extras: AssignmentStatusUpdateExtras = {}
   ) => {
-    // Prevent duplicate calls for same assignment
+    // short-circuit duplicate clicks on the same card
     if (updatingIds.has(id)) {
       console.log('Already updating assignment:', id);
       return;
@@ -190,7 +190,7 @@ export default function DashboardPage() {
     const startTime = performance.now();
     console.log('Starting status update at:', startTime, { id, status, extras });
     
-    // Add to updating set
+    // track the active update so we can block repeats
     setUpdatingIds(prev => new Set(prev).add(id));
     
     try {
@@ -215,7 +215,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Status update error:", err)
     } finally {
-      // Remove from updating set
+      // clear the tracking set
       setUpdatingIds(prev => {
         const next = new Set(prev);
         next.delete(id);
@@ -262,7 +262,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container py-10 space-y-10">
-      {/* Header */}
+      {/* header */}
       <header className="mb-4 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Welcome back, {firstName}</h1>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Mini Calendar Strip */}
+      {/* mini calendar strip */}
       <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <h2 className="text-xl font-bold mb-4">This Week</h2>
         <div className="grid grid-cols-7 gap-3 text-center">
@@ -342,7 +342,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Priority Assignments */}
+      {/* priority assignments */}
       <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <h2 className="text-xl font-bold mb-4">Priority Assignments</h2>
         <div className="grid gap-4 md:grid-cols-3">
@@ -391,7 +391,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Full Assignment List */}
+      {/* full assignment list */}
       <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>

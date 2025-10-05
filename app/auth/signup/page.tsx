@@ -42,7 +42,7 @@ export default function SignUp() {
 
       setSuccess('Account created successfully! Signing you in...')
       
-      // Auto sign in after successful signup
+      // jump straight into a session once the account is created
       const result = await signIn('credentials', {
         email,
         password,

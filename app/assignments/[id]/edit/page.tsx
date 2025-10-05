@@ -9,7 +9,7 @@ export default function EditAssignment() {
     const router = useRouter()
     const assignmentId = params.id as string
 
-    // The Assignment type with all fields from API
+    // shape for the assignment response coming back from the API
     type Assignment = {
         id: string
         title: string
@@ -31,11 +31,10 @@ export default function EditAssignment() {
         weight: number
     }
 
-    // State for the assignment data and loading
-    const [data, setData] = useState<Assignment | null>(null) // To store the fetched data
-    const [loading, setLoading] = useState(true) // To indicate loading status
-    const [error, setError] = useState<Error | string | null>(null) // to store any errors
-    const [submitLoading, setSubmitLoading] = useState(false) // To track form submission loading
+    const [data, setData] = useState<Assignment | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<Error | string | null>(null)
+    const [submitLoading, setSubmitLoading] = useState(false)
     const [formData, setFormData] = useState<FormData>({
         title: '',
         description: '',
@@ -48,7 +47,7 @@ export default function EditAssignment() {
 
 
 
-    // Fetch by id
+    // fetch the assignment on mount
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
@@ -68,7 +67,7 @@ export default function EditAssignment() {
         if (assignmentId) fetchAssignment()
     }, [assignmentId])
 
-    // useEffect to populate form when data loads
+    // sync the form once the assignment loads
     useEffect(() => {
         if (data) {
             setFormData({
@@ -94,7 +93,7 @@ export default function EditAssignment() {
         return null
     }
 
-    // Add handleSubmit function  
+    // submit updates back through the assignments API
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setSubmitLoading(true)
@@ -105,14 +104,14 @@ export default function EditAssignment() {
                 body: JSON.stringify({ id: assignmentId, ...formData })
             })
             if (!res.ok) {
-                // Try to get the error message from the response
+                // try to surface the API error if it exists
                 const body = await res.json().catch(() => ({}))
                 console.error('Update failed:', body)
                 alert(body?.error || 'Failed to update assignment')
                 setSubmitLoading(false)
                 return
             }
-            // Success! Go back to the dashboard
+            // success -> kick back to the dashboard
             router.push('/dashboard')
         } catch (error) {
             console.error('Network error:', error)
@@ -122,14 +121,14 @@ export default function EditAssignment() {
         }
     }
 
-    // handleChange function to update form data
+    // track field changes and coerce weight to a number
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'weight' ? Number(value) : value // Convert weight to number
+            [name]: name === 'weight' ? Number(value) : value // keep weight numeric
         }))
     }
 

@@ -1,3 +1,4 @@
+// singleton prisma client so hot reloads don't blow up the connection pool
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as {

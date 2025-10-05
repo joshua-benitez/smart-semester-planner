@@ -31,7 +31,7 @@ const DEFAULTS: Required<ParseOptions> = {
   acceptPastDates: true,
 };
 
-// Normalization helpers
+// clean up the raw syllabus text before parsing
 function normalizeText(input: string): string {
   return input
     .replace(/\r\n?/g, "\n")                  // windows newlines -> \n
@@ -47,7 +47,7 @@ function splitKeepIndex(text: string): { line: string; index: number }[] {
     .filter(x => x.line.length > 0);
 }
 
-// Segmentation - Merge wrapped lines that are obviously continuations (indented, bullet continuations, trailing commas, etc.)
+// merge obvious continuation lines so chrono sees the full sentence
 function segmentBlocks(lines: { line: string; index: number }[]): { text: string; indices: number[] }[] {
   const blocks: { text: string; indices: number[] }[] = [];
   let buf: string[] = [];
@@ -83,7 +83,7 @@ function segmentBlocks(lines: { line: string; index: number }[]): { text: string
   return blocks;
 }
 
-// Assignment heuristics
+// my quick keyword map so the parser has a clue what type we're dealing with
 const KEYWORD_MAP: Record<AssignmentType, string[]> = {
   quiz: ["quiz", "content quiz", "practice quiz"],
   project: ["project", "programming project", "research assignment", "speech", "presentation", "slides"],
@@ -121,12 +121,12 @@ function defaultDifficulty(type: AssignmentType): Difficulty {
   return "moderate";
 }
 
-// Date extraction using chrono
+// date extraction via chrono; lot of edge cases so we massage the result
 function extractISO(dateText: string, opts: Required<ParseOptions>): string | null {
-  // Parse with chrono relative to referenceDate
+  // run chrono relative to the reference date (usually semester start)
   const results = chrono.parse(dateText, opts.referenceDate, { forwardDate: true });
   if (!results.length) return null;
-  // Choose the *last* resolved date on the line (common pattern: open -> due)
+  // grab the last date on the line since profs love "opens X, due Y"
   const last = results[results.length - 1];
   const d = last.start.date(); // JS Date
 
@@ -139,7 +139,7 @@ function extractISO(dateText: string, opts: Required<ParseOptions>): string | nu
     }
     d.setFullYear(inferredYear);
   }
-  // Force default due time if only date provided
+  // assume a default due time if the prof only gave a date
   const [hh, mm] = opts.defaultDueTime.split(":").map(Number);
   d.setHours(hh, mm, 0, 0);
   const iso = toLocalISO(d);
@@ -148,26 +148,26 @@ function extractISO(dateText: string, opts: Required<ParseOptions>): string | nu
 }
 
 function toLocalISO(d: Date): string {
-  // Local "YYYY-MM-DDTHH:mm" without timezone suffix
+  // local "YYYY-MM-DDTHH:mm" without timezone noise
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// Title cleanup
+// clean up the noisy title text so the UI looks decent
 function cleanTitle(raw: string): string {
   let t = raw;
-  // Remove trailing "Due ..." gibberish
+  // ditch trailing "Due..." wording
   t = t.replace(/\b(due|by|deadline)[:\s].*$/i, "").trim();
-  // Remove dates in parentheses
+  // also strip dates inside parentheses
   t = t.replace(/\((?:[^()]*\d[^()]*)\)$/g, "").trim();
-  // Collapse spaces
+  // collapse random spacing
   t = t.replace(/\s{2,}/g, " ");
-  // Capitalize first letter nicely
+  // capitalize the front so cards look consistent
   if (t.length) t = t[0].toUpperCase() + t.slice(1);
   return t;
 }
 
-// Confidence scoring
+// score how confident I am this block is a real assignment
 function scoreLine(line: string, hasDate: boolean, type: AssignmentType | null): number {
   let s = 0;
   const lower = line.toLowerCase();
@@ -179,7 +179,7 @@ function scoreLine(line: string, hasDate: boolean, type: AssignmentType | null):
   return Math.min(1, s);
 }
 
-// Main parse function
+// main parse entry point used by the syllabus modal
 export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssignment[] {
   const opts = { ...DEFAULTS, ...(options || {}) };
   const text = normalizeText(input);
@@ -191,9 +191,9 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
   for (const block of blocks) {
     const raw = block.text;
     const type = detectType(raw) ?? "homework";
-    const iso = extractISO(raw, opts);          // try dates in the same block
+    const iso = extractISO(raw, opts);          // first try to grab a date in the same block
 
-    // If no date in the same block, try a softer hint: trailing "Due: ..." segment separated by punctuation
+    // if the date wasn't in the block, take a second pass for trailing "due:" text
     let dueISO = iso;
     if (!dueISO) {
       const match = raw.match(/(?:due|by)[:\s]+([^.;]+)[.;]?/i);
@@ -202,7 +202,7 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
       }
     }
 
-    // Decide if this block is "assignment-like":
+    // skip anything that doesn't feel like an assignment
     const looksLikeAssignment = detectType(raw) !== null || !!dueISO || /\bchapter\b|\bchapter\s*\d+\b/i.test(raw);
     if (!looksLikeAssignment) continue;
 
@@ -220,7 +220,7 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
     });
   }
 
-  // Deduplicate by (normalizedTitle, dueDate)
+  // remove accidental duplicates caused by syllabus formatting quirks
   const seen = new Set<string>();
   const deduped: ParsedAssignment[] = [];
   for (const a of out) {
@@ -232,7 +232,7 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
   return deduped;
 }
 
-// Runtime validation (optional but nice)
+// schema keeps downstream consumers honest without trusting my string parsing
 export const ParsedAssignmentSchema = z.object({
   title: z.string().min(1),
   dueDate: z.string().min(3),

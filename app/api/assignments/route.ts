@@ -6,7 +6,7 @@ import type { LadderReasonCode } from '@/types/ladder'
 import { z } from 'zod'
 import { UnauthorizedError } from '@/lib/errors'
 
-// Lightweight runtime validation helper
+// tiny helper so we don't run Prisma with blank ids
 function isNonEmptyString(x: any): x is string {
   return typeof x === 'string' && x.trim().length > 0
 }
@@ -50,7 +50,7 @@ function describeOffset(diffMs: number, suffix: 'early' | 'late') {
   return `${hours}h ${suffix}`
 }
 
-// Zod schemas
+// guardrails for the payloads coming from the client
 const AssignmentCreateSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().default(''),
@@ -59,7 +59,7 @@ const AssignmentCreateSchema = z.object({
     .refine((d) => d instanceof Date && !isNaN(d.getTime()), { message: 'Invalid dueDate' }),
   type: z.enum(['homework', 'quiz', 'project', 'exam']).optional(),
   difficulty: z.enum(['easy', 'moderate', 'crushing', 'brutal']).optional(),
-  // Weight as percentage (0-100)
+  // weight is stored as a percent (0-100)
   weight: z.number().min(0).max(100).optional(),
   courseName: z.string()
     .transform((val) => val.trim())
@@ -85,7 +85,7 @@ const AssignmentUpdateSchema = z.object({
   submissionNote: z.string().max(500).nullable().optional(),
 })
 
-// GET: fetch all assignments (with course)
+// GET -> return every assignment for the signed-in user
 export async function GET() {
   try {
     const user = await requireAuth()
@@ -104,7 +104,7 @@ export async function GET() {
   }
 }
 
-// POST: create new assignment
+// POST -> create a fresh assignment and auto-make the course if needed
 export async function POST(request: Request) {
   try {
     const user = await requireAuth()
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT: update an assignment
+// PUT -> update an assignment and adjust ladder points when status flips
 export async function PUT(request: Request) {
   try {
     const user = await requireAuth()
@@ -173,7 +173,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    // Find assignment by ID
+    // make sure the assignment belongs to this user before touching it
     const existing = await prisma.assignment.findFirst({
       where: { id: parsed.data.id, userId: user.id }
     })
@@ -181,7 +181,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
     }
 
-    // Build update payload only with provided fields
+    // only set fields the client actually sent
     const updateData: any = {}
     const nextTitle = parsed.data.title ?? existing.title
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title
@@ -343,7 +343,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE: remove an assignment
+// DELETE -> nuke the assignment and roll back any ladder history from it
 export async function DELETE(request: Request) {
   try {
     const user = await requireAuth()
@@ -353,7 +353,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing assignment id' }, { status: 400 })
     }
 
-    // Check if the assignment exists before trying to delete it
+    // verify the assignment really exists for this user
     const existing = await prisma.assignment.findFirst({
       where: { id, userId: user.id }
     })

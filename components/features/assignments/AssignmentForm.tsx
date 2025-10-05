@@ -27,7 +27,7 @@ export const AssignmentForm = ({
   const [loading, setLoading] = useState(false)
   const [courses, setCourses] = useState<Course[]>([])
   const [coursesLoading, setCoursesLoading] = useState(true)
-  // Helper to default due date to today at 23:59 local
+  // default the due date to tonight at 11:59 local time
   const defaultDueLocal = () => {
     const d = new Date()
     d.setHours(23, 59, 0, 0)
@@ -42,7 +42,7 @@ export const AssignmentForm = ({
     type: initialData.type || 'homework',
     difficulty: initialData.difficulty || 'moderate',
     courseName: initialData.courseName || '',
-    // Weight now represents category weight as percentage 0-100
+    // weight is stored as a percent slider in the UI
     weight: initialData.weight !== undefined ? initialData.weight : 20,
     submissionNote: initialData.submissionNote || '',
   })
@@ -81,7 +81,7 @@ export const AssignmentForm = ({
     }))
   }
 
-  // Fetch courses when component mounts
+  // populate the course dropdown on mount
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -137,7 +137,7 @@ export const AssignmentForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="form-group">
-      {/* Assignment Title */}
+      {/* assignment title */}
       <div>
         <label className="form-label">Assignment Title</label>
         <input
@@ -151,7 +151,7 @@ export const AssignmentForm = ({
         />
       </div>
 
-      {/* Course Selection */}
+      {/* course selection */}
       <div>
         <label className="form-label">Course</label>
         {coursesLoading ? (
@@ -190,7 +190,7 @@ export const AssignmentForm = ({
         )}
       </div>
 
-      {/* Description */}
+      {/* description */}
       <div>
         <label className="form-label">Description</label>
         <textarea
@@ -203,7 +203,7 @@ export const AssignmentForm = ({
         />
       </div>
 
-      {/* Submission Note */}
+      {/* submission note */}
       <div>
         <label className="form-label">Submission Note (optional)</label>
         <textarea
@@ -217,7 +217,7 @@ export const AssignmentForm = ({
         <p className="text-sm text-gray-500 mt-1">Notes boost early bonuses when you complete work ahead of the deadline.</p>
       </div>
 
-      {/* Due Date and Type */}
+      {/* due date and type */}
       <div className="form-grid">
         <div>
           <label className="form-label">Due Date</label>
@@ -257,7 +257,7 @@ export const AssignmentForm = ({
         </div>
       </div>
 
-      {/* Difficulty and Weight */}
+      {/* difficulty and weight */}
       <div className="form-grid">
         <div>
           <label className="form-label">Difficulty Level</label>
@@ -285,7 +285,7 @@ export const AssignmentForm = ({
         </div>
       </div>
 
-      {/* Submit and Cancel */}
+      {/* submit / cancel */}
       <div className="pt-6 border-t border-gray-200">
         <div className="flex gap-4">
           <Button

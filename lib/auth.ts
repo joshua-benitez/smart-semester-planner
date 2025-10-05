@@ -1,3 +1,4 @@
+// central NextAuth config – credentials only for now so I can tweak behavior easily
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"

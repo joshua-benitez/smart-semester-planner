@@ -1,4 +1,3 @@
-// app/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -6,9 +5,10 @@ import { authOptions } from "@/lib/auth";
 import Logo from "@/components/ui/Logo";
 
 export default async function LandingPage() {
+  // marketing splash for logged-out visitors; redirect signed-in users straight to work
   const session = await getServerSession(authOptions);
   if (session) {
-    redirect("/dashboard"); // logged-in users skip landing
+    redirect("/dashboard"); // skip the marketing page once you're signed in
   }
 
   return (

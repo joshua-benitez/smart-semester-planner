@@ -3,7 +3,7 @@ import { authOptions } from "./auth"
 import { prisma } from "./db"
 import { UnauthorizedError } from "./errors"
 
-// Helper function to get current authenticated user
+// central place to grab the signed-in user on the server
 export async function getCurrentUser() {
   try {
     const session = await getServerSession(authOptions)
@@ -20,12 +20,12 @@ export async function getCurrentUser() {
     })
     return user
   } catch (err) {
-    // If NextAuth or Prisma throw, treat as unauthenticated in API context
+    // if NextAuth/Prisma explode, just act like the user isn't signed in
     return null
   }
 }
 
-// Helper to get user or throw error  
+// same as above but throws when we absolutely need a user
 export async function requireAuth() {
   const user = await getCurrentUser()
   if (!user) {

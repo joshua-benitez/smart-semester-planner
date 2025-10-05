@@ -10,6 +10,7 @@ import {
   LADDER_STEPS,
 } from '@/lib/ladder-service'
 
+// GET -> return the latest ladder summary + event feed for the signed-in student
 export async function GET() {
   try {
     const user = await requireAuth()
@@ -45,6 +46,7 @@ export async function GET() {
   }
 }
 
+// POST -> apply a point delta (server-validated) and hand back the new summary
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth()

@@ -22,16 +22,16 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   const [selectionMode, setSelectionMode] = useState(false)
   const { preferences, updatePreferences } = useUserPreferences()
 
-  // Respect user preference but default to showing completed assignments on first load
+  // respect whatever preference was saved but default to showing everything
   const hideCompleted = preferences?.hideCompletedAssignments ?? false
   const showCompleted = !hideCompleted
 
-  // Toggle hide completed preference
+  // flip the hide-completed flag and persist it
   const toggleShowCompleted = () => {
     updatePreferences({ hideCompletedAssignments: !hideCompleted })
   }
 
-  // Filter assignments based on show completed toggle
+  // apply the toggle before rendering the list
   const completedStatuses = ['completed', 'submitted', 'graded']
   const filteredAssignments = showCompleted ? assignments : assignments.filter(a => !completedStatuses.includes(a.status))
 
@@ -113,10 +113,10 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
+      {/* top toolbar */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-soft">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          {/* Left controls */}
+          {/* left side toggles */}
           <div className="flex items-center gap-3 flex-wrap">
             {!selectionMode ? (
               <>
@@ -165,7 +165,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
             )}
           </div>
 
-          {/* Bulk Action Buttons */}
+          {/* bulk actions when selection mode is live */}
           {selectionMode && selectedIds.size > 0 && onBulkStatusUpdate && (
             <div className="flex gap-2 flex-wrap items-center">
               <Button size="sm" variant="secondary" className="rounded-full px-4" onClick={() => handleBulkAction('completed')} disabled={bulkLoading}>
@@ -190,7 +190,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
         </div>
       </div>
 
-      {/* Assignment Cards */}
+      {/* the actual assignment cards */}
       {filteredAssignments.map((assignment, index) => (
         <AssignmentCard
           key={assignment.id}

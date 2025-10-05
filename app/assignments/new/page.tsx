@@ -35,7 +35,7 @@ export default function NewAssignment() {
     setBatchCreating(true)
     
     try {
-      // Create all assignments in parallel
+      // fire off creates in parallel to keep it fast
       const promises = assignments.map(assignment => 
         fetch('/api/assignments', {
           method: 'POST',
@@ -46,7 +46,7 @@ export default function NewAssignment() {
       
       const results = await Promise.all(promises)
       
-      // Check if any failed
+      // bail out if any of the calls came back unhappy
       const failed = results.filter(r => !r.ok)
       if (failed.length > 0) {
         throw new Error(`Failed to create ${failed.length} assignments`)
@@ -91,7 +91,7 @@ export default function NewAssignment() {
             submitText="Create Assignment"
           />
           
-          {/* Syllabus Parser Modal */}
+          {/* syllabus parser modal */}
           {showSyllabusParser && (
             <SyllabusParser
               onAssignmentsParsed={handleBatchCreate}

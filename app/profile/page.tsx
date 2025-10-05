@@ -11,6 +11,7 @@ type Profile = {
 }
 
 export default function ProfilePage() {
+  // lightweight account settings page (name + password) hitting the profile API
   const { data: session } = useSession()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)

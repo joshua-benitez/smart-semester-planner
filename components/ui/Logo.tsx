@@ -1,4 +1,4 @@
-// components/ui/Logo.tsx
+// simple logo wrapper so I can resize it anywhere in the app
 import Image from "next/image";
 import logo from "@/public/images/logo.png";
 
@@ -6,7 +6,7 @@ type LogoProps = {
   width?: number;        // render width in px
   className?: string;    // optional wrapper class
   imgClassName?: string; // optional <Image> class
-  unwrapped?: boolean;   // if true, render <Image> directly
+  unwrapped?: boolean;   // skip the div wrapper when true
 };
 
 export default function Logo({
