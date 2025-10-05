@@ -55,6 +55,9 @@ export async function POST(request: Request) {
         name: parsed.data.name,
         color: parsed.data.color ?? '#3b82f6',
         userId: user.id
+      },
+      include: {
+        _count: { select: { assignments: true } }
       }
     })
     return NextResponse.json(newCourse)
@@ -88,6 +91,9 @@ export async function PUT(request: Request) {
       data: {
         name: parsed.data.name ?? existingCourse.name,
         color: parsed.data.color ?? existingCourse.color
+      },
+      include: {
+        _count: { select: { assignments: true } }
       }
     })
     return NextResponse.json(updatedCourse)

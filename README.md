@@ -5,17 +5,19 @@ I'm building this so I stop juggling random spreadsheets and overdue Canvas tabs
 ## Quick Start
 
 ```bash
+cp .env.example .env.local   # add your Postgres DATABASE_URL + NextAuth vars
 npm install
-npm run db:push   # creates the local SQLite dev file
-npm run dev       # launches Next.js on http://localhost:3000
+npx prisma db push           # sync schema to your dev database
+npm run db:seed              # optional: load the demo data
+npm run dev                  # launches Next.js on http://localhost:3000
 ```
 
-Demo data lives in `prisma/seed.ts` if you want a populated dashboard.
+I use a Neon branch for local development so I get the same Postgres flavor that runs in production, but any Postgres instance works (Docker, Supabase, etc.).
 
 ## How It Works
 
 - App Router (Next.js 14) drives the UI with client components where it makes sense.
-- Prisma handles the data layer; SQLite locally, Postgres when I deploy.
+- Prisma handles the data layer; Postgres everywhere (Neon in prod, Neon branch locally).
 - NextAuth manages email/password auth with JWT sessions.
 - React Query keeps the assignment and ladder data in sync without me hand-rolling caches.
 - Tailwind is doing the styling lift so I can focus on features.
@@ -48,16 +50,13 @@ types/                  # shared TypeScript types
 
 ## Deploy Notes (Vercel)
 
-1. Grab a managed Postgres instance (Neon/Supabase/Vercel Postgres) and set `DATABASE_URL`.
-2. Add the following env vars in Vercel settings:
-   - `DATABASE_URL`
-   - `NEXTAUTH_URL`
-   - `NEXTAUTH_SECRET`
-3. Switch the Prisma datasource to `postgresql` before running `npx prisma migrate deploy` (or `db push` if you keep it lightweight).
-4. Run a smoke check locally:
-   - `next build`
-   - hit `/api/assignments` with a logged-in session
-   - sign in/out once to confirm auth.
-5. Deploy and repeat the same checklist against the production URL.
+1. **Database** – spin up a managed Postgres (I’m using Neon). Copy the pooled connection string and stash it in Vercel as `DATABASE_URL`.
+2. **Auth env** – in Vercel → Project → Settings → Environment Variables set:
+   - `DATABASE_URL` – the pooled Postgres URI (include `?sslmode=require`).
+   - `NEXTAUTH_SECRET` – `openssl rand -hex 32` output.
+   - `NEXTAUTH_URL` – the exact production URL with `https://` (e.g., `https://courseflow-alpha.vercel.app`).
+3. **Schema sync** – before the first deploy run `npx prisma db push` (or `npx prisma migrate deploy`) pointed at that Postgres instance, then `npm run db:seed` if you want demo data.
+4. **Deploy** – `git push` and let Vercel build; it runs `next build` + Prisma generate automatically.
+5. **Smoke test prod** – create a fresh account, hit `/api/assignments`, and toggle the ladder from the live site to confirm everything talks to Neon.
 
-That’s the baseline I show recruiters/admissions so they know the project actually runs.
+Once all that passes, I link recruiters/admissions straight to the hosted app so they can click around a real deployment.
