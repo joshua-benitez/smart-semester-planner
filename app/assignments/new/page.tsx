@@ -10,7 +10,6 @@ import type { AssignmentFormData } from '@/types/assignment'
 export default function NewAssignment() {
   const router = useRouter()
   const [showSyllabusParser, setShowSyllabusParser] = useState(false)
-  const [batchCreating, setBatchCreating] = useState(false)
 
   const handleSubmit = async (formData: AssignmentFormData) => {
     const res = await fetch('/api/assignments', {
@@ -32,8 +31,6 @@ export default function NewAssignment() {
   }
 
   const handleBatchCreate = async (assignments: AssignmentFormData[]) => {
-    setBatchCreating(true)
-    
     try {
       // fire off creates in parallel to keep it fast
       const promises = assignments.map(assignment => 
@@ -58,8 +55,6 @@ export default function NewAssignment() {
     } catch (error) {
       console.error('Batch creation error:', error)
       alert('Some assignments failed to create. Please try again.')
-    } finally {
-      setBatchCreating(false)
     }
   }
 
