@@ -62,6 +62,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
       setSelectedIds(new Set())
     } catch (error) {
       console.error('Bulk update failed:', error)
+      alert('Bulk status update failed. Please try again.')
     } finally {
       setBulkLoading(false)
     }
@@ -81,6 +82,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
       setSelectedIds(new Set())
     } catch (error) {
       console.error('Bulk delete failed:', error)
+      alert('Bulk delete failed. Please try again.')
     } finally {
       setBulkLoading(false)
     }

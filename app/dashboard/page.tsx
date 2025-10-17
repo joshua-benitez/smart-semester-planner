@@ -214,6 +214,7 @@ export default function DashboardPage() {
       console.log('Total time:', totalTime, 'ms');
     } catch (err) {
       console.error("Status update error:", err)
+      alert('Failed to update assignment status. Please try again.')
     } finally {
       // clear the tracking set
       setUpdatingIds(prev => {
@@ -226,37 +227,41 @@ export default function DashboardPage() {
 
   const handleBulkStatusUpdate = async (ids: string[], status: string) => {
     try {
-      const results = await Promise.all(
-        ids.map((id) =>
-          fetch("/api/assignments", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id, status }),
-          })
-        )
-      )
-      if (results.some((r) => !r.ok)) throw new Error("Bulk update failed")
-      await refresh()
+      for (const id of ids) {
+        const res = await fetch("/api/assignments", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body?.error || 'Failed to update assignment')
+        }
+      }
+      await Promise.all([refresh(), refreshLadder()])
     } catch (err) {
       console.error("Bulk update error:", err)
+      throw err
     }
   }
 
   const handleBulkDelete = async (ids: string[]) => {
     try {
-      const results = await Promise.all(
-        ids.map((id) =>
-          fetch("/api/assignments", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id }),
-          })
-        )
-      )
-      if (results.some((r) => !r.ok)) throw new Error("Bulk delete failed")
-      await refresh()
+      for (const id of ids) {
+        const res = await fetch("/api/assignments", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body?.error || 'Failed to delete assignment')
+        }
+      }
+      await Promise.all([refresh(), refreshLadder()])
     } catch (err) {
       console.error("Bulk delete error:", err)
+      throw err
     }
   }
 

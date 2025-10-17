@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import type { AssignmentFormData } from '@/types/assignment'
+import { validateAssignment } from '@/lib/validations'
 
 
 export default function EditAssignment() {
@@ -19,30 +21,31 @@ export default function EditAssignment() {
         difficulty: string
         weight: number
         course: { name: string }
+        submissionNote: string | null
     }
 
-    type FormData = {
-        title: string
-        description: string
-        dueDate: string
-        type: string
-        difficulty: string
-        courseName: string
-        weight: number
+    type FormState = AssignmentFormData
+
+    const formatForInput = (value: string): string => {
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) return value
+        const pad = (n: number) => String(n).padStart(2, '0')
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
     }
 
     const [data, setData] = useState<Assignment | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<Error | string | null>(null)
     const [submitLoading, setSubmitLoading] = useState(false)
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<FormState>({
         title: '',
         description: '',
         dueDate: '',
         type: 'homework',
         difficulty: 'moderate',
         courseName: '',
-        weight: 1
+        weight: 20,
+        submissionNote: ''
     })
 
 
@@ -73,29 +76,25 @@ export default function EditAssignment() {
             setFormData({
                 title: data.title,
                 description: data.description || '',
-                dueDate: data.dueDate,
+                dueDate: formatForInput(data.dueDate),
                 type: data.type || 'homework',
                 difficulty: data.difficulty || 'moderate',
                 courseName: data.course.name,
-                weight: data.weight || 1
+                weight: data.weight ?? 20,
+                submissionNote: data.submissionNote ?? ''
             })
 
         }
     }, [data])
 
-    const validate = (): string | null => {
-        if (!formData.title.trim()) return 'Title is required'
-        if (!formData.courseName.trim()) return 'Course name is required'
-        if (!formData.dueDate) return 'Due date is required'
-        const d = new Date(formData.dueDate)
-        if (isNaN(d.getTime())) return 'Due date is invalid'
-        if (formData.weight < 0.1 || formData.weight > 5) return 'Weight must be between 0.1 and 5.0'
-        return null
-    }
-
     // submit updates back through the assignments API
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        const validationError = validateAssignment({ ...formData })
+        if (validationError) {
+            alert(validationError)
+            return
+        }
         setSubmitLoading(true)
         try {
             const res = await fetch('/api/assignments', {
@@ -132,7 +131,7 @@ export default function EditAssignment() {
         }))
     }
 
-    function renderForm(formData: FormData) {
+    function renderForm(formData: FormState) {
         return (
             <div className="page-container">
                 <div className="page-content max-w-2xl">
