@@ -58,6 +58,7 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [sortBy, setSortBy] = useState<"dueDate" | "title" | "difficulty">("dueDate")
+  const [searchQuery, setSearchQuery] = useState("")
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const searchParams = useSearchParams()
   const firstName = session?.user?.name?.split(" ")?.[0] ?? "there"
@@ -116,14 +117,6 @@ export default function DashboardPage() {
     })
   }, [assignments])
 
-  // grab the next three deadlines for the priority row
-  const priorityAssignments = useMemo(() => {
-    return [...assignments]
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-      .slice(0, 3)
-  }, [assignments])
-
-  // filter + sort assignments based on course selection and sort option
   const filteredAndSortedAssignments = useMemo(() => {
     let filtered = assignments
 
@@ -138,6 +131,14 @@ export default function DashboardPage() {
           )
         }
       }
+    }
+
+    const search = searchQuery.trim().toLowerCase()
+    if (search) {
+      filtered = filtered.filter((assignment) => {
+        const haystack = `${assignment.title} ${assignment.course?.name ?? ''} ${assignment.description ?? ''}`.toLowerCase()
+        return haystack.includes(search)
+      })
     }
 
     // autohide completed items after 24 hours so the list stays focused
@@ -173,7 +174,12 @@ export default function DashboardPage() {
     })
 
     return sorted
-  }, [assignments, selectedCourseId, sortBy, courses])
+  }, [assignments, selectedCourseId, sortBy, courses, searchQuery])
+
+  // grab the next three deadlines for the priority row (from filtered list)
+  const priorityAssignments = useMemo(() => {
+    return filteredAndSortedAssignments.slice(0, 3)
+  }, [filteredAndSortedAssignments])
 
   // handlers
   const handleStatusUpdate = async (
@@ -278,6 +284,8 @@ export default function DashboardPage() {
           <div className="relative w-full md:w-64">
             <input
               type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="form-input bg-white/5 pr-10 text-sm placeholder:text-white/40"
               placeholder="Search assignments"
             />
@@ -297,6 +305,17 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">
+            <label className="sr-only" htmlFor="dashboard-sort">Sort assignments</label>
+            <select
+              id="dashboard-sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="form-input w-full md:w-auto md:min-w-[160px]"
+            >
+              <option value="dueDate">Sort by due date</option>
+              <option value="title">Sort by title</option>
+              <option value="difficulty">Sort by difficulty</option>
+            </select>
             <Link href="/courses" className="btn-secondary text-white visited:text-white">Manage Courses</Link>
             <Link href="/assignments/new" className="btn-secondary text-white visited:text-white">+ New Assignment</Link>
             <button

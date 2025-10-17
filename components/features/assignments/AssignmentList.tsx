@@ -14,9 +14,10 @@ interface AssignmentListProps {
   onBulkStatusUpdate?: (ids: string[], status: string) => void
   onBulkDelete?: (ids: string[]) => void
   onStatusUpdate?: (id: string, status: string, extras?: AssignmentStatusUpdateExtras) => void
+  emptyState?: React.ReactNode
 }
 
-export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete, onStatusUpdate }: AssignmentListProps) => {
+export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBulkStatusUpdate, onBulkDelete, onStatusUpdate, emptyState }: AssignmentListProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [selectionMode, setSelectionMode] = useState(false)
@@ -97,6 +98,7 @@ export const AssignmentList = ({ assignments, loading, onDeleteAssignment, onBul
   }
 
   if (assignments.length === 0) {
+    if (emptyState) return <>{emptyState}</>
     return (
       <div className="empty-state">
         <p className="empty-title">No assignments yet. Start by adding one!</p>
