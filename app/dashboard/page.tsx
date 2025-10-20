@@ -611,7 +611,7 @@ export default function DashboardPage() {
            priorityGroups.dueThisWeek.length === 0 &&
            priorityGroups.dueSoon.length === 0 && (
             <div className="text-center py-8 text-white/70">
-              <p className="text-lg">🎉 All caught up!</p>
+              <p className="text-lg">All caught up!</p>
               <p className="text-sm mt-2">No active assignments right now.</p>
             </div>
           )}

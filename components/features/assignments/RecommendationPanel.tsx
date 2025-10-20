@@ -90,9 +90,9 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
   if (!topRecommendation) {
     return (
       <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
-        <h2 className="text-xl font-bold mb-4">🎯 Smart Recommendations</h2>
+        <h2 className="text-xl font-bold mb-4">Smart Recommendations</h2>
         <div className="text-center py-8 text-white/70">
-          <p className="text-lg">🎉 All caught up!</p>
+          <p className="text-lg">All caught up!</p>
           <p className="text-sm mt-2">No assignments to recommend right now.</p>
         </div>
       </section>
@@ -111,7 +111,7 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
   return (
     <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10 space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-xl font-bold">🎯 Smart Recommendations</h2>
+        <h2 className="text-xl font-bold">Smart Recommendations</h2>
         <span className="text-xs text-white/50 bg-white/5 px-3 py-1 rounded-full">
           Powered by AI scoring
         </span>
@@ -124,7 +124,6 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">⭐</span>
               <span className={`px-3 py-1 border rounded-full text-xs font-bold uppercase tracking-wider ${topColors.badge}`}>
                 START THIS NEXT
               </span>
@@ -186,7 +185,6 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
       {quickWins.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">⚡</span>
             <h3 className="text-lg font-bold">Quick Wins</h3>
             <span className="text-xs text-white/50">Easy tasks to build momentum</span>
           </div>
@@ -202,7 +200,6 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
       {highPriority.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🔥</span>
             <h3 className="text-lg font-bold">High Priority</h3>
             <span className="text-xs text-white/50">Critical deadlines approaching</span>
           </div>
@@ -218,7 +215,6 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
       {earlyBonusOpportunities.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🎁</span>
             <h3 className="text-lg font-bold">Earn Bonus Points</h3>
             <span className="text-xs text-white/50">Complete early for +15 ladder points</span>
           </div>
