@@ -66,6 +66,7 @@ const AssignmentCreateSchema = z.object({
     .refine((val) => val.length > 0, { message: 'Course name is required' }),
   submittedAt: z.union([z.string(), z.date()]).optional(),
   submissionNote: z.string().max(500).optional(),
+  estimatedHours: z.number().min(0.25).max(100).optional(),
 })
 
 const AssignmentUpdateSchema = z.object({
@@ -83,6 +84,7 @@ const AssignmentUpdateSchema = z.object({
     .optional(),
   submittedAt: z.union([z.string(), z.date(), z.null()]).optional(),
   submissionNote: z.string().max(500).nullable().optional(),
+  estimatedHours: z.number().min(0.25).max(100).nullable().optional(),
 })
 
 // GET -> return every assignment for the signed-in user
@@ -147,6 +149,7 @@ export async function POST(request: Request) {
         courseId: course.id,
         submittedAt,
         submissionNote: submissionNote ? submissionNote : null,
+        estimatedHours: parsed.data.estimatedHours ?? null,
       }
     })
 
@@ -234,6 +237,10 @@ export async function PUT(request: Request) {
         const trimmed = note.trim()
         updateData.submissionNote = trimmed ? trimmed : null
       }
+    }
+
+    if (parsed.data.estimatedHours !== undefined) {
+      updateData.estimatedHours = parsed.data.estimatedHours
     }
 
     const statusChanged = nextStatus !== existing.status

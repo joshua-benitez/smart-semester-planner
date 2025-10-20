@@ -12,6 +12,7 @@ export type Assignment = {
   course: { id: string; name: string; color?: string }
   submittedAt: string | null
   submissionNote: string | null
+  estimatedHours?: number | null
 }
 
 export type AssignmentFormData = {
@@ -23,6 +24,7 @@ export type AssignmentFormData = {
   courseName: string
   weight: number
   submissionNote?: string
+  estimatedHours?: number
 }
 
 export type AssignmentType = 'homework' | 'quiz' | 'project' | 'exam'

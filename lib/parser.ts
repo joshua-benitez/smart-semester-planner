@@ -121,14 +121,84 @@ function defaultDifficulty(type: AssignmentType): Difficulty {
   return "moderate";
 }
 
-// date extraction via chrono; lot of edge cases so we massage the result
+// Enhanced date extraction with regex patterns + chrono fallback
 function extractISO(dateText: string, opts: Required<ParseOptions>): string | null {
-  // run chrono relative to the reference date (usually semester start)
+  // Try regex patterns first for common formats that chrono might miss
+  const regexPatterns = [
+    // MM/DD/YYYY or MM/DD/YY
+    /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/,
+    // MM-DD-YYYY or MM-DD-YY
+    /(\d{1,2})-(\d{1,2})-(\d{2,4})/,
+    // Month DD, YYYY (e.g., "January 15, 2025")
+    /(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+(\d{1,2}),?\s+(\d{4})/i,
+    // Month DD (e.g., "Jan 15" or "January 15")
+    /(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+(\d{1,2})(?!\d)/i,
+    // DD Month (e.g., "15 Jan" or "15 January")
+    /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?/i,
+  ];
+
+  for (const pattern of regexPatterns) {
+    const match = dateText.match(pattern);
+    if (match) {
+      try {
+        let d: Date | null = null;
+
+        if (pattern.source.includes('January|February')) {
+          // Month name patterns
+          if (match[3] && match[3].length === 4) {
+            // Full date with year
+            d = new Date(`${match[1]} ${match[2]}, ${match[3]}`);
+          } else {
+            // Month + day only, infer year
+            const monthDay = `${match[1]} ${match[2]}`;
+            d = new Date(`${monthDay}, ${opts.assumeAcademicYear}`);
+            const monthNum = d.getMonth() + 1;
+            if (opts.semesterStartMonth && monthNum < opts.semesterStartMonth) {
+              d.setFullYear(opts.assumeAcademicYear + 1);
+            }
+          }
+        } else if (pattern.source.includes('\\d{1,2})\\s+')) {
+          // DD Month format
+          const monthMap: Record<string, number> = {
+            jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2,
+            apr: 3, april: 3, may: 4, jun: 5, june: 5, jul: 6, july: 6,
+            aug: 7, august: 7, sep: 8, september: 8, oct: 9, october: 9,
+            nov: 10, november: 10, dec: 11, december: 11,
+          };
+          const day = parseInt(match[1], 10);
+          const month = monthMap[match[2].toLowerCase()];
+          d = new Date(opts.assumeAcademicYear, month, day);
+          if (opts.semesterStartMonth && month < opts.semesterStartMonth - 1) {
+            d.setFullYear(opts.assumeAcademicYear + 1);
+          }
+        } else {
+          // Numeric formats (MM/DD/YYYY or MM-DD-YYYY)
+          const month = parseInt(match[1], 10);
+          const day = parseInt(match[2], 10);
+          let year = parseInt(match[3], 10);
+          if (year < 100) year += 2000; // Handle 2-digit years
+          d = new Date(year, month - 1, day);
+        }
+
+        if (d && !isNaN(d.getTime())) {
+          const [hh, mm] = opts.defaultDueTime.split(":").map(Number);
+          d.setHours(hh, mm, 0, 0);
+          const iso = toLocalISO(d);
+          if (!opts.acceptPastDates && new Date(iso) < new Date()) continue;
+          return iso;
+        }
+      } catch (e) {
+        // Continue to next pattern or chrono
+        continue;
+      }
+    }
+  }
+
+  // Fallback to chrono for natural language dates
   const results = chrono.parse(dateText, opts.referenceDate, { forwardDate: true });
   if (!results.length) return null;
-  // grab the last date on the line since profs love "opens X, due Y"
   const last = results[results.length - 1];
-  const d = last.start.date(); // JS Date
+  const d = last.start.date();
 
   if (!last.start.isCertain('year')) {
     const month = last.start.get('month') ?? (d.getMonth() + 1);
@@ -139,7 +209,6 @@ function extractISO(dateText: string, opts: Required<ParseOptions>): string | nu
     }
     d.setFullYear(inferredYear);
   }
-  // assume a default due time if the prof only gave a date
   const [hh, mm] = opts.defaultDueTime.split(":").map(Number);
   d.setHours(hh, mm, 0, 0);
   const iso = toLocalISO(d);
@@ -179,45 +248,179 @@ function scoreLine(line: string, hasDate: boolean, type: AssignmentType | null):
   return Math.min(1, s);
 }
 
+// Detect table/structured formats with Week numbers
+function parseWeekBasedFormat(lines: { line: string; index: number }[], opts: Required<ParseOptions>): ParsedAssignment[] {
+  const results: ParsedAssignment[] = [];
+  let currentWeekStart: Date | null = null;
+
+  for (const { line, index } of lines) {
+    // Check for week headers like "Week 1", "Week 2:", etc.
+    const weekMatch = line.match(/week\s+(\d+)[:\s-]*(.*)/i);
+    if (weekMatch) {
+      const weekNum = parseInt(weekMatch[1], 10);
+      // Estimate week start date (assuming semester starts on referenceDate)
+      currentWeekStart = new Date(opts.referenceDate);
+      currentWeekStart.setDate(currentWeekStart.getDate() + (weekNum - 1) * 7);
+
+      // Check if there's an assignment on the same line
+      const restOfLine = weekMatch[2].trim();
+      if (restOfLine.length > 10) {
+        const type = detectType(restOfLine) ?? "homework";
+        const iso = extractISO(restOfLine, opts);
+        const title = cleanTitle(restOfLine);
+
+        if (title && (iso || currentWeekStart)) {
+          const dueISO = iso || toLocalISO(new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000)); // End of week
+          results.push({
+            title,
+            dueDate: dueISO,
+            type,
+            difficulty: defaultDifficulty(type),
+            confidence: iso ? 0.8 : 0.5,
+            sourceLines: [index],
+          });
+        }
+      }
+    } else if (currentWeekStart) {
+      // This line might be an assignment for the current week
+      const type = detectType(line);
+      if (type || line.length > 15) {
+        const iso = extractISO(line, opts);
+        const title = cleanTitle(line);
+
+        if (title) {
+          const dueISO = iso || toLocalISO(new Date(currentWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000));
+          results.push({
+            title,
+            dueDate: dueISO,
+            type: type ?? "homework",
+            difficulty: defaultDifficulty(type ?? "homework"),
+            confidence: iso ? 0.8 : 0.4,
+            sourceLines: [index],
+          });
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+// Detect pipe-separated table formats (| Assignment | Due Date |)
+function parseTableFormat(text: string, opts: Required<ParseOptions>): ParsedAssignment[] {
+  const results: ParsedAssignment[] = [];
+  const lines = text.split('\n');
+
+  let titleCol = -1;
+  let dateCol = -1;
+  let typeCol = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line.includes('|')) continue;
+
+    const cells = line.split('|').map(c => c.trim()).filter(c => c.length > 0);
+
+    // Detect header row
+    if (titleCol === -1) {
+      for (let j = 0; j < cells.length; j++) {
+        const lower = cells[j].toLowerCase();
+        if (/assignment|task|work|topic/.test(lower)) titleCol = j;
+        if (/due|date|deadline/.test(lower)) dateCol = j;
+        if (/type|kind|category/.test(lower)) typeCol = j;
+      }
+      continue; // Skip header row
+    }
+
+    // Skip separator rows (----)
+    if (cells.every(c => /^[-:=\s]+$/.test(c))) continue;
+
+    // Parse data row
+    if (cells.length > Math.max(titleCol, dateCol)) {
+      const titleText = titleCol >= 0 && cells[titleCol] ? cells[titleCol] : '';
+      const dateText = dateCol >= 0 && cells[dateCol] ? cells[dateCol] : '';
+      const typeText = typeCol >= 0 && cells[typeCol] ? cells[typeCol] : '';
+
+      if (titleText && titleText.length > 2) {
+        const iso = dateText ? extractISO(dateText, opts) : null;
+        const type = detectType(typeText || titleText) ?? "homework";
+        const title = cleanTitle(titleText);
+
+        results.push({
+          title,
+          dueDate: iso ?? "TBD",
+          type,
+          difficulty: defaultDifficulty(type),
+          confidence: iso ? 0.9 : 0.3,
+          sourceLines: [i],
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
 // main parse entry point used by the syllabus modal
 export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssignment[] {
   const opts = { ...DEFAULTS, ...(options || {}) };
   const text = normalizeText(input);
-  const lines = splitKeepIndex(text).filter(({ line }) => !isHeaderNoise(line));
-  const blocks = segmentBlocks(lines);
 
+  // Try specialized parsers first
   const out: ParsedAssignment[] = [];
 
-  for (const block of blocks) {
-    const raw = block.text;
-    const type = detectType(raw) ?? "homework";
-    const iso = extractISO(raw, opts);          // first try to grab a date in the same block
-
-    // if the date wasn't in the block, take a second pass for trailing "due:" text
-    let dueISO = iso;
-    if (!dueISO) {
-      const match = raw.match(/(?:due|by)[:\s]+([^.;]+)[.;]?/i);
-      if (match) {
-        dueISO = extractISO(match[1], opts);
-      }
+  // Check for table format
+  if (text.includes('|') && text.split('|').length > 10) {
+    const tableResults = parseTableFormat(text, opts);
+    if (tableResults.length > 0) {
+      out.push(...tableResults);
     }
+  }
 
-    // skip anything that doesn't feel like an assignment
-    const looksLikeAssignment = detectType(raw) !== null || !!dueISO || /\bchapter\b|\bchapter\s*\d+\b/i.test(raw);
-    if (!looksLikeAssignment) continue;
+  // Check for week-based format
+  const lines = splitKeepIndex(text).filter(({ line }) => !isHeaderNoise(line));
+  if (text.match(/week\s+\d+/i)) {
+    const weekResults = parseWeekBasedFormat(lines, opts);
+    if (weekResults.length > 0) {
+      out.push(...weekResults);
+    }
+  }
 
-    const title = cleanTitle(raw);
-    const dueDate = dueISO ?? "TBD";
-    const confidence = scoreLine(raw, !!dueISO, detectType(raw));
+  // Fallback to original block-based parsing
+  if (out.length === 0) {
+    const blocks = segmentBlocks(lines);
 
-    out.push({
-      title: title || raw.slice(0, 140),
-      dueDate,
-      type,
-      difficulty: defaultDifficulty(type),
-      confidence,
-      sourceLines: block.indices,
-    });
+    for (const block of blocks) {
+      const raw = block.text;
+      const type = detectType(raw) ?? "homework";
+      const iso = extractISO(raw, opts);
+
+      // if the date wasn't in the block, take a second pass for trailing "due:" text
+      let dueISO = iso;
+      if (!dueISO) {
+        const match = raw.match(/(?:due|by)[:\s]+([^.;]+)[.;]?/i);
+        if (match) {
+          dueISO = extractISO(match[1], opts);
+        }
+      }
+
+      // skip anything that doesn't feel like an assignment
+      const looksLikeAssignment = detectType(raw) !== null || !!dueISO || /\bchapter\b|\bchapter\s*\d+\b/i.test(raw);
+      if (!looksLikeAssignment) continue;
+
+      const title = cleanTitle(raw);
+      const dueDate = dueISO ?? "TBD";
+      const confidence = scoreLine(raw, !!dueISO, detectType(raw));
+
+      out.push({
+        title: title || raw.slice(0, 140),
+        dueDate,
+        type,
+        difficulty: defaultDifficulty(type),
+        confidence,
+        sourceLines: block.indices,
+      });
+    }
   }
 
   // remove accidental duplicates caused by syllabus formatting quirks

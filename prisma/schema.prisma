@@ -78,26 +78,27 @@ model Course {
 }
 
 model Assignment {
-  id           String   @id @default(cuid())
-  title        String
-  description  String?
-  dueDate      DateTime
-  type         String   @default("homework")
-  difficulty   String   @default("moderate")
-  weight       Float    @default(1.0)
-  priority     Int?
-  status       String   @default("not_started") // 'not_started', 'in_progress', 'submitted', 'graded', 'missed'
-  awaitingGrade Boolean @default(false)
-  grade        Float?
-  submittedAt  DateTime?
-  submissionNote String?
-  suggestedDate DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  dueDate         DateTime
+  type            String   @default("homework")
+  difficulty      String   @default("moderate")
+  weight          Float    @default(1.0)
+  priority        Int?
+  status          String   @default("not_started") // 'not_started', 'in_progress', 'submitted', 'graded', 'missed'
+  awaitingGrade   Boolean  @default(false)
+  grade           Float?
+  submittedAt     DateTime?
+  submissionNote  String?
+  suggestedDate   DateTime?
+  estimatedHours  Float?   // Estimated time to complete in hours
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   userId   String
   courseId String
-  
+
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   ladderEvents  LadderEvent[]

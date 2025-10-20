@@ -45,6 +45,7 @@ export const AssignmentForm = ({
     // weight is stored as a percent slider in the UI
     weight: initialData.weight !== undefined ? initialData.weight : 20,
     submissionNote: initialData.submissionNote || '',
+    estimatedHours: initialData.estimatedHours || undefined,
   })
   const [isCreatingNewCourse, setIsCreatingNewCourse] = useState(false)
   const [newCourseName, setNewCourseName] = useState('')
@@ -77,7 +78,7 @@ export const AssignmentForm = ({
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'weight' ? parseFloat(value) : value
+      [name]: name === 'weight' || name === 'estimatedHours' ? (value ? parseFloat(value) : undefined) : value
     }))
   }
 
@@ -257,8 +258,8 @@ export const AssignmentForm = ({
         </div>
       </div>
 
-      {/* difficulty and weight */}
-      <div className="form-grid">
+      {/* difficulty, weight, and estimated time */}
+      <div className="form-grid grid-cols-1 md:grid-cols-3">
         <div>
           <label className="form-label">Difficulty Level</label>
           <select name="difficulty" value={formData.difficulty} onChange={handleChange} className="form-input">
@@ -281,7 +282,23 @@ export const AssignmentForm = ({
             step="1"
             className="form-input"
           />
-          <p className="text-sm text-gray-500 mt-1">Percentage weight of this category in your course grade (0–100%)</p>
+          <p className="text-sm text-gray-500 mt-1">Percentage weight of this category in your course grade</p>
+        </div>
+
+        <div>
+          <label className="form-label">Estimated Time (hours)</label>
+          <input
+            type="number"
+            name="estimatedHours"
+            value={formData.estimatedHours ?? ''}
+            onChange={handleChange}
+            min="0.25"
+            max="100"
+            step="0.25"
+            placeholder="e.g., 2.5"
+            className="form-input"
+          />
+          <p className="text-sm text-gray-500 mt-1">How long will this take? (optional)</p>
         </div>
       </div>
 
