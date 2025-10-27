@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -8,14 +9,26 @@ async function main() {
   // ----------------------------------------------------------
   // Core demo user 
   // ----------------------------------------------------------
+  const demoEmail = 'demo@student.edu'
+  const demoPassword = 'demo1234'
+  const hashedDemoPassword = await bcrypt.hash(demoPassword, 12)
+
   const user = await prisma.user.upsert({
     where: { email: 'demo@student.edu' },
-    update: {},
-    create: {
-      email: 'demo@student.edu',
+    update: {
       name: 'Demo Student',
-      password: null,
+      password: hashedDemoPassword,
     },
+    create: {
+      email: demoEmail,
+      name: 'Demo Student',
+      password: hashedDemoPassword,
+    },
+  })
+
+  console.info('Demo login credentials ready:', {
+    email: demoEmail,
+    password: demoPassword,
   })
 
   // ----------------------------------------------------------
