@@ -374,6 +374,7 @@ function parseTableFormat(text: string, opts: Required<ParseOptions>): ParsedAss
 function parseGroupedFormat(lines: { line: string; index: number }[], opts: Required<ParseOptions>): ParsedAssignment[] {
   const results: ParsedAssignment[] = []
   let currentDateIso: string | null = null
+  const pending: number[] = []
 
   const platformRegex = new RegExp(`\\b(${PLATFORM_KEYWORDS.join('|')})\\b`, 'i')
   const assignmentHintRegex = /(assignment|quiz|project|exam|lab|participation|challenge|practice|attendance)/i
@@ -386,6 +387,12 @@ function parseGroupedFormat(lines: { line: string; index: number }[], opts: Requ
 
     if (iso && !looksLikeAssignment && line.length <= 40) {
       currentDateIso = iso
+      // Update any pending assignments that were waiting for a date
+      for (const pendingIndex of pending) {
+        results[pendingIndex].dueDate = iso
+        results[pendingIndex].confidence = Math.min(1, results[pendingIndex].confidence + 0.3)
+      }
+      pending.length = 0
       continue
     }
 
@@ -398,14 +405,19 @@ function parseGroupedFormat(lines: { line: string; index: number }[], opts: Requ
     const resolvedType = type ?? 'homework'
     const confidence = scoreLine(line, !!dueISO, type ?? null)
 
-    results.push({
+    const record: ParsedAssignment = {
       title: title || line,
       dueDate: dueISO ?? 'TBD',
       type: resolvedType,
       difficulty: defaultDifficulty(resolvedType),
       confidence,
       sourceLines: [index],
-    })
+    }
+
+    const recordIndex = results.push(record) - 1
+    if (!dueISO) {
+      pending.push(recordIndex)
+    }
 
   }
 
