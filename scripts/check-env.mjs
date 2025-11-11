@@ -1,7 +1,8 @@
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 
-const REQUIRED_ENV_VARS = ['NEXTAUTH_URL', 'NEXTAUTH_SECRET', 'DATABASE_URL', 'DATABASE_PROVIDER']
+const REQUIRED_ENV_VARS = ['NEXTAUTH_URL', 'NEXTAUTH_SECRET', 'DATABASE_URL']
+const OPTIONAL_ENV_VARS = ['DATABASE_PROVIDER']
 
 function parseEnvFile(filePath) {
   const contents = readFileSync(filePath, 'utf8')
@@ -48,18 +49,22 @@ function loadEnvCandidates(cwd, explicitFiles) {
   return envValues
 }
 
-function resolveEnvValues(requiredKeys) {
+function resolveEnvValues(requiredKeys, optionalKeys = []) {
   const explicitArgs = process.argv.slice(2).filter((arg) => !arg.startsWith('--'))
   const cwd = process.cwd()
   const fileEnv = loadEnvCandidates(cwd, explicitArgs)
   const values = {}
   const missing = []
 
-  for (const key of requiredKeys) {
+  const allKeys = [...requiredKeys, ...optionalKeys]
+
+  for (const key of allKeys) {
     const runtimeValue = process.env[key]
     const resolved = runtimeValue ?? fileEnv[key]
     if (!resolved || resolved.trim().length === 0) {
-      missing.push(key)
+      if (requiredKeys.includes(key)) {
+        missing.push(key)
+      }
     } else {
       values[key] = resolved.trim()
     }
@@ -69,32 +74,17 @@ function resolveEnvValues(requiredKeys) {
 }
 
 function validateDatabaseConfig(values) {
-  const provider = (values.DATABASE_PROVIDER || '').toLowerCase()
+  const provider = (values.DATABASE_PROVIDER ?? 'postgresql').toLowerCase()
   const url = values.DATABASE_URL || ''
   const errors = []
-  const allowedProviders = ['postgresql', 'sqlite']
+  const allowedProviders = ['postgresql']
 
   if (!allowedProviders.includes(provider)) {
-    errors.push(`DATABASE_PROVIDER must be one of: ${allowedProviders.join(', ')}`)
-    return errors
+    errors.push('Only the "postgresql" provider is supported for this project')
   }
 
-  if (provider === 'postgresql') {
-    if (!/^postgres(ql)?:\/\//i.test(url)) {
-      errors.push('DATABASE_URL must start with postgresql:// when DATABASE_PROVIDER=postgresql')
-    }
-    return errors
-  }
-
-  if (!url.startsWith('file:')) {
-    errors.push('DATABASE_URL must start with file: when DATABASE_PROVIDER=sqlite')
-    return errors
-  }
-
-  const filePath = url.replace(/^file:/, '')
-  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)
-  if (!existsSync(resolvedPath)) {
-    console.warn(`⚠️  SQLite database file not found at ${resolvedPath}. Prisma will create it on first push.`)
+  if (!/^postgres(ql)?:\/\//i.test(url)) {
+    errors.push('DATABASE_URL must start with postgresql:// and point at your Neon/Supabase/Vercel Postgres instance')
   }
 
   return errors
@@ -119,7 +109,7 @@ function maskConnectionString(conn) {
 }
 
 function main() {
-  const { missing, values } = resolveEnvValues(REQUIRED_ENV_VARS)
+  const { missing, values } = resolveEnvValues(REQUIRED_ENV_VARS, OPTIONAL_ENV_VARS)
 
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:')
@@ -145,10 +135,12 @@ function main() {
   for (const key of REQUIRED_ENV_VARS) {
     const masked = key === 'DATABASE_URL'
       ? maskConnectionString(values[key])
-      : key === 'DATABASE_PROVIDER'
-        ? values[key]
-        : maskSecret(values[key])
+      : maskSecret(values[key])
     console.log(`  - ${key}: ${masked}`)
+  }
+
+  if (values.DATABASE_PROVIDER) {
+    console.log(`  - DATABASE_PROVIDER: ${values.DATABASE_PROVIDER}`)
   }
 }
 

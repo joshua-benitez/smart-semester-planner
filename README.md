@@ -13,9 +13,6 @@ npm run db:seed              # optional: load the demo data
 npm run dev                  # launches Next.js on http://localhost:3000
 ```
 
-> 💡 Want a zero-setup local database? Set `DATABASE_PROVIDER=sqlite` and
-> `DATABASE_URL="file:./prisma/dev.db"` in `.env.local`, then run `npx prisma db push`.
-
 I use a Neon branch for local development so I get the same Postgres flavor that runs in production, but any Postgres instance works (Docker, Supabase, etc.).
 
 ## How It Works

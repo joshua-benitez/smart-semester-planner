@@ -8,15 +8,12 @@ function ensureDatabaseConfig() {
     throw new Error('DATABASE_URL is not configured. Run `npm run verify:env` and try again.')
   }
 
-  if (!provider || provider === 'postgresql') {
-    if (!/^postgres(ql)?:\/\//i.test(url)) {
-      throw new Error('DATABASE_URL must start with postgresql:// when using the Postgres provider.')
-    }
-    return
+  if (provider && provider !== 'postgresql') {
+    throw new Error('DATABASE_PROVIDER must be set to "postgresql" for this project.')
   }
 
-  if (provider === 'sqlite' && !url.startsWith('file:')) {
-    throw new Error('DATABASE_URL must start with file: when DATABASE_PROVIDER=sqlite.')
+  if (!/^postgres(ql)?:\/\//i.test(url)) {
+    throw new Error('DATABASE_URL must start with postgresql:// and point at your Neon/Supabase database.')
   }
 }
 
