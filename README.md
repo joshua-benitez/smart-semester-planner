@@ -27,6 +27,7 @@ I use a Neon branch for local development so I get the same Postgres flavor that
 
 - Track assignments across every class, filter by course, and mark progress.
 - Paste a syllabus and let the chrono-powered parser guess dates, types, and difficulty.
+- Parser now supports grouped context (date/platform lines), week schedules, tables, and single-line bullets so you can paste most raw syllabi without pre-formatting.
 - Calendar and dashboard views that highlight the next deadlines and weekly workload.
 - "Ladder" system that gives me a game-style points recap whenever I finish or reopen work.
 - Profile page to tweak preferences and update my info.
