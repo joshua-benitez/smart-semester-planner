@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
 import { applyLadderDelta } from '@/lib/ladder-service'
@@ -38,6 +39,20 @@ type LadderAdjustment = {
   delta: number
   reason: LadderReasonCode
   description: string
+}
+
+function handleAssignmentError(error: unknown, message: string) {
+  if (error instanceof UnauthorizedError) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    console.error('Assignment API database initialization error:', error)
+    return NextResponse.json({ error: 'Database connection failed. Check DATABASE_URL/DATABASE_PROVIDER.' }, { status: 500 })
+  }
+
+  console.error(message, error)
+  return NextResponse.json({ error: message }, { status: 500 })
 }
 
 function describeOffset(diffMs: number, suffix: 'early' | 'late') {
@@ -98,11 +113,7 @@ export async function GET() {
     })
     return NextResponse.json(assignments)
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error fetching assignments:', error)
-    return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
+    return handleAssignmentError(error, 'Failed to fetch assignments')
   }
 }
 
@@ -158,11 +169,7 @@ export async function POST(request: Request) {
       assignment
     })
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error creating assignment:', error)
-    return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 })
+    return handleAssignmentError(error, 'Failed to create assignment')
   }
 }
 
@@ -342,11 +349,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error updating assignment:', error)
-    return NextResponse.json({ error: 'Failed to update assignment' }, { status: 500 })
+    return handleAssignmentError(error, 'Failed to update assignment')
   }
 }
 
@@ -393,10 +396,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: 'Assignment deleted successfully' })
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error deleting assignment:', error)
-    return NextResponse.json({ error: 'Failed to delete assignment' }, { status: 500 })
+    return handleAssignmentError(error, 'Failed to delete assignment')
   }
 }

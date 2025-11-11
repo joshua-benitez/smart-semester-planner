@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 
-const REQUIRED_ENV_VARS = ['NEXTAUTH_URL', 'NEXTAUTH_SECRET', 'DATABASE_URL']
+const REQUIRED_ENV_VARS = ['NEXTAUTH_URL', 'NEXTAUTH_SECRET', 'DATABASE_URL', 'DATABASE_PROVIDER']
 
 function parseEnvFile(filePath) {
   const contents = readFileSync(filePath, 'utf8')
@@ -68,6 +68,38 @@ function resolveEnvValues(requiredKeys) {
   return { missing, values }
 }
 
+function validateDatabaseConfig(values) {
+  const provider = (values.DATABASE_PROVIDER || '').toLowerCase()
+  const url = values.DATABASE_URL || ''
+  const errors = []
+  const allowedProviders = ['postgresql', 'sqlite']
+
+  if (!allowedProviders.includes(provider)) {
+    errors.push(`DATABASE_PROVIDER must be one of: ${allowedProviders.join(', ')}`)
+    return errors
+  }
+
+  if (provider === 'postgresql') {
+    if (!/^postgres(ql)?:\/\//i.test(url)) {
+      errors.push('DATABASE_URL must start with postgresql:// when DATABASE_PROVIDER=postgresql')
+    }
+    return errors
+  }
+
+  if (!url.startsWith('file:')) {
+    errors.push('DATABASE_URL must start with file: when DATABASE_PROVIDER=sqlite')
+    return errors
+  }
+
+  const filePath = url.replace(/^file:/, '')
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)
+  if (!existsSync(resolvedPath)) {
+    console.warn(`⚠️  SQLite database file not found at ${resolvedPath}. Prisma will create it on first push.`)
+  }
+
+  return errors
+}
+
 function maskSecret(secret) {
   if (!secret) return '[empty]'
   if (secret.length <= 8) return '[hidden]'
@@ -102,9 +134,20 @@ function main() {
     process.exit(1)
   }
 
+  const dbErrors = validateDatabaseConfig(values)
+  if (dbErrors.length > 0) {
+    console.error('❌ Invalid database configuration:')
+    dbErrors.forEach((msg) => console.error(`  - ${msg}`))
+    process.exit(1)
+  }
+
   console.log('✅ Required environment variables detected:')
   for (const key of REQUIRED_ENV_VARS) {
-    const masked = key === 'DATABASE_URL' ? maskConnectionString(values[key]) : maskSecret(values[key])
+    const masked = key === 'DATABASE_URL'
+      ? maskConnectionString(values[key])
+      : key === 'DATABASE_PROVIDER'
+        ? values[key]
+        : maskSecret(values[key])
     console.log(`  - ${key}: ${masked}`)
   }
 }
