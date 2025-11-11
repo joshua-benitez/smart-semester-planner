@@ -102,6 +102,15 @@ const STOP_HEADERS = [
   "policies", "policy", "late work", "grading", "rubric", "schedule (tentative)"
 ];
 
+const PLATFORM_KEYWORDS = [
+  'brightspace',
+  'zybook',
+  'webassign',
+  'gradescope',
+  'canvas',
+  'blackboard',
+];
+
 function isHeaderNoise(line: string): boolean {
   const lower = line.toLowerCase();
   return STOP_HEADERS.some(h => lower.includes(h));
@@ -361,6 +370,48 @@ function parseTableFormat(text: string, opts: Required<ParseOptions>): ParsedAss
   return results;
 }
 
+// Handles grouped formats where dates/platforms are on their own lines
+function parseGroupedFormat(lines: { line: string; index: number }[], opts: Required<ParseOptions>): ParsedAssignment[] {
+  const results: ParsedAssignment[] = []
+  let currentDateIso: string | null = null
+
+  const platformRegex = new RegExp(`\\b(${PLATFORM_KEYWORDS.join('|')})\\b`, 'i')
+  const assignmentHintRegex = /(assignment|quiz|project|exam|lab|participation|challenge|practice|attendance)/i
+
+  for (const { line, index } of lines) {
+    const iso = extractISO(line, opts)
+    const platformMatch = platformRegex.exec(line)
+    const type = detectType(line)
+    const looksLikeAssignment = !!type || assignmentHintRegex.test(line)
+
+    if (iso && !looksLikeAssignment && line.length <= 40) {
+      currentDateIso = iso
+      continue
+    }
+
+    if (!looksLikeAssignment) {
+      continue
+    }
+
+    const dueISO = iso ?? currentDateIso
+    const title = cleanTitle(line)
+    const resolvedType = type ?? 'homework'
+    const confidence = scoreLine(line, !!dueISO, type ?? null)
+
+    results.push({
+      title: title || line,
+      dueDate: dueISO ?? 'TBD',
+      type: resolvedType,
+      difficulty: defaultDifficulty(resolvedType),
+      confidence,
+      sourceLines: [index],
+    })
+
+  }
+
+  return results
+}
+
 // main parse entry point used by the syllabus modal
 export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssignment[] {
   const opts = { ...DEFAULTS, ...(options || {}) };
@@ -368,9 +419,15 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
 
   // Try specialized parsers first
   const out: ParsedAssignment[] = [];
+  const lines = splitKeepIndex(text).filter(({ line }) => !isHeaderNoise(line));
+
+  const groupedResults = parseGroupedFormat(lines, opts)
+  if (groupedResults.length > 0) {
+    out.push(...groupedResults)
+  }
 
   // Check for table format
-  if (text.includes('|') && text.split('|').length > 10) {
+  if (out.length === 0 && text.includes('|') && text.split('|').length > 10) {
     const tableResults = parseTableFormat(text, opts);
     if (tableResults.length > 0) {
       out.push(...tableResults);
@@ -378,8 +435,7 @@ export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssi
   }
 
   // Check for week-based format
-  const lines = splitKeepIndex(text).filter(({ line }) => !isHeaderNoise(line));
-  if (text.match(/week\s+\d+/i)) {
+  if (out.length === 0 && text.match(/week\s+\d+/i)) {
     const weekResults = parseWeekBasedFormat(lines, opts);
     if (weekResults.length > 0) {
       out.push(...weekResults);
