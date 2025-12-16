@@ -63,11 +63,11 @@ export async function PUT(request: Request) {
       select: { id: true, email: true, name: true }
     })
     return ok(updated)
-  } catch (err) {
-    if (err instanceof UnauthorizedError) {
+  } catch (e) {
+    if (e instanceof UnauthorizedError) {
       return err('Unauthorized', 401, 'unauthorized')
     }
-    console.error('Error updating profile:', err)
+    console.error('Error updating profile:', e)
     return err('Failed to update profile', 500, 'server_error')
   }
 }
