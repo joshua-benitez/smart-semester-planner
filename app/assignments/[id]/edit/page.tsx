@@ -57,9 +57,13 @@ export default function EditAssignment() {
                 const response = await fetch(`/api/assignments/${assignmentId}`)
                 if (!response.ok) {
                     const body = await response.json().catch(() => ({}))
-                    throw new Error(body?.error || 'Failed to fetch assignment')
+                    throw new Error(body?.error?.message || 'Failed to fetch assignment')
                 }
-                const assignment: Assignment = await response.json()
+                const payload = await response.json()
+                if (!payload.ok) {
+                    throw new Error(payload?.error?.message || 'Failed to fetch assignment')
+                }
+                const assignment: Assignment = payload.data
                 setData(assignment)
             } catch (error) {
                 setError(error instanceof Error ? error : String(error))

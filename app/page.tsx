@@ -41,7 +41,7 @@ export default async function LandingPage() {
 
         {/* Feature highlights */}
         <section className="mt-12 grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg p-5 border-2 border-brandPrimary bg-brandPrimary/10">
+          <div className="rounded-lg p-5 border border-white/10 bg-panelBg">
             <div className="mb-3 text-white">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="inline-block mr-2">
                 <path d="M8 2v4M16 2v4M4 10h16M6 20h12a2 2 0 0 0 2-2v-8H4v8a2 2 0 0 0 2 2z"/>
@@ -50,7 +50,7 @@ export default async function LandingPage() {
             </div>
             <p className="text-white/80 text-sm">Clear views for this week and the month so you can see what’s coming and avoid last‑minute stress.</p>
           </div>
-          <div className="rounded-lg p-5 border-2 border-brandPrimary bg-brandPrimary/10">
+          <div className="rounded-lg p-5 border border-white/10 bg-panelBg">
             <div className="mb-3 text-white">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="inline-block mr-2">
                 <path d="M4 7h16M4 12h10M4 17h7"/>
@@ -59,7 +59,7 @@ export default async function LandingPage() {
             </div>
             <p className="text-white/80 text-sm">Paste a syllabus — we parse dates and types automatically so you can batch‑create assignments in seconds.</p>
           </div>
-          <div className="rounded-lg p-5 border-2 border-brandPrimary bg-brandPrimary/10">
+          <div className="rounded-lg p-5 border border-white/10 bg-panelBg">
             <div className="mb-3 text-white">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="inline-block mr-2">
                 <path d="M12 8v8M8 12h8"/>
@@ -71,7 +71,7 @@ export default async function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section className="mt-12 rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
+        <section className="mt-12 rounded-lg p-6 border border-white/10 bg-panelBg">
           <h2 className="text-xl font-bold mb-4">How it works</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="rounded-lg p-4 bg-panelBg border border-white/10">

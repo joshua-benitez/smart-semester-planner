@@ -4,7 +4,7 @@
 /* ========= BASE ========= */
 @layer base {
   body {
-    background: #050a30; /* fallback */
+    background: #0c0f16; /* fallback */
     color: #ffffff;
     @apply bg-brandBg text-white;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -68,12 +68,12 @@
   .btn-sm { @apply px-3 py-1.5 text-sm rounded-md; }
 
   /* Card */
-  .card { @apply rounded-lg p-6 border bg-cardBg; border-color: rgba(255,255,255,0.1); }
+  .card { @apply rounded-lg p-6 border bg-cardBg; border-color: rgba(255,255,255,0.06); }
 
   /* Inputs */
   .form-input {
     @apply w-full px-4 py-2 rounded-md border transition-colors bg-panelBg text-white;
-    border-color: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.12);
   }
   .form-input:focus { @apply border-brandPrimary outline-none; box-shadow: 0 0 0 2px rgba(1,102,254,0.5); }
 

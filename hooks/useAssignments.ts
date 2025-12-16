@@ -12,8 +12,9 @@ export const useAssignments = () => {
     queryFn: async () => {
       const res = await fetch('/api/assignments')
       if (!res.ok) throw new Error('Failed to fetch assignments')
-      const data = await res.json()
-      return Array.isArray(data) ? (data as Assignment[]) : []
+      const payload = await res.json()
+      if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to fetch assignments')
+      return (payload.data ?? []) as Assignment[]
     },
     staleTime: 60_000,
   })

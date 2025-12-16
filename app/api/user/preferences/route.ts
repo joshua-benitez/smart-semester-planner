@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getCurrentUser } from '@/lib/get-current-user'
 import { prisma } from '@/lib/db'
 import { UserPreferences, DEFAULT_USER_PREFERENCES, UserPreferencesSchema } from '@/types/user'
+import { ok, err } from '@/server/responses'
 
 const PartialPreferencesSchema = UserPreferencesSchema.partial()
 
@@ -28,7 +29,7 @@ export async function GET() {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
 
     const userData = await prisma.user.findUnique({
@@ -37,15 +38,15 @@ export async function GET() {
     })
 
     if (!userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return err('User not found', 404, 'not_found')
     }
 
     const preferences = mergeStoredPreferences(userData.preferences)
 
-    return NextResponse.json(preferences)
+    return ok(preferences)
   } catch (error) {
     console.error('Error fetching user preferences:', error)
-    return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 })
+    return err('Failed to fetch preferences', 500, 'server_error')
   }
 }
 
@@ -53,13 +54,13 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
 
     const json = await request.json()
     const parsed = PartialPreferencesSchema.safeParse(json)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid preferences payload', details: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid preferences payload', 400, 'validation_error', parsed.error.flatten())
     }
     const updates = parsed.data
     
@@ -80,9 +81,9 @@ export async function PUT(request: NextRequest) {
       data: { preferences: JSON.stringify(newPreferences) }
     })
 
-    return NextResponse.json(newPreferences)
+    return ok(newPreferences)
   } catch (error) {
     console.error('Error updating user preferences:', error)
-    return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 })
+    return err('Failed to update preferences', 500, 'server_error')
   }
 }

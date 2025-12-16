@@ -14,7 +14,9 @@ export function useLadder() {
     queryFn: async () => {
       const res = await fetch('/api/ladder')
       if (!res.ok) throw new Error('Failed to load ladder data')
-      return res.json()
+      const payload = await res.json()
+      if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to load ladder data')
+      return payload.data as LadderSummary
     },
     staleTime: 30_000,
   })
@@ -27,7 +29,9 @@ export function useLadder() {
         body: JSON.stringify(payload),
       })
       if (!res.ok) throw new Error('Failed to update ladder standing')
-      return res.json()
+      const data = await res.json()
+      if (!data.ok) throw new Error(data?.error?.message || 'Failed to update ladder standing')
+      return data.data as LadderSummary
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: LADDER_QUERY_KEY }),
   })

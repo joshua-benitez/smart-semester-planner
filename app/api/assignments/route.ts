@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
@@ -6,6 +5,7 @@ import { applyLadderDelta } from '@/lib/ladder-service'
 import type { LadderReasonCode } from '@/types/ladder'
 import { z } from 'zod'
 import { UnauthorizedError } from '@/lib/errors'
+import { ok, err } from '@/server/responses'
 
 // tiny helper so we don't run Prisma with blank ids
 function isNonEmptyString(x: any): x is string {
@@ -43,16 +43,16 @@ type LadderAdjustment = {
 
 function handleAssignmentError(error: unknown, message: string) {
   if (error instanceof UnauthorizedError) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return err('Unauthorized', 401, 'unauthorized')
   }
 
   if (error instanceof Prisma.PrismaClientInitializationError) {
     console.error('Assignment API database initialization error:', error)
-    return NextResponse.json({ error: 'Database connection failed. Check DATABASE_URL/DATABASE_PROVIDER.' }, { status: 500 })
+    return err('Database connection failed. Check DATABASE_URL/DATABASE_PROVIDER.', 500, 'db_init_error')
   }
 
   console.error(message, error)
-  return NextResponse.json({ error: message }, { status: 500 })
+  return err(message, 500, 'server_error')
 }
 
 function describeOffset(diffMs: number, suffix: 'early' | 'late') {
@@ -111,7 +111,7 @@ export async function GET() {
       include: { course: true },
       orderBy: { dueDate: 'asc' }
     })
-    return NextResponse.json(assignments)
+    return ok(assignments)
   } catch (error) {
     return handleAssignmentError(error, 'Failed to fetch assignments')
   }
@@ -124,12 +124,12 @@ export async function POST(request: Request) {
     const json = await request.json()
     const parsed = AssignmentCreateSchema.safeParse(json)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error', parsed.error.flatten())
     }
 
     const courseName = parsed.data.courseName.trim()
     if (!courseName) {
-      return NextResponse.json({ error: 'Course name is required' }, { status: 400 })
+      return err('Course name is required', 400, 'validation_error')
     }
     const course = await findOrCreateCourseForUser(user.id, courseName)
 
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
         ? new Date(parsed.data.submittedAt)
         : parsed.data.submittedAt
       if (isNaN(value.getTime())) {
-        return NextResponse.json({ error: 'Invalid submittedAt' }, { status: 400 })
+        return err('Invalid submittedAt', 400, 'validation_error')
       }
       submittedAt = value
     }
@@ -164,10 +164,7 @@ export async function POST(request: Request) {
       }
     })
 
-    return NextResponse.json({
-      message: 'Assignment created successfully',
-      assignment
-    })
+    return ok(assignment, 201)
   } catch (error) {
     return handleAssignmentError(error, 'Failed to create assignment')
   }
@@ -180,7 +177,7 @@ export async function PUT(request: Request) {
     const json = await request.json()
     const parsed = AssignmentUpdateSchema.safeParse(json)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error', parsed.error.flatten())
     }
 
     // make sure the assignment belongs to this user before touching it
@@ -188,7 +185,7 @@ export async function PUT(request: Request) {
       where: { id: parsed.data.id, userId: user.id }
     })
     if (!existing) {
-      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
+      return err('Assignment not found', 404, 'not_found')
     }
 
     // only set fields the client actually sent
@@ -206,7 +203,7 @@ export async function PUT(request: Request) {
     let nextDueDate = existing.dueDate
     if (parsed.data.dueDate !== undefined) {
       const d = typeof parsed.data.dueDate === 'string' ? new Date(parsed.data.dueDate) : parsed.data.dueDate
-      if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
+      if (isNaN(d.getTime())) return err('Invalid dueDate', 400, 'validation_error')
       updateData.dueDate = d
       nextDueDate = d
     }
@@ -214,7 +211,7 @@ export async function PUT(request: Request) {
     if (parsed.data.courseName) {
       const nextCourseName = parsed.data.courseName.trim()
       if (!nextCourseName) {
-        return NextResponse.json({ error: 'Course name is required' }, { status: 400 })
+        return err('Course name is required', 400, 'validation_error')
       }
       const course = await findOrCreateCourseForUser(user.id, nextCourseName)
       updateData.courseId = course.id
@@ -229,7 +226,7 @@ export async function PUT(request: Request) {
       } else {
         const submittedDate = typeof submittedAtPayload === 'string' ? new Date(submittedAtPayload) : submittedAtPayload
         if (isNaN(submittedDate.getTime())) {
-          return NextResponse.json({ error: 'Invalid submittedAt' }, { status: 400 })
+          return err('Invalid submittedAt', 400, 'validation_error')
         }
         nextSubmittedAt = submittedDate
         updateData.submittedAt = submittedDate
@@ -347,7 +344,7 @@ export async function PUT(request: Request) {
       })
     }
 
-    return NextResponse.json({ message: 'Assignment updated', assignment: updatedAssignment })
+    return ok(updatedAssignment)
   } catch (error) {
     return handleAssignmentError(error, 'Failed to update assignment')
   }
@@ -360,7 +357,7 @@ export async function DELETE(request: Request) {
     const json = await request.json()
     const id = json?.id
     if (!isNonEmptyString(id)) {
-      return NextResponse.json({ error: 'Missing assignment id' }, { status: 400 })
+      return err('Missing assignment id', 400, 'validation_error')
     }
 
     // verify the assignment really exists for this user
@@ -368,7 +365,7 @@ export async function DELETE(request: Request) {
       where: { id, userId: user.id }
     })
     if (!existing) {
-      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
+      return err('Assignment not found', 404, 'not_found')
     }
 
     const ladderEvents = await prisma.ladderEvent.findMany({
@@ -394,7 +391,7 @@ export async function DELETE(request: Request) {
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Assignment deleted successfully' })
+    return ok({ id })
   } catch (error) {
     return handleAssignmentError(error, 'Failed to delete assignment')
   }

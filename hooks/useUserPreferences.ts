@@ -12,7 +12,9 @@ export function useUserPreferences() {
     queryFn: async () => {
       const res = await fetch('/api/user/preferences')
       if (!res.ok) throw new Error('Failed to fetch preferences')
-      return res.json()
+      const payload = await res.json()
+      if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to fetch preferences')
+      return payload.data as UserPreferences
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -25,7 +27,9 @@ export function useUserPreferences() {
         body: JSON.stringify(updates),
       })
       if (!res.ok) throw new Error('Failed to update preferences')
-      return res.json()
+      const payload = await res.json()
+      if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to update preferences')
+      return payload.data as UserPreferences
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['user', 'preferences'], data)

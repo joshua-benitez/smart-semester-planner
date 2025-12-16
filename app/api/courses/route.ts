@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
 import { UnauthorizedError } from '@/lib/errors'
 import { z } from 'zod'
+import { ok, err } from '@/server/responses'
 
 // schema guardrails so the course routes stay honest
 const CourseCreateSchema = z.object({
@@ -30,12 +30,12 @@ export async function GET() {
       },
       orderBy: { name: 'asc' }
     })
-    return NextResponse.json(courses)
+    return ok(courses)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return err('Internal Server Error', 500, 'server_error')
   }
 }
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = CourseCreateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error', parsed.error.flatten())
     }
 
     const user = await requireAuth()
@@ -60,12 +60,12 @@ export async function POST(request: Request) {
         _count: { select: { assignments: true } }
       }
     })
-    return NextResponse.json(newCourse)
+    return ok(newCourse, 201)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return err('Internal Server Error', 500, 'server_error')
   }
 }
 
@@ -76,14 +76,14 @@ export async function PUT(request: Request) {
     const body = await request.json()
     const parsed = CourseUpdateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error', parsed.error.flatten())
     }
     // make sure the course belongs to this user first
     const existingCourse = await prisma.course.findFirst({
       where: { id: parsed.data.id, userId: user.id },
     })
     if (!existingCourse) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+      return err('Course not found', 404, 'not_found')
     }
     // apply the updates, but fall back to the existing data when fields are missing
     const updatedCourse = await prisma.course.update({
@@ -96,13 +96,13 @@ export async function PUT(request: Request) {
         _count: { select: { assignments: true } }
       }
     })
-    return NextResponse.json(updatedCourse)
+    return ok(updatedCourse)
     // done
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return err('Internal Server Error', 500, 'server_error')
   }
 }
 
@@ -113,7 +113,7 @@ export async function DELETE(request: Request) {
     const body = await request.json()
     const parsed = CourseDeleteSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error', parsed.error.flatten())
     }
     // include assignments so we can block deletes when they're still linked
     const course = await prisma.course.findUnique({
@@ -122,21 +122,18 @@ export async function DELETE(request: Request) {
     })
     // if it isn't the user's course or still has assignments, bail out
     if (!course || course.userId !== user.id) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+      return err('Course not found', 404, 'not_found')
     }
     if (course.assignments.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete course with existing assignments' },
-        { status: 400 }
-      )
+      return err('Cannot delete course with existing assignments', 400, 'blocked')
     }
     // finally delete
     await prisma.course.delete({ where: { id: parsed.data.id } })
-    return NextResponse.json({ message: 'Course deleted successfully' })
+    return ok({ id: parsed.data.id })
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return err('Internal Server Error', 500, 'server_error')
   }
 }

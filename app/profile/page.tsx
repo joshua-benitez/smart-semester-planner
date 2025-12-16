@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { useUserPreferences } from '@/hooks/useUserPreferences'
+import { DEFAULT_USER_PREFERENCES, UserPreferences } from '@/types/user'
 
 type Profile = {
   id: string
@@ -21,15 +23,18 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { preferences, updatePreferences, isUpdating: prefsSaving } = useUserPreferences()
+  const [prefForm, setPrefForm] = useState<UserPreferences>(DEFAULT_USER_PREFERENCES)
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch('/api/profile')
         if (!res.ok) throw new Error('Failed to load profile')
-        const data = await res.json()
-        setProfile(data)
-        setName(data?.name ?? '')
+        const payload = await res.json()
+        if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to load profile')
+        setProfile(payload.data)
+        setName(payload.data?.name ?? '')
       } catch (e) {
         setError('Failed to load profile')
       } finally {
@@ -38,6 +43,12 @@ export default function ProfilePage() {
     }
     load()
   }, [])
+
+  useEffect(() => {
+    if (preferences) {
+      setPrefForm({ ...DEFAULT_USER_PREFERENCES, ...preferences })
+    }
+  }, [preferences])
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,13 +62,25 @@ export default function ProfilePage() {
         body: JSON.stringify({ name })
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Update failed')
+      if (!res.ok || !data.ok) throw new Error(data?.error?.message || 'Update failed')
       setMessage('Name updated')
       setProfile((p) => (p ? { ...p, name } : p))
     } catch (e: any) {
       setError(e.message || 'Update failed')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const savePreferences = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setMessage(null)
+    setError(null)
+    try {
+      await updatePreferences(prefForm)
+      setMessage('Preferences updated')
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update preferences')
     }
   }
 
@@ -73,7 +96,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ currentPassword, newPassword })
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Password change failed')
+      if (!res.ok || !data.ok) throw new Error(data?.error?.message || 'Password change failed')
       setMessage('Password updated')
       setCurrentPassword('')
       setNewPassword('')
@@ -99,7 +122,7 @@ export default function ProfilePage() {
 
   return (
     <div className="page-container">
-      <div className="page-content max-w-3xl">
+      <div className="page-content max-w-5xl">
         <div className="header-card">
           <div className="page-header">
             <div>
@@ -116,7 +139,7 @@ export default function ProfilePage() {
         )}
 
         {/* Account Info */}
-        <div className="page-card mb-8">
+        <div className="page-card mb-8 border border-white/10 bg-cardBg">
           <h2 className="text-xl font-bold mb-4">Account</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -131,7 +154,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Update name */}
-        <div className="page-card mb-8">
+        <div className="page-card mb-8 border border-white/10 bg-cardBg">
           <h2 className="text-xl font-bold mb-4">Display Name</h2>
           <form onSubmit={updateProfile} className="space-y-4">
             <div>
@@ -147,7 +170,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Change password */}
-        <div className="page-card">
+        <div className="page-card mb-8 border border-white/10 bg-cardBg">
           <h2 className="text-xl font-bold mb-4">Change Password</h2>
           <form onSubmit={changePassword} className="space-y-4">
             <div className="form-grid">
@@ -163,6 +186,68 @@ export default function ProfilePage() {
             <div className="flex gap-3">
               <button type="submit" disabled={saving} className="btn-secondary">
                 {saving ? 'Updating…' : 'Update Password'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Preferences */}
+        <div className="page-card border border-white/10 bg-cardBg">
+          <h2 className="text-xl font-bold mb-4">Preferences</h2>
+          <form onSubmit={savePreferences} className="space-y-4">
+            <div className="form-grid">
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-white/30 bg-panelBg"
+                  checked={prefForm.hideCompletedAssignments ?? false}
+                  onChange={(e) => setPrefForm((prev) => ({ ...prev, hideCompletedAssignments: e.target.checked }))}
+                />
+                <span className="text-white/80 text-sm">Hide completed assignments by default</span>
+              </label>
+              <div>
+                <label className="form-label">Theme</label>
+                <select
+                  className="form-input"
+                  value={prefForm.theme}
+                  onChange={(e) => setPrefForm((prev) => ({ ...prev, theme: e.target.value as UserPreferences['theme'] }))}
+                >
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-grid">
+              <div>
+                <label className="form-label">Default Assignment Type</label>
+                <select
+                  className="form-input"
+                  value={prefForm.defaultAssignmentType}
+                  onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultAssignmentType: e.target.value }))}
+                >
+                  <option value="homework">Homework</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="project">Project</option>
+                  <option value="exam">Exam</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Default Difficulty</label>
+                <select
+                  className="form-input"
+                  value={prefForm.defaultDifficulty}
+                  onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultDifficulty: e.target.value }))}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="crushing">Crushing</option>
+                  <option value="brutal">Brutal</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" disabled={prefsSaving} className="btn-secondary">
+                {prefsSaving ? 'Saving…' : 'Save Preferences'}
               </button>
             </div>
           </form>

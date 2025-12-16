@@ -17,39 +17,6 @@ type Course = {
   color?: string
 }
 
-const difficultyThemes: Record<string, { border: string; background: string; gradient: string; shadow: string }> = {
-  easy: {
-    border: 'border-emerald-400/60',
-    background: 'bg-emerald-500/10',
-    gradient: 'from-emerald-400/40 via-emerald-500/10 to-transparent',
-    shadow: 'hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]',
-  },
-  moderate: {
-    border: 'border-amber-400/60',
-    background: 'bg-amber-500/10',
-    gradient: 'from-amber-400/40 via-amber-500/10 to-transparent',
-    shadow: 'hover:shadow-[0_0_20px_rgba(217,119,6,0.25)]',
-  },
-  crushing: {
-    border: 'border-yellow-400/60',
-    background: 'bg-yellow-500/10',
-    gradient: 'from-yellow-400/40 via-yellow-500/10 to-transparent',
-    shadow: 'hover:shadow-[0_0_20px_rgba(202,138,4,0.25)]',
-  },
-  brutal: {
-    border: 'border-red-400/60',
-    background: 'bg-red-500/10',
-    gradient: 'from-red-400/40 via-red-500/10 to-transparent',
-    shadow: 'hover:shadow-[0_0_20px_rgba(248,113,113,0.25)]',
-  },
-  default: {
-    border: 'border-brandPrimary/60',
-    background: 'bg-brandPrimary/10',
-    gradient: 'from-brandPrimary/40 via-brandPrimary/10 to-transparent',
-    shadow: 'hover:shadow-[0_0_20px_rgba(1,102,254,0.25)]',
-  },
-}
-
 export default function DashboardPage() {
   // pull session + data hooks up front
   const { data: session } = useSession()
@@ -76,8 +43,8 @@ export default function DashboardPage() {
       try {
         const response = await fetch("/api/courses")
         if (response.ok) {
-          const data = await response.json()
-          setCourses(data)
+          const payload = await response.json()
+          if (payload.ok) setCourses(payload.data ?? [])
         }
       } catch (error) {
         console.error("Error fetching courses:", error)
@@ -373,15 +340,15 @@ export default function DashboardPage() {
       <RecommendationPanel assignments={assignments} />
 
       {/* mini calendar strip */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
+      <section className="rounded-lg p-6 border border-white/10 bg-panelBg">
         <h2 className="text-xl font-bold mb-4">This Week</h2>
         <div className="grid grid-cols-7 gap-3 text-center">
           {weekDays.map((day) => {
             const stateClasses = day.isToday
-              ? 'border-white/60 bg-gradient-to-b from-brandPrimary/50 via-brandPrimary/30 to-brandPrimary/10 text-white shadow-[0_6px_18px_rgba(1,102,254,0.25)]'
+              ? 'border-white/60 bg-gradient-to-b from-white/10 via-white/5 to-transparent text-white shadow-[0_6px_18px_rgba(0,0,0,0.35)]'
               : day.isPast
                 ? 'border-white/5 bg-white/5 text-white/55'
-                : 'border-brandPrimary/40 bg-brandPrimary/10 text-white hover:bg-brandPrimary/20 hover:border-brandPrimary'
+                : 'border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/20'
 
             return (
               <div
@@ -405,7 +372,7 @@ export default function DashboardPage() {
       </section>
 
       {/* smart priority view with grouping */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
+      <section className="rounded-lg p-6 border border-white/10 bg-panelBg">
         <h2 className="text-xl font-bold mb-6">Priority Assignments</h2>
 
         <div className="space-y-6">
@@ -421,15 +388,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {priorityGroups.overdue.map((assignment) => {
                   const diff = (assignment.difficulty || '').toLowerCase()
-                  const theme = difficultyThemes[diff] ?? difficultyThemes.default
                   const daysLate = Math.ceil((new Date().getTime() - new Date(assignment.dueDate).getTime()) / (1000 * 60 * 60 * 24))
 
                   return (
                     <div
                       key={assignment.id}
-                      className={`relative overflow-hidden rounded-xl border-2 p-4 transition ${theme.background} ${theme.border} ${theme.shadow} ring-2 ring-red-500/30`}
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-cardBg p-4 transition hover:shadow-[0_0_20px_rgba(0,0,0,0.35)]"
                     >
-                      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${theme.gradient}`} aria-hidden="true" />
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 flex-1">
                           <h3 className="text-base font-semibold text-white line-clamp-2">{assignment.title}</h3>
@@ -460,15 +425,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {priorityGroups.dueToday.map((assignment) => {
                   const diff = (assignment.difficulty || '').toLowerCase()
-                  const theme = difficultyThemes[diff] ?? difficultyThemes.default
                   const dueTime = new Date(assignment.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
                   return (
                     <div
                       key={assignment.id}
-                      className={`relative overflow-hidden rounded-xl border-2 p-4 transition ${theme.background} ${theme.border} ${theme.shadow}`}
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-cardBg p-4 transition hover:shadow-[0_0_20px_rgba(0,0,0,0.35)]"
                     >
-                      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${theme.gradient}`} aria-hidden="true" />
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 flex-1">
                           <h3 className="text-base font-semibold text-white line-clamp-2">{assignment.title}</h3>
@@ -499,15 +462,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 {priorityGroups.dueTomorrow.map((assignment) => {
                   const diff = (assignment.difficulty || '').toLowerCase()
-                  const theme = difficultyThemes[diff] ?? difficultyThemes.default
                   const dueTime = new Date(assignment.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
                   return (
                     <div
                       key={assignment.id}
-                      className={`relative overflow-hidden rounded-xl border-2 p-4 transition ${theme.background} ${theme.border} ${theme.shadow}`}
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-cardBg p-4 transition hover:shadow-[0_0_20px_rgba(0,0,0,0.35)]"
                     >
-                      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${theme.gradient}`} aria-hidden="true" />
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 flex-1">
                           <h3 className="text-base font-semibold text-white line-clamp-2">{assignment.title}</h3>
@@ -538,15 +499,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {priorityGroups.dueThisWeek.map((assignment) => {
                   const diff = (assignment.difficulty || '').toLowerCase()
-                  const theme = difficultyThemes[diff] ?? difficultyThemes.default
                   const dueDate = new Date(assignment.dueDate).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
 
                   return (
                     <div
                       key={assignment.id}
-                      className={`relative overflow-hidden rounded-xl border-2 p-4 transition ${theme.background} ${theme.border} ${theme.shadow}`}
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-cardBg p-4 transition hover:shadow-[0_0_20px_rgba(0,0,0,0.35)]"
                     >
-                      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${theme.gradient}`} aria-hidden="true" />
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 flex-1">
                           <h3 className="text-base font-semibold text-white line-clamp-2">{assignment.title}</h3>
@@ -577,15 +536,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 {priorityGroups.dueSoon.map((assignment) => {
                   const diff = (assignment.difficulty || '').toLowerCase()
-                  const theme = difficultyThemes[diff] ?? difficultyThemes.default
                   const dueDate = new Date(assignment.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })
 
                   return (
                     <div
                       key={assignment.id}
-                      className={`relative overflow-hidden rounded-xl border-2 p-4 transition ${theme.background} ${theme.border} ${theme.shadow}`}
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-cardBg p-4 transition hover:shadow-[0_0_20px_rgba(0,0,0,0.35)]"
                     >
-                      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${theme.gradient}`} aria-hidden="true" />
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 flex-1">
                           <h3 className="text-base font-semibold text-white line-clamp-2">{assignment.title}</h3>
@@ -619,7 +576,7 @@ export default function DashboardPage() {
       </section>
 
       {/* full assignment list */}
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
+      <section className="rounded-lg p-6 border border-white/10 bg-panelBg">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h2 className="text-xl font-bold">Your Assignments</h2>
         </div>

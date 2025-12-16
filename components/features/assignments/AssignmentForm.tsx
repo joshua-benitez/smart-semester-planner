@@ -88,7 +88,9 @@ export const AssignmentForm = ({
       try {
         const response = await fetch('/api/courses')
         if (response.ok) {
-          const data = await response.json()
+          const payload = await response.json()
+          if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to fetch courses')
+          const data = payload.data ?? []
           setCourses(data)
           if (data.length === 0) {
             setIsCreatingNewCourse(true)
@@ -303,13 +305,13 @@ export const AssignmentForm = ({
       </div>
 
       {/* submit / cancel */}
-      <div className="pt-6 border-t border-gray-200">
-        <div className="flex gap-4">
+      <div className="pt-6 border-t border-white/10 md:static md:bg-transparent sticky bottom-0 left-0 right-0 bg-cardBg/90 backdrop-blur md:backdrop-blur-0 md:border-none">
+        <div className="flex flex-col gap-3 md:flex-row md:gap-4">
           <Button
             type="submit"
             loading={loading}
             variant="primary"
-            className="flex-1"
+            className="flex-1 w-full md:w-auto"
           >
             {submitText}
           </Button>
@@ -317,6 +319,7 @@ export const AssignmentForm = ({
             type="button" 
             onClick={onCancel}
             variant="secondary"
+            className="w-full md:w-auto"
           >
             Cancel
           </Button>

@@ -25,8 +25,9 @@ export default function AssignmentsIndexPage() {
       try {
         const res = await fetch('/api/courses')
         if (!res.ok) throw new Error('Failed to fetch courses')
-        const data = await res.json()
-        setCourses(Array.isArray(data) ? data : [])
+        const payload = await res.json()
+        if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to fetch courses')
+        setCourses(Array.isArray(payload.data) ? payload.data : [])
       } catch (err) {
         console.error('Failed to load courses for filter:', err)
       } finally {

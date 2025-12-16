@@ -29,8 +29,9 @@ export default function CoursesPage() {
       try {
         const response = await fetch('/api/courses')
         if (response.ok) {
-          const data = await response.json()
-          setCourses(data)
+          const payload = await response.json()
+          if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to fetch courses')
+          setCourses(payload.data ?? [])
         } else {
           console.error('Failed to fetch courses')
         }
@@ -87,8 +88,9 @@ export default function CoursesPage() {
         body: JSON.stringify({ name: newCourseName.trim(), color: newCourseColor })
       })
       if (response.ok) {
-        const createdCourse = await response.json()
-        setCourses([...courses, createdCourse])
+        const payload = await response.json()
+        if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to create course')
+        setCourses([...courses, payload.data])
         setNewCourseName('')
         setNewCourseColor('#3b82f6')
       } else {
@@ -116,6 +118,8 @@ export default function CoursesPage() {
         body: JSON.stringify({ id: courseId })
       })
       if (response.ok) {
+        const payload = await response.json()
+        if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to delete course')
         setCourses(courses.filter(c => c.id !== courseId))
       } else {
         console.error('Failed to delete course')
@@ -125,9 +129,9 @@ export default function CoursesPage() {
     }
   }
 
-    return (
+  return (
     <div className="page-container">
-      <div className="page-content">
+      <div className="page-content max-w-6xl">
         {/* header section */}
         <div className="header-card">
           <div className="page-header">
@@ -225,13 +229,13 @@ export default function CoursesPage() {
               <p className="empty-description">Create your first course above to organize your assignments.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {sortedCourses.map((course) => (
-                <div key={course.id} className="content-card">
-                  <div className="mobile-stack">
+                <div key={course.id} className="content-card border border-white/10 bg-cardBg">
+                  <div className="mobile-stack items-start">
                     <div className="flex items-center space-x-4">
                       <div
-                        className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                        className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-white/20 shadow-sm"
                         style={{ backgroundColor: course.color }}
                         title={`Course color: ${course.color}`}
                       ></div>

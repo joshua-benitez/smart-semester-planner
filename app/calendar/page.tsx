@@ -106,10 +106,10 @@ export default function CalendarPage() {
                 onClick={() => setSelectedDate(new Date(cell.date))}
                 className={`text-left rounded-lg border-2 p-2 min-h-[84px] transition-colors ${
                   isSelected
-                    ? 'border-white/80 bg-brandPrimary/30'
+                    ? 'border-white/80 bg-white/10'
                     : isToday
-                      ? 'border-white/60 bg-brandPrimary/20'
-                      : 'border-brandPrimary bg-panelBg hover:bg-brandPrimary/10'
+                      ? 'border-white/60 bg-white/5'
+                      : 'border-white/10 bg-panelBg hover:bg-white/10'
                 } text-white`}
               >
                 <div className="flex items-center justify-between mb-1">

@@ -36,7 +36,7 @@ export default function SignUp() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Something went wrong')
+        setError(data.error?.message || 'Something went wrong')
         return
       }
 

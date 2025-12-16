@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
 import { UnauthorizedError } from '@/lib/errors'
+import { ok, err } from '@/server/responses'
 
 export async function GET() {
   try {
@@ -12,15 +12,15 @@ export async function GET() {
       select: { id: true, email: true, name: true, createdAt: true }
     })
     if (!data) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return err('User not found', 404, 'not_found')
     }
-    return NextResponse.json(data)
+    return ok(data)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
     console.error('Error fetching profile:', err)
-    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
+    return err('Failed to load profile', 500, 'server_error')
   }
 }
 
@@ -39,22 +39,22 @@ export async function PUT(request: Request) {
     if (newPassword) {
       // double-check the existing password before letting anyone swap it
       const stored = await prisma.user.findUnique({ where: { id: user.id } })
-      if (!stored) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      if (!stored) return err('User not found', 404, 'not_found')
       if (stored.password) {
         if (!currentPassword) {
-          return NextResponse.json({ error: 'Current password required' }, { status: 400 })
+          return err('Current password required', 400, 'validation_error')
         }
         const ok = await bcrypt.compare(currentPassword, stored.password)
-        if (!ok) return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 })
+        if (!ok) return err('Current password is incorrect', 400, 'validation_error')
       }
       if (typeof newPassword !== 'string' || newPassword.length < 6) {
-        return NextResponse.json({ error: 'New password must be at least 6 characters' }, { status: 400 })
+        return err('New password must be at least 6 characters', 400, 'validation_error')
       }
       updates.password = await bcrypt.hash(newPassword, 12)
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: 'No changes provided' }, { status: 400 })
+      return err('No changes provided', 400, 'validation_error')
     }
 
     const updated = await prisma.user.update({
@@ -62,12 +62,12 @@ export async function PUT(request: Request) {
       data: updates,
       select: { id: true, email: true, name: true }
     })
-    return NextResponse.json({ message: 'Profile updated', user: updated })
+    return ok(updated)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
     console.error('Error updating profile:', err)
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    return err('Failed to update profile', 500, 'server_error')
   }
 }

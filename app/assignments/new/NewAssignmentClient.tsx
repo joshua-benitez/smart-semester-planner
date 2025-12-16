@@ -35,7 +35,7 @@ export default function NewAssignmentClient() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
-      throw new Error(body?.error || 'Failed to create assignment')
+      throw new Error(body?.error?.message || 'Failed to create assignment')
     }
 
     router.push('/assignments')
@@ -72,40 +72,68 @@ export default function NewAssignmentClient() {
 
   return (
     <div className="page-container">
-      <div className="page-content max-w-2xl">
-        <div className="page-card">
-          <div className="mb-8">
-            <h1 className="page-title">Create New Assignment</h1>
-            <p className="page-description">Fill out the form below to add a new assignment to your semester planner.</p>
+      <div className="page-content max-w-6xl">
+        <div className="grid gap-6 lg:grid-cols-[1.7fr_1.1fr]">
+          <div className="page-card">
+            <div className="mb-8">
+              <h1 className="page-title">Create New Assignment</h1>
+              <p className="page-description">Fill out the form to add a new assignment to your semester planner.</p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
-              <Link href="/" className="nav-link">
-                ← Back to Dashboard
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <Link href="/" className="nav-link">
+                  ← Back to Dashboard
+                </Link>
 
-              <button
-                onClick={() => setShowSyllabusParser(true)}
-                className="btn-secondary text-sm"
-              >
-                Parse Syllabus (Fast Add)
-              </button>
+                <button
+                  onClick={() => setShowSyllabusParser(true)}
+                  className="btn-secondary text-sm"
+                >
+                  Parse Syllabus (Fast Add)
+                </button>
+              </div>
             </div>
+
+            <AssignmentForm
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              submitText="Create Assignment"
+            />
           </div>
 
-          <AssignmentForm
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            submitText="Create Assignment"
-          />
-
-          {showSyllabusParser && (
-            <SyllabusParserModal
-              onAssignmentsParsed={handleBatchCreate}
-              onClose={() => setShowSyllabusParser(false)}
-            />
-          )}
+          <aside className="page-card bg-panelBg border border-white/10">
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white">Preview & Tips</h2>
+              <p className="text-white/70 text-sm">
+                Keep details consistent so your dashboard stays clean. Use the parser to batch-create from a syllabus, then fine-tune here.
+              </p>
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+                <p className="text-sm text-white/80 font-semibold">Fast steps</p>
+                <ul className="text-sm text-white/65 space-y-1 list-disc list-inside">
+                  <li>Pick the right course for filtering later.</li>
+                  <li>Add estimated hours for better recommendations.</li>
+                  <li>Set weight as a percent (0–100%) so GPA math stays sane.</li>
+                </ul>
+              </div>
+              <button
+                onClick={() => setShowSyllabusParser(true)}
+                className="btn-primary w-full"
+              >
+                Open Syllabus Parser
+              </button>
+              <div className="text-xs text-white/50">
+                On mobile, actions stay at the bottom so you can submit without scrolling.
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
+
+      {showSyllabusParser && (
+        <SyllabusParserModal
+          onAssignmentsParsed={handleBatchCreate}
+          onClose={() => setShowSyllabusParser(false)}
+        />
+      )}
     </div>
   )
 }
@@ -148,10 +176,13 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
       try {
         const response = await fetch('/api/courses')
         if (response.ok) {
-          const data = await response.json()
-          setCourses(data)
-          if (data.length > 0) {
-            setCourseName(data[0].name)
+          const payload = await response.json()
+          if (payload.ok) {
+            const data = payload.data ?? []
+            setCourses(data)
+            if (data.length > 0) {
+              setCourseName(data[0].name)
+            }
           }
         }
       } catch (error) {
@@ -208,16 +239,16 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
 
   const renderCourseSelect = () => {
     if (coursesLoading) {
-      return <div className="form-input bg-gray-50">Loading your courses...</div>
+      return <div className="form-input bg-panelBg text-white/70">Loading your courses...</div>
     }
 
     if (courses.length === 0) {
       return (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 font-medium">No courses found!</p>
-          <p className="text-yellow-700 text-sm mt-1">
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg p-4">
+          <p className="text-amber-200 font-medium">No courses found!</p>
+          <p className="text-amber-100 text-sm mt-1">
             Please create a course first in the
-            <a href="/courses" className="underline font-medium"> Courses page</a>, then come back to parse your syllabus.
+            <a href="/courses" className="underline font-medium text-white"> Courses page</a>, then come back to parse your syllabus.
           </p>
         </div>
       )
@@ -238,7 +269,7 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
             </option>
           ))}
         </select>
-        <p className="text-sm text-gray-500 mt-1">Assignments will be added to this course</p>
+        <p className="text-sm text-white/60 mt-1">Assignments will be added to this course</p>
       </>
     )
   }
@@ -246,22 +277,22 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
   const renderInputPhase = () => (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Syllabus Parser</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <h2 className="text-2xl font-bold text-white">Syllabus Parser</h2>
+        <button onClick={onClose} className="text-white/60 hover:text-white">
           ✕
         </button>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="form-label">Select Course *</label>
+          <label className="form-label text-white/90">Select Course *</label>
           {renderCourseSelect()}
         </div>
 
         <div>
-          <label className="form-label">
+          <label className="form-label text-white/90">
             Paste Your Syllabus Here
-            <span className="text-sm text-gray-500 ml-2">(Copy the assignments section from your syllabus)</span>
+            <span className="text-sm text-white/50 ml-2">(Copy the assignments section from your syllabus)</span>
           </label>
           <textarea
             value={syllabusText}
@@ -271,9 +302,9 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
           />
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">Enhanced Parser Features:</h3>
-          <ul className="text-sm text-blue-800 space-y-1">
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+          <h3 className="font-medium text-white mb-2">Enhanced Parser Features:</h3>
+          <ul className="text-sm text-white/70 space-y-1">
             <li>• Understands natural language dates (&ldquo;Sun. 8/24&rdquo;, &ldquo;Sept 2&rdquo;, &ldquo;next Wed 11:59pm&rdquo;)</li>
             <li>• Smart assignment detection with confidence scoring</li>
             <li>• Handles wrapped lines and bullet points automatically</li>
@@ -298,18 +329,18 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
   const renderAssignmentCard = (assignment: ParsedAssignment, index: number) => (
     <div
       key={index}
-      className={`border rounded-lg p-4 ${
-        (assignment.confidence || 0) < 0.5 ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'
+      className={`border rounded-lg p-4 bg-panelBg ${
+        (assignment.confidence || 0) < 0.5 ? 'border-amber-300/60' : 'border-white/10'
       }`}
     >
       <div className="flex justify-between items-center mb-3">
         <span
           className={`text-xs px-2 py-1 rounded-full font-medium ${
             (assignment.confidence || 0) >= 0.8
-              ? 'bg-green-100 text-green-800'
+              ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40'
               : (assignment.confidence || 0) >= 0.5
-              ? 'bg-yellow-100 text-yellow-800'
-              : 'bg-red-100 text-red-800'
+              ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40'
+              : 'bg-red-500/15 text-red-200 border border-red-500/40'
           }`}
         >
           {(assignment.confidence || 0) >= 0.8
@@ -318,12 +349,12 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
             ? 'Medium Confidence'
             : 'Low Confidence - Please Review'}
         </span>
-        <span className="text-xs text-gray-500">{Math.round((assignment.confidence || 0) * 100)}% confident</span>
+        <span className="text-xs text-white/60">{Math.round((assignment.confidence || 0) * 100)}% confident</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="text-sm font-medium text-gray-700">Title</label>
+          <label className="text-sm font-medium text-white/80">Title</label>
           <input
             type="text"
             value={assignment.title}
@@ -332,10 +363,10 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-white/80">
             Due Date
             {assignment.dueDate === '2025-01-01T23:59' && (
-              <span className="text-xs text-orange-600 ml-2">(TBD - Please edit)</span>
+              <span className="text-xs text-amber-300 ml-2">(TBD - Please edit)</span>
             )}
           </label>
           <input
@@ -343,12 +374,12 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
             value={assignment.dueDate}
             onChange={(e) => handleEdit(index, 'dueDate', e.target.value)}
             className={`form-input mt-1 ${
-              assignment.dueDate === '2025-01-01T23:59' ? 'border-orange-300 bg-orange-50' : ''
+              assignment.dueDate === '2025-01-01T23:59' ? 'border-amber-300/60 bg-amber-500/10' : ''
             }`}
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Type</label>
+          <label className="text-sm font-medium text-white/80">Type</label>
           <select
             value={assignment.type}
             onChange={(e) => handleEdit(index, 'type', e.target.value)}
@@ -361,7 +392,7 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700">Difficulty</label>
+          <label className="text-sm font-medium text-white/80">Difficulty</label>
           <select
             value={assignment.difficulty}
             onChange={(e) => handleEdit(index, 'difficulty', e.target.value)}
@@ -380,15 +411,15 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
   const renderPreviewPhase = () => (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Found {parsedAssignments.length} Assignments</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <h2 className="text-2xl font-bold text-white">Found {parsedAssignments.length} Assignments</h2>
+        <button onClick={onClose} className="text-white/60 hover:text-white">
           ✕
         </button>
       </div>
 
       {parsedAssignments.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">No assignments found. Try adjusting your text format.</p>
+          <p className="text-white/70 mb-4">No assignments found. Try adjusting your text format.</p>
           <Button onClick={() => setIsPreviewMode(false)} variant="secondary">
             Go Back and Try Again
           </Button>
@@ -415,8 +446,8 @@ const SyllabusParserModal = ({ onAssignmentsParsed, onClose }: SyllabusParserMod
   )
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+      <div className="bg-cardBg border border-white/10 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {isPreviewMode ? renderPreviewPhase() : renderInputPhase()}
         </div>

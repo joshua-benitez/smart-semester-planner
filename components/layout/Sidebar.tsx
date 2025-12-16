@@ -7,8 +7,10 @@ import Logo from "@/components/ui/Logo";
 import { useLadder } from "@/hooks/useLadder";
 import LadderSidebarCard from "@/components/features/ladder/LadderSidebarCard";
 
+export type NavItem = { href: string; label: string; icon: ReactNode };
+
 // sticky sidebar that drives nav + shows the live ladder card
-const navItems: Array<{ href: string; label: string; icon: ReactNode }> = [
+export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
   { href: "/assignments", label: "Assignments", icon: <AssignmentsIcon /> },
   { href: "/calendar", label: "Calendar", icon: <CalendarIcon /> },
@@ -75,12 +77,12 @@ function ProfileIcon() {
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const { data, loading, error, refresh } = useLadder();
 
   return (
-    <aside className="w-96 bg-brandBg text-white flex flex-col h-screen">
+    <aside className={`w-96 bg-brandBg text-white flex flex-col h-screen ${className ?? ''}`}>
       {/* Logo / Brand */}
       <div className="border-b border-white/10 px-5 py-6">
         <Link href="/dashboard" className="flex items-center gap-0">

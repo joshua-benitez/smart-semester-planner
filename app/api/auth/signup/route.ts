@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { validateSignUp } from '@/lib/validations'
+import { ok, err } from '@/server/responses'
 
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json()
     const validationError = validateSignUp(payload)
     if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 })
+      return err(validationError, 400, 'validation_error')
     }
 
     const name = typeof payload.name === 'string' ? payload.name.trim() : undefined
@@ -23,10 +24,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists with this email' },
-        { status: 400 }
-      )
+      return err('User already exists with this email', 400, 'conflict')
     }
 
     // hash the password before storing it
@@ -41,19 +39,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
-      message: 'User created successfully',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    })
+    return ok({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    }, 201)
   } catch (error) {
     console.error('Signup error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return err('Internal server error', 500, 'server_error')
   }
 }

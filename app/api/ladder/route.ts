@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/get-current-user'
 import { UnauthorizedError } from '@/lib/errors'
@@ -9,6 +9,7 @@ import {
   isSupportedLadderReason,
   LADDER_STEPS,
 } from '@/lib/ladder-service'
+import { ok, err } from '@/server/responses'
 
 // GET -> return the latest ladder summary + event feed for the signed-in student
 export async function GET() {
@@ -36,13 +37,13 @@ export async function GET() {
       })),
     })
 
-    return NextResponse.json(summary)
+    return ok(summary)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
     console.error('Error fetching ladder summary:', error)
-    return NextResponse.json({ error: 'Failed to fetch ladder' }, { status: 500 })
+    return err('Failed to fetch ladder', 500, 'server_error')
   }
 }
 
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     const user = await requireAuth()
     const payload = await req.json().catch(() => null)
     if (!payload) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+      return err('Invalid payload', 400, 'validation_error')
     }
 
     const { delta, reason, description, assignmentId } = payload
@@ -63,15 +64,15 @@ export async function POST(req: NextRequest) {
       delta === 0 ||
       typeof reason !== 'string'
     ) {
-      return NextResponse.json({ error: 'Invalid payload structure' }, { status: 400 })
+      return err('Invalid payload structure', 400, 'validation_error')
     }
 
     if (!isSupportedLadderReason(reason)) {
-      return NextResponse.json({ error: 'Unsupported reason code' }, { status: 400 })
+      return err('Unsupported reason code', 400, 'validation_error')
     }
 
     if (description !== undefined && typeof description !== 'string') {
-      return NextResponse.json({ error: 'Description must be a string' }, { status: 400 })
+      return err('Description must be a string', 400, 'validation_error')
     }
 
     let resolvedAssignmentId: string | undefined
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
         select: { id: true },
       })
       if (!assignment) {
-        return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
+        return err('Assignment not found', 404, 'not_found')
       }
       resolvedAssignmentId = assignment.id
     }
@@ -94,12 +95,12 @@ export async function POST(req: NextRequest) {
       assignmentId: resolvedAssignmentId,
     })
 
-    return NextResponse.json(summary)
+    return ok(summary)
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return err('Unauthorized', 401, 'unauthorized')
     }
     console.error('Error applying ladder delta:', error)
-    return NextResponse.json({ error: 'Failed to update ladder' }, { status: 500 })
+    return err('Failed to update ladder', 500, 'server_error')
   }
 }

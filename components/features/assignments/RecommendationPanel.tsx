@@ -89,7 +89,7 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
 
   if (!topRecommendation) {
     return (
-      <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10">
+      <section className="rounded-lg p-6 border border-white/10 bg-panelBg">
         <h2 className="text-xl font-bold mb-4">Smart Recommendations</h2>
         <div className="text-center py-8 text-white/70">
           <p className="text-lg">All caught up!</p>
@@ -109,7 +109,7 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
   })
 
   return (
-    <section className="rounded-lg p-6 border-2 border-brandPrimary bg-brandPrimary/10 space-y-6">
+    <section className="rounded-lg p-6 border border-white/10 bg-panelBg space-y-6">
       <div className="flex items-center gap-3">
         <h2 className="text-xl font-bold">Smart Recommendations</h2>
         <span className="text-xs text-white/50 bg-white/5 px-3 py-1 rounded-full">
@@ -118,7 +118,7 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
       </div>
 
       {/* Top Recommendation - Hero Card */}
-      <div className={`relative overflow-hidden rounded-2xl border-2 p-6 ${topColors.background} ${topColors.border} ring-2 ring-white/10`}>
+      <div className={`relative overflow-hidden rounded-2xl border p-6 bg-cardBg ${topColors.border}`}>
         <div className={`pointer-events-none absolute inset-0 -z-10 opacity-60 bg-gradient-to-br ${topColors.gradient}`} aria-hidden="true" />
 
         <div className="flex items-start justify-between gap-4 mb-4">
