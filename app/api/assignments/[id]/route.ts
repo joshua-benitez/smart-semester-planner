@@ -17,11 +17,11 @@ export async function GET(_req: Request, { params }: Params) {
     })
     if (!assignment) return err('Not found', 404, 'not_found')
     return ok(assignment)
-  } catch (err) {
-    if (err instanceof UnauthorizedError) {
+  } catch (e) {
+    if (e instanceof UnauthorizedError) {
       return err('Unauthorized', 401, 'unauthorized')
     }
-    console.error('Error fetching assignment by id:', err)
+    console.error('Error fetching assignment by id:', e)
     return err('Failed to fetch assignment', 500, 'server_error')
   }
 }
