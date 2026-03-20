@@ -1,19 +1,18 @@
-// dashboard layout keeps the sidebar persistent across pages
-import Sidebar from "@/components/layout/Sidebar";
-import MobileNav from "@/components/layout/MobileNav";
+import IconRail from "@/components/layout/IconRail"
+import MobileNav from "@/components/layout/MobileNav"
 
 export default function DashboardRouteLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-brandBg text-white flex">
-      <Sidebar className="hidden lg:flex" />
-      <main className="flex-1 min-w-0 pb-20 lg:pb-0">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#0b0d12" }}>
+      <IconRail className="hidden lg:flex" />
+      <main className="flex-1 min-w-0 overflow-hidden pb-16 lg:pb-0">
         {children}
         <MobileNav />
       </main>
     </div>
-  );
+  )
 }

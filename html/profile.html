@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CourseFlow - Profile</title>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brandBg: '#0c0f16',
+              cardBg: '#111827',
+              panelBg: '#161f2e',
+              brandPrimary: '#0f8bff',
+              brandPrimaryDark: '#0b6dc7'
+            },
+            boxShadow: {
+              soft: '0 2px 8px rgba(0,0,0,0.15)',
+              card: '0 4px 12px rgba(0,0,0,0.2)'
+            },
+            borderRadius: {
+              card: '12px',
+              badge: '8px'
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="bg-brandBg text-white">
+    <div class="page-container">
+      <div class="page-content max-w-5xl">
+        <div class="header-card">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Profile</h1>
+              <p class="page-description">Manage your account settings</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-card border border-emerald-500/40 bg-emerald-500/10">
+          <div class="text-sm">Profile updated successfully.</div>
+        </div>
+
+        <div class="page-card mb-8 border border-white/10 bg-cardBg">
+          <h2 class="text-xl font-bold mb-4">Account</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="text-white/70 text-sm">Email</div>
+              <div class="text-white font-medium">jordan@campus.edu</div>
+            </div>
+            <div>
+              <div class="text-white/70 text-sm">Member Since</div>
+              <div class="text-white font-medium">Jan 12, 2024</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-card mb-8 border border-white/10 bg-cardBg">
+          <h2 class="text-xl font-bold mb-4">Display Name</h2>
+          <form class="space-y-4">
+            <div>
+              <label class="form-label">Name</label>
+              <input class="form-input" value="Jordan Lee" />
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" class="btn-secondary">Save Name</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="page-card mb-8 border border-white/10 bg-cardBg">
+          <h2 class="text-xl font-bold mb-4">Change Password</h2>
+          <form class="space-y-4">
+            <div class="form-grid">
+              <div>
+                <label class="form-label">Current Password</label>
+                <input type="password" class="form-input" placeholder="Enter current password" />
+              </div>
+              <div>
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-input" placeholder="At least 6 characters" />
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" class="btn-secondary">Update Password</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="page-card border border-white/10 bg-cardBg">
+          <h2 class="text-xl font-bold mb-4">Preferences</h2>
+          <form class="space-y-4">
+            <div class="form-grid">
+              <label class="flex items-center gap-3">
+                <input type="checkbox" class="h-4 w-4 rounded border-white/30 bg-panelBg" checked />
+                <span class="text-white/80 text-sm">Hide completed assignments by default</span>
+              </label>
+              <div>
+                <label class="form-label">Theme</label>
+                <select class="form-input">
+                  <option selected>Dark</option>
+                  <option>Light</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="form-label">Default Assignment Type</label>
+                <select class="form-input">
+                  <option selected>Homework</option>
+                  <option>Quiz</option>
+                  <option>Project</option>
+                  <option>Exam</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Default Difficulty</label>
+                <select class="form-input">
+                  <option>Easy</option>
+                  <option selected>Moderate</option>
+                  <option>Crushing</option>
+                  <option>Brutal</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" class="btn-secondary">Save Preferences</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

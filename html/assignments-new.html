@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CourseFlow - New Assignment</title>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brandBg: '#0c0f16',
+              cardBg: '#111827',
+              panelBg: '#161f2e',
+              brandPrimary: '#0f8bff',
+              brandPrimaryDark: '#0b6dc7'
+            },
+            boxShadow: {
+              soft: '0 2px 8px rgba(0,0,0,0.15)',
+              card: '0 4px 12px rgba(0,0,0,0.2)'
+            },
+            borderRadius: {
+              card: '12px',
+              badge: '8px'
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="bg-brandBg text-white">
+    <div class="page-container">
+      <div class="page-content max-w-6xl">
+        <div class="grid gap-6 lg:grid-cols-[1.7fr_1.1fr]">
+          <div class="page-card">
+            <div class="mb-8">
+              <h1 class="page-title">Create New Assignment</h1>
+              <p class="page-description">Fill out the form to add a new assignment to your semester planner.</p>
+
+              <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                <a href="./dashboard.html" class="nav-link">&larr; Back to Dashboard</a>
+                <button class="btn-secondary text-sm">Parse Syllabus (Fast Add)</button>
+              </div>
+            </div>
+
+            <form class="form-group">
+              <div>
+                <label class="form-label">Assignment Title</label>
+                <input type="text" class="form-input" placeholder="e.g., Math homework Chapter 5" />
+              </div>
+              <div>
+                <label class="form-label">Course</label>
+                <select class="form-input">
+                  <option>Select a course</option>
+                  <option>Math 221</option>
+                  <option>Chem 204</option>
+                  <option>History 101</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Description</label>
+                <textarea class="form-input" rows="4" placeholder="Any additional details about this assignment..."></textarea>
+              </div>
+              <div>
+                <label class="form-label">Submission Note (optional)</label>
+                <textarea class="form-input" rows="3" placeholder="Where did you submit it? Add quick context for future you."></textarea>
+                <p class="text-sm text-gray-500 mt-1">Notes boost early bonuses when you complete work ahead of the deadline.</p>
+              </div>
+              <div class="form-grid">
+                <div>
+                  <label class="form-label">Due Date</label>
+                  <input type="datetime-local" class="form-input" />
+                  <div class="flex gap-2 mt-2">
+                    <button type="button" class="btn-sm btn-secondary">Today 11:59 PM</button>
+                    <button type="button" class="btn-sm btn-secondary">Tomorrow 11:59 PM</button>
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">Assignment Type</label>
+                  <select class="form-input">
+                    <option>Homework</option>
+                    <option>Quiz</option>
+                    <option>Project</option>
+                    <option>Exam</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-grid grid-cols-1 md:grid-cols-3">
+                <div>
+                  <label class="form-label">Difficulty Level</label>
+                  <select class="form-input">
+                    <option>Easy</option>
+                    <option>Moderate</option>
+                    <option>Crushing</option>
+                    <option>Brutal</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Category Weight (%)</label>
+                  <input type="number" class="form-input" value="20" />
+                  <p class="text-sm text-gray-500 mt-1">Percentage weight of this category in your course grade</p>
+                </div>
+                <div>
+                  <label class="form-label">Estimated Time (hours)</label>
+                  <input type="number" class="form-input" placeholder="e.g., 2.5" />
+                  <p class="text-sm text-gray-500 mt-1">How long will this take? (optional)</p>
+                </div>
+              </div>
+              <div class="pt-6 border-t border-white/10 md:static md:bg-transparent sticky bottom-0 left-0 right-0 bg-cardBg/90 backdrop-blur md:backdrop-blur-0 md:border-none">
+                <div class="flex flex-col gap-3 md:flex-row md:gap-4">
+                  <button type="submit" class="btn-primary flex-1 w-full md:w-auto">Create Assignment</button>
+                  <button type="button" class="btn-secondary w-full md:w-auto">Cancel</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <aside class="page-card bg-panelBg border border-white/10">
+            <div class="space-y-4">
+              <h2 class="text-xl font-semibold text-white">Preview and Tips</h2>
+              <p class="text-white/70 text-sm">Keep details consistent so your dashboard stays clean. Use the parser to batch-create from a syllabus, then fine-tune here.</p>
+              <div class="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+                <p class="text-sm text-white/80 font-semibold">Fast steps</p>
+                <ul class="text-sm text-white/65 space-y-1 list-disc list-inside">
+                  <li>Pick the right course for filtering later.</li>
+                  <li>Add estimated hours for better recommendations.</li>
+                  <li>Set weight as a percent (0-100%) so GPA math stays sane.</li>
+                </ul>
+              </div>
+              <button class="btn-primary w-full">Open Syllabus Parser</button>
+              <div class="text-xs text-white/50">On mobile, actions stay at the bottom so you can submit without scrolling.</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
