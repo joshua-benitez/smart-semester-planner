@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { type ReactNode } from "react"
+import Logo from "@/components/ui/Logo"
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -47,6 +48,17 @@ const NAV = [
     ),
   },
   {
+    href: "/courses",
+    label: "Courses",
+    icon: (
+      <Icon>
+        <path d="M4 6h16" />
+        <path d="M4 12h16" />
+        <path d="M4 18h10" />
+      </Icon>
+    ),
+  },
+  {
     href: "/calendar",
     label: "Calendar",
     icon: (
@@ -75,7 +87,7 @@ export default function IconRail({ className }: { className?: string }) {
   const pathname = usePathname()
 
   const btnBase =
-    "w-[34px] h-[34px] rounded-[7px] flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer"
+    "relative w-[34px] h-[34px] rounded-[7px] flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer group"
   const btnActive = "text-white/90"
   const btnInactive = "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
 
@@ -88,13 +100,8 @@ export default function IconRail({ className }: { className?: string }) {
         borderRight: "1px solid rgba(255,255,255,0.055)",
       }}
     >
-      <div
-        className="w-6 h-6 rounded-[6px] flex items-center justify-center mb-3.5 flex-shrink-0"
-        style={{ background: "rgba(230,234,246,0.9)" }}
-      >
-        <svg viewBox="0 0 24 24" fill="#0b0d12" className="w-[13px] h-[13px]">
-          <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
-        </svg>
+      <div className="mb-3.5 flex-shrink-0">
+        <Logo width={28} unwrapped imgClassName="rounded-[6px]" />
       </div>
 
       {NAV.map(({ href, label, icon }) => {
@@ -108,6 +115,12 @@ export default function IconRail({ className }: { className?: string }) {
             style={active ? { background: "rgba(255,255,255,0.07)" } : undefined}
           >
             {icon}
+            <span
+              className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-semibold opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+              style={{ background: "rgba(15,17,22,0.95)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(230,234,246,0.8)" }}
+            >
+              {label}
+            </span>
           </Link>
         )
       })}
@@ -125,6 +138,12 @@ export default function IconRail({ className }: { className?: string }) {
             style={active ? { background: "rgba(255,255,255,0.07)" } : undefined}
           >
             {icon}
+            <span
+              className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-semibold opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+              style={{ background: "rgba(15,17,22,0.95)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(230,234,246,0.8)" }}
+            >
+              {label}
+            </span>
           </Link>
         )
       })}

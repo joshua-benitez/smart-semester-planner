@@ -13,6 +13,7 @@ export type NavItem = { href: string; label: string; icon: ReactNode };
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
   { href: "/assignments", label: "Assignments", icon: <AssignmentsIcon /> },
+  { href: "/courses", label: "Courses", icon: <CoursesIcon /> },
   { href: "/calendar", label: "Calendar", icon: <CalendarIcon /> },
   { href: "/profile", label: "Profile", icon: <ProfileIcon /> },
 ];
@@ -64,6 +65,16 @@ function CalendarIcon() {
       <path d="M4 7h16" />
       <rect x="4" y="4" width="16" height="18" rx="2" />
       <path d="m8 12 2 2 3-3" />
+    </IconShell>
+  )
+}
+
+function CoursesIcon() {
+  return (
+    <IconShell>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h10" />
     </IconShell>
   )
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { useSession, signOut } from "next-auth/react"
+import { signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useLadder } from "@/hooks/useLadder"
@@ -128,13 +128,11 @@ function AssignmentRow({ assignment, onComplete, updating }: RowProps) {
 }
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
   const router = useRouter()
   const { assignments, loading, refresh } = useAssignments()
   const { data: ladderData, loading: ladderLoading, error: ladderError, refresh: refreshLadder } = useLadder()
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
-  const [searchQuery, setSearchQuery] = useState("")
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const [showCompleted, setShowCompleted] = useState(false)
   const searchParams = useSearchParams()
@@ -170,13 +168,6 @@ export default function DashboardPage() {
       })
     }
 
-    const q = searchQuery.trim().toLowerCase()
-    if (q) {
-      list = list.filter((a) =>
-        `${a.title} ${a.course?.name ?? ""} ${a.description ?? ""}`.toLowerCase().includes(q)
-      )
-    }
-
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
     list = list.filter((a) => {
       if (a.status !== "completed") return true
@@ -185,7 +176,7 @@ export default function DashboardPage() {
     })
 
     return list.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-  }, [assignments, selectedCourseId, searchQuery, courses])
+  }, [assignments, selectedCourseId, courses])
 
   const sections = useMemo(() => {
     const completedStatuses = ["completed", "submitted", "graded"]
@@ -201,7 +192,7 @@ export default function DashboardPage() {
   const summary = useMemo(() => {
     const overdue = sections.groups.overdue
     const thisWk = [...sections.groups.today, ...sections.groups.week]
-    if (overdue.length === 0 && thisWk.length === 0) return "All clear — nothing urgent right now."
+    if (overdue.length === 0 && thisWk.length === 0) return "All clear — nothing due in the next 7 days."
     const parts: string[] = []
     if (overdue.length > 0) {
       const first = overdue[0]
@@ -239,13 +230,13 @@ export default function DashboardPage() {
     }
   }
 
-  const SECTION_META = [
+  const SECTION_META: { key: "overdue" | "today" | "week" | "next" | "later"; name: string; urgent?: boolean; warn?: boolean }[] = [
     { key: "overdue", name: "Overdue", urgent: true },
     { key: "today", name: "Today", urgent: true },
     { key: "week", name: "This week", warn: true },
-    { key: "next", name: "Next week", warn: false },
-    { key: "later", name: "Upcoming", warn: false },
-  ] as const
+    { key: "next", name: "Next week" },
+    { key: "later", name: "Upcoming" },
+  ]
 
   const uniqueCourses = useMemo(() => {
     const seen = new Set<string>()
@@ -259,6 +250,19 @@ export default function DashboardPage() {
     })
     return out
   }, [assignments])
+
+  const courseColorClass = (name: string) => {
+    const palette = [
+      "text-emerald-400",
+      "text-blue-400",
+      "text-violet-400",
+      "text-cyan-400",
+      "text-rose-400",
+      "text-orange-400",
+    ]
+    const idx = Math.abs(name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) % palette.length
+    return palette[idx]
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -277,6 +281,12 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
+          <button
+            className="text-[0.77rem] font-medium px-3 py-1.5 rounded-md border transition-colors"
+            style={{ borderColor: "rgba(255,255,255,0.09)", color: "rgba(230,234,246,0.5)" }}
+          >
+            Import
+          </button>
           <Link
             href="/assignments/new"
             className="text-[0.77rem] font-semibold px-3 py-1.5 rounded-md text-white"
@@ -316,28 +326,18 @@ export default function DashboardPage() {
             onClick={() => setSelectedCourseId(c.id === selectedCourseId ? "" : c.id)}
             className={`text-[0.79rem] font-medium px-3 py-2 border-b-2 transition-colors ${
               selectedCourseId === c.id
-                ? "border-current text-white/90"
+                ? `${courseColorClass(c.name)}`
                 : "border-transparent text-white/30 hover:text-white/50"
             }`}
-            style={{ marginBottom: -1 }}
+            style={{
+              marginBottom: -1,
+              borderBottomColor: selectedCourseId === c.id ? "currentColor" : "transparent",
+            }}
           >
             {c.name}
           </button>
         ))}
         <div className="ml-auto flex items-center gap-3 pb-2">
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search"
-            className="text-[0.75rem] px-3 py-1.5 rounded-md outline-none transition-colors"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(230,234,246,0.7)",
-              width: 140,
-            }}
-          />
           <label className="flex items-center gap-1.5 text-[0.75rem] cursor-pointer" style={{ color: "rgba(230,234,246,0.3)" }}>
             <input
               type="checkbox"

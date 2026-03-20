@@ -40,9 +40,8 @@ export default function SignUp() {
         return
       }
 
-      setSuccess('Account created successfully! Signing you in...')
-      
-      // jump straight into a session once the account is created
+      setSuccess('Account created successfully! Signing you in…')
+
       const result = await signIn('credentials', {
         email,
         password,
@@ -61,94 +60,88 @@ export default function SignUp() {
     }
   }
 
+  const inputCls = 'w-full text-[0.82rem] px-3 py-2 rounded-md outline-none transition-colors'
+  const inputStyle = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.09)',
+    color: 'rgba(230,234,246,0.85)',
+  } as React.CSSProperties
+
   return (
-    <div className="page-container">
-      <div className="page-content min-h-[70vh] flex items-center justify-center">
-        <div className="page-card w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="page-title">Create Account</h1>
-            <p className="page-description">Join Smart Semester Planner today</p>
+    <div className="flex items-center justify-center min-h-screen" style={{ background: '#0b0d12' }}>
+      <div className="w-full max-w-sm px-7 py-6 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#0f1116' }}>
+        <div className="mb-5">
+          <h1 className="text-[1.1rem] font-semibold text-white/90">Create account</h1>
+          <p className="text-[0.78rem]" style={{ color: 'rgba(230,234,246,0.3)' }}>Get started in a minute.</p>
+        </div>
+
+        {error && (
+          <div className="mb-4 text-[0.78rem] rounded-md px-3 py-2" style={{ background: 'rgba(248,113,113,0.12)', color: 'rgba(248,113,113,0.9)' }}>
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 text-[0.78rem] rounded-md px-3 py-2" style={{ background: 'rgba(34,197,94,0.12)', color: 'rgba(34,197,94,0.9)' }}>
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-[0.72rem] mb-1" style={{ color: 'rgba(230,234,246,0.5)' }}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              className={inputCls}
+              style={inputStyle}
+              placeholder="Your name"
+            />
+          </div>
+          <div>
+            <label className="block text-[0.72rem] mb-1" style={{ color: 'rgba(230,234,246,0.5)' }}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className={inputCls}
+              style={inputStyle}
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-[0.72rem] mb-1" style={{ color: 'rgba(230,234,246,0.5)' }}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className={inputCls}
+              style={inputStyle}
+              placeholder="••••••••"
+            />
           </div>
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full text-[0.8rem] font-semibold px-3 py-2 rounded-md disabled:opacity-40"
+            style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}
+          >
+            {loading ? 'Creating…' : 'Create account'}
+          </button>
+        </form>
 
-          {success && (
-            <div className="bg-green-500/20 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg mb-6">
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="name"
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                placeholder="Enter your email"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete="new-password"
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                placeholder="Choose a password (min 6 characters)"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full"
-            >
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="text-center mt-6">
-            <p className="text-sm text-slate-400">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="text-blue-400 hover:text-blue-300">
-                Sign in
-              </Link>
-            </p>
-          </div>
+        <div className="mt-4 text-[0.75rem]" style={{ color: 'rgba(230,234,246,0.4)' }}>
+          Already have an account?{' '}
+          <Link href="/auth/signin" className="text-blue-400 hover:text-blue-300">Sign in</Link>
         </div>
       </div>
     </div>

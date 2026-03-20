@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -11,18 +10,21 @@ module.exports = {
         border: "hsl(var(--border))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        // neutral surfaces + a single blue accent
-        brandBg: '#0c0f16',          // near-black charcoal
-        cardBg: '#111827',           // primary surface
-        panelBg: '#161f2e',          // secondary surface
-        brandPrimary: '#0f8bff',     // accent
-        brandPrimaryDark: '#0b6dc7', // accent hover
+        brandBg: '#0b0d12',
+        cardBg: '#0f1116',
+        panelBg: '#13151c',
+        brandPrimary: '#0f8bff',
+        brandPrimaryDark: '#0b6dc7',
+      },
+      fontFamily: {
+        sans: ['Geist', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       fontSize: {
-        brand: ["2.25rem", { lineHeight: "1.1" }],      // ~36px
-        brandLg: ["2.75rem", { lineHeight: "1.1" }],   // ~44px
-        tagline: ["1rem", { lineHeight: "1.2" }],      // 16px
-        taglineLg: ["1.125rem", { lineHeight: "1.25" }], // 18px
+        brand: ["2.25rem", { lineHeight: "1.1" }],
+        brandLg: ["2.75rem", { lineHeight: "1.1" }],
+        tagline: ["1rem", { lineHeight: "1.2" }],
+        taglineLg: ["1.125rem", { lineHeight: "1.25" }],
       },
       borderRadius: {
         card: '12px',

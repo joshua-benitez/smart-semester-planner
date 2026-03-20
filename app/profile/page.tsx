@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import { useUserPreferences } from '@/hooks/useUserPreferences'
 import { DEFAULT_USER_PREFERENCES, UserPreferences } from '@/types/user'
 
@@ -13,8 +13,6 @@ type Profile = {
 }
 
 export default function ProfilePage() {
-  // lightweight account settings page (name + password) hitting the profile API
-  const { data: session } = useSession()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -107,149 +105,120 @@ export default function ProfilePage() {
     }
   }
 
+  const inputCls = 'w-full text-[0.82rem] px-3 py-2 rounded-md outline-none transition-colors'
+  const inputStyle = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.09)',
+    color: 'rgba(230,234,246,0.85)',
+  } as React.CSSProperties
+
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Loading profile…</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-screen" style={{ background: '#0b0d12', color: 'rgba(230,234,246,0.3)' }}>
+        Loading…
       </div>
     )
   }
 
   return (
-    <div className="page-container">
-      <div className="page-content max-w-5xl">
-        <div className="header-card">
-          <div className="page-header">
-            <div>
-              <h1 className="page-title">Profile</h1>
-              <p className="page-description">Manage your account settings</p>
-            </div>
-          </div>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0b0d12' }}>
+      <div className="flex items-center justify-between px-7 pt-6 pb-4 flex-shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div>
+          <Link href="/dashboard" className="text-[0.72rem]" style={{ color: 'rgba(230,234,246,0.3)' }}>← Dashboard</Link>
+          <h1 className="text-[1.1rem] font-semibold tracking-tight text-white/90 mt-2">Profile</h1>
         </div>
+      </div>
 
+      <div className="flex-1 overflow-y-auto px-7 py-6 max-w-3xl">
         {(message || error) && (
-          <div className={`page-card ${error ? 'border-red-500/40 bg-red-500/10' : 'border-emerald-500/40 bg-emerald-500/10'}`}>
-            <div className="text-sm">{error || message}</div>
+          <div className="mb-4 text-[0.8rem] rounded-md px-3 py-2" style={{ background: error ? 'rgba(248,113,113,0.12)' : 'rgba(34,197,94,0.12)', color: error ? 'rgba(248,113,113,0.9)' : 'rgba(34,197,94,0.9)' }}>
+            {error || message}
           </div>
         )}
 
-        {/* Account Info */}
-        <div className="page-card mb-8 border border-white/10 bg-cardBg">
-          <h2 className="text-xl font-bold mb-4">Account</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="text-white/70 text-sm">Email</div>
-              <div className="text-white font-medium">{profile?.email}</div>
-            </div>
-            <div>
-              <div className="text-white/70 text-sm">Member Since</div>
-              <div className="text-white font-medium">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '-'}</div>
+        <div className="mb-6">
+          <div className="text-[0.72rem] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(230,234,246,0.3)' }}>
+            Account
+          </div>
+          <div className="rounded-md px-3 py-3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="text-[0.7rem]" style={{ color: 'rgba(230,234,246,0.3)' }}>Email</div>
+                <div className="text-[0.85rem]" style={{ color: 'rgba(230,234,246,0.85)' }}>{profile?.email}</div>
+              </div>
+              <div>
+                <div className="text-[0.7rem]" style={{ color: 'rgba(230,234,246,0.3)' }}>Member since</div>
+                <div className="text-[0.85rem]" style={{ color: 'rgba(230,234,246,0.85)' }}>{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '-'}</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Update name */}
-        <div className="page-card mb-8 border border-white/10 bg-cardBg">
-          <h2 className="text-xl font-bold mb-4">Display Name</h2>
-          <form onSubmit={updateProfile} className="space-y-4">
-            <div>
-              <label className="form-label">Name</label>
-              <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={saving} className="btn-secondary">
-                {saving ? 'Saving…' : 'Save Name'}
-              </button>
-            </div>
+        <div className="mb-6">
+          <div className="text-[0.72rem] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(230,234,246,0.3)' }}>
+            Display name
+          </div>
+          <form onSubmit={updateProfile} className="space-y-3">
+            <input className={inputCls} style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+            <button type="submit" disabled={saving} className="text-[0.77rem] font-semibold px-3 py-2 rounded-md disabled:opacity-40" style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}>
+              {saving ? 'Saving…' : 'Save name'}
+            </button>
           </form>
         </div>
 
-        {/* Change password */}
-        <div className="page-card mb-8 border border-white/10 bg-cardBg">
-          <h2 className="text-xl font-bold mb-4">Change Password</h2>
-          <form onSubmit={changePassword} className="space-y-4">
-            <div className="form-grid">
-              <div>
-                <label className="form-label">Current Password</label>
-                <input type="password" className="form-input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" />
-              </div>
-              <div>
-                <label className="form-label">New Password</label>
-                <input type="password" className="form-input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 6 characters" />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={saving} className="btn-secondary">
-                {saving ? 'Updating…' : 'Update Password'}
-              </button>
-            </div>
+        <div className="mb-6">
+          <div className="text-[0.72rem] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(230,234,246,0.3)' }}>
+            Change password
+          </div>
+          <form onSubmit={changePassword} className="space-y-3">
+            <input type="password" className={inputCls} style={inputStyle} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Current password" />
+            <input type="password" className={inputCls} style={inputStyle} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password" />
+            <button type="submit" disabled={saving} className="text-[0.77rem] font-semibold px-3 py-2 rounded-md disabled:opacity-40" style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}>
+              {saving ? 'Updating…' : 'Update password'}
+            </button>
           </form>
         </div>
 
-        {/* Preferences */}
-        <div className="page-card border border-white/10 bg-cardBg">
-          <h2 className="text-xl font-bold mb-4">Preferences</h2>
-          <form onSubmit={savePreferences} className="space-y-4">
-            <div className="form-grid">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-white/30 bg-panelBg"
-                  checked={prefForm.hideCompletedAssignments ?? false}
-                  onChange={(e) => setPrefForm((prev) => ({ ...prev, hideCompletedAssignments: e.target.checked }))}
-                />
-                <span className="text-white/80 text-sm">Hide completed assignments by default</span>
-              </label>
-              <div>
-                <label className="form-label">Theme</label>
-                <select
-                  className="form-input"
-                  value={prefForm.theme}
-                  onChange={(e) => setPrefForm((prev) => ({ ...prev, theme: e.target.value as UserPreferences['theme'] }))}
-                >
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
-                </select>
-              </div>
+        <div>
+          <div className="text-[0.72rem] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(230,234,246,0.3)' }}>
+            Preferences
+          </div>
+          <form onSubmit={savePreferences} className="space-y-3">
+            <label className="flex items-center gap-2 text-[0.8rem]" style={{ color: 'rgba(230,234,246,0.6)' }}>
+              <input
+                type="checkbox"
+                checked={prefForm.hideCompletedAssignments ?? false}
+                onChange={(e) => setPrefForm((prev) => ({ ...prev, hideCompletedAssignments: e.target.checked }))}
+              />
+              Hide completed assignments by default
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                className={inputCls}
+                style={inputStyle}
+                value={prefForm.defaultAssignmentType}
+                onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultAssignmentType: e.target.value }))}
+              >
+                <option value="homework">Homework</option>
+                <option value="quiz">Quiz</option>
+                <option value="project">Project</option>
+                <option value="exam">Exam</option>
+              </select>
+              <select
+                className={inputCls}
+                style={inputStyle}
+                value={prefForm.defaultDifficulty}
+                onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultDifficulty: e.target.value }))}
+              >
+                <option value="easy">Easy</option>
+                <option value="moderate">Moderate</option>
+                <option value="crushing">Crushing</option>
+                <option value="brutal">Brutal</option>
+              </select>
             </div>
-            <div className="form-grid">
-              <div>
-                <label className="form-label">Default Assignment Type</label>
-                <select
-                  className="form-input"
-                  value={prefForm.defaultAssignmentType}
-                  onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultAssignmentType: e.target.value }))}
-                >
-                  <option value="homework">Homework</option>
-                  <option value="quiz">Quiz</option>
-                  <option value="project">Project</option>
-                  <option value="exam">Exam</option>
-                </select>
-              </div>
-              <div>
-                <label className="form-label">Default Difficulty</label>
-                <select
-                  className="form-input"
-                  value={prefForm.defaultDifficulty}
-                  onChange={(e) => setPrefForm((prev) => ({ ...prev, defaultDifficulty: e.target.value }))}
-                >
-                  <option value="easy">Easy</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="crushing">Crushing</option>
-                  <option value="brutal">Brutal</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={prefsSaving} className="btn-secondary">
-                {prefsSaving ? 'Saving…' : 'Save Preferences'}
-              </button>
-            </div>
+            <button type="submit" disabled={prefsSaving} className="text-[0.77rem] font-semibold px-3 py-2 rounded-md disabled:opacity-40" style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}>
+              {prefsSaving ? 'Saving…' : 'Save preferences'}
+            </button>
           </form>
         </div>
       </div>

@@ -1,13 +1,11 @@
-/* ===== Tailwind base first ===== */
 @tailwind base;
 
-/* ========= BASE ========= */
 @layer base {
   body {
-    background: #0c0f16; /* fallback */
+    background: #0b0d12;
     color: #ffffff;
     @apply bg-brandBg text-white;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     line-height: 1.6;
     min-height: 100vh;
   }
@@ -16,22 +14,26 @@
   h2, h3, h4, h5, h6 { font-weight: 600; color: #ffffff; }
   p { margin: 0.5rem 0; }
 
-  /* Links */
   a, a:visited { color: inherit; text-decoration: none; }
   a:hover { color: #ffffffcc; text-decoration: none; }
 
-  /* Kill native white pill look on buttons */
   button, [type='button'], [type='submit'], [type='reset'] {
     @apply appearance-none bg-transparent border-0;
   }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  *::-webkit-scrollbar { width: 4px; height: 4px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
 }
 
-/* ===== Tailwind components ===== */
 @tailwind components;
 
-/* ========= COMPONENTS ========= */
 @layer components {
-  /* DRY base */
   .btn {
     @apply inline-flex items-center justify-center gap-2
            px-6 py-3 rounded-full font-semibold transition
@@ -41,7 +43,6 @@
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Variants */
   .btn-primary   { @apply btn bg-brandPrimary text-white border border-brandPrimary shadow-md; }
   .btn-primary:hover { @apply bg-brandPrimaryDark border-brandPrimaryDark; }
 
@@ -51,33 +52,31 @@
   .btn-cta       { @apply btn px-10 py-4 text-lg bg-brandPrimary text-white border-2 border-brandPrimary shadow-lg; }
   .btn-cta:hover { @apply bg-brandPrimaryDark border-brandPrimaryDark; }
 
-  /* Anchor-styled button visited lock (no ! in @apply) */
   .btn-primary:visited   { color: #fff; }
   .btn-secondary:visited { color: #fff; }
   .btn-cta:visited       { color: #fff; }
 
-
-  /* Success / Danger */
   .btn-success { @apply btn; background:#16a34a; border:2px solid #16a34a; color:#fff; }
   .btn-success:hover { background:#15803d; border-color:#15803d; }
 
   .btn-danger  { @apply btn; background:#dc2626; border:2px solid #dc2626; color:#fff; }
   .btn-danger:hover { background:#b91c1c; border-color:#b91c1c; }
 
-  /* Small helper — placed after variants so it overrides their padding */
   .btn-sm { @apply px-3 py-1.5 text-sm rounded-md; }
 
-  /* Card */
   .card { @apply rounded-lg p-6 border bg-cardBg; border-color: rgba(255,255,255,0.06); }
 
-  /* Inputs */
+  .content-card {
+    @apply rounded-xl border p-5 bg-cardBg;
+    border-color: rgba(255,255,255,0.08);
+  }
+
   .form-input {
     @apply w-full px-4 py-2 rounded-md border transition-colors bg-panelBg text-white;
     border-color: rgba(255,255,255,0.12);
   }
   .form-input:focus { @apply border-brandPrimary outline-none; box-shadow: 0 0 0 2px rgba(1,102,254,0.5); }
 
-  /* Badges */
   .status-badge   { @apply px-2 py-1 rounded-md text-xs font-medium; }
   .status-easy    { background: rgba(34,197,94,.2);  color:#4ade80; }
   .status-moderate{ background: rgba(251,191,36,.2); color:#fbbf24; }
@@ -85,15 +84,31 @@
   .status-brutal  { background: rgba(239,68,68,.2);  color:#f87171; }
 
   .nav-link { @apply inline-flex items-center gap-1 text-white/80 hover:text-white transition; }
+
+  .page-container { @apply flex justify-center p-6; }
+  .page-content   { @apply w-full; }
+  .page-card      { @apply card mb-6; }
+  .header-card    { @apply card mb-6; }
+  .page-header    { @apply flex flex-col gap-4 md:flex-row md:items-center md:justify-between; }
+  .page-title     { @apply text-2xl font-bold; }
+  .page-description { @apply text-white/70 text-sm mt-1; }
+  .section-title  { @apply text-xl font-bold mb-4; }
+  .form-group     { @apply space-y-5; }
+  .form-label     { @apply block text-sm font-medium text-white/80 mb-1; }
+  .form-grid      { @apply grid grid-cols-1 gap-4 md:grid-cols-2; }
+  .mobile-stack   { @apply flex flex-col gap-4 sm:flex-row sm:items-start; }
+
+  .loading-container { @apply flex flex-col items-center justify-center py-12 gap-4; }
+  .loading-text      { @apply text-white/60 text-sm; }
+  .empty-state       { @apply text-center py-12; }
+  .empty-title       { @apply text-xl font-semibold text-white mb-2; }
+  .empty-description { @apply text-white/60 text-sm; }
 }
 
-/* ===== Tailwind utilities last ===== */
 @tailwind utilities;
 
-/* ========= UTILITIES ========= */
 @layer utilities {
   .container { @apply max-w-6xl mx-auto px-6; }
-  .section-title { @apply text-3xl font-bold mb-4; }
   .muted { color: #b0b0b0; }
 
   .animate-fade-in { animation: fade-in 400ms ease-out forwards; opacity: 0; }
@@ -106,4 +121,7 @@
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .app-shell { @apply flex min-h-screen; }
+  .app-main  { @apply flex-1 min-w-0; }
 }
