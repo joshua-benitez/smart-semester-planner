@@ -6,16 +6,6 @@ import Link from 'next/link'
 
 type Course = { id: string; name: string }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-[0.75rem] font-medium mb-1.5" style={{ color: 'rgba(230,234,246,0.5)' }}>{label}</label>
-      {children}
-      {hint && <p className="text-[0.72rem] mt-1" style={{ color: 'rgba(230,234,246,0.25)' }}>{hint}</p>}
-    </div>
-  )
-}
-
 export default function EditAssignmentPage() {
   const router = useRouter()
   const params = useParams()
@@ -39,8 +29,8 @@ export default function EditAssignmentPage() {
   useEffect(() => {
     if (!id) return
     Promise.all([
-      fetch('/api/courses').then(r => r.json()),
-      fetch(`/api/assignments/${id}`).then(r => r.json()),
+      fetch('/api/courses').then((r) => r.json()),
+      fetch(`/api/assignments/${id}`).then((r) => r.json()),
     ]).then(([cp, ap]) => {
       if (cp.ok) setCourses(cp.data ?? [])
       if (ap.ok && ap.data) {
@@ -61,7 +51,7 @@ export default function EditAssignmentPage() {
   }, [id])
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(prev => ({ ...prev, [k]: e.target.value }))
+    setForm((prev) => ({ ...prev, [k]: e.target.value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,92 +83,98 @@ export default function EditAssignmentPage() {
     }
   }
 
-  const inputCls = 'w-full text-[0.82rem] px-3 py-2 rounded-md outline-none transition-colors'
-  const inputStyle = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    color: 'rgba(230,234,246,0.85)',
-  } as React.CSSProperties
+  const inputCls = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brandPrimary'
+  const labelCls = 'mb-1.5 block text-sm font-semibold text-gray-700'
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen text-[0.85rem]" style={{ background: '#0b0d12', color: 'rgba(230,234,246,0.3)' }}>
-      Loading…
-    </div>
-  )
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-brandBg text-sm text-gray-500">
+        Loading…
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0b0d12' }}>
-      <div className="flex items-center justify-between px-7 pt-6 pb-4 flex-shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 py-5">
         <div className="flex items-center gap-4">
-          <Link href="/assignments" className="text-[0.78rem] transition-colors" style={{ color: 'rgba(230,234,246,0.3)' }}>
-            ← Back
-          </Link>
-          <h1 className="text-[1.1rem] font-semibold tracking-tight text-white/90">Edit Assignment</h1>
+          <Link href="/assignments" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">← Back</Link>
+          <h1 className="border-l border-gray-300 pl-4 text-xl font-bold tracking-tight text-gray-900">Edit Assignment</h1>
         </div>
         <button
           form="edit-assignment-form"
           type="submit"
           disabled={saving || !form.title.trim() || !form.dueDate || !form.courseName.trim()}
-          className="text-[0.77rem] font-semibold px-3 py-1.5 rounded-md disabled:opacity-40 transition-opacity"
-          style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}
+          className="btn-primary text-sm"
         >
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving…' : 'Save Task'}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-7 py-6">
-        <form id="edit-assignment-form" onSubmit={handleSubmit} className="max-w-xl space-y-5">
-          <Field label="Title *">
-            <input type="text" value={form.title} onChange={set('title')} className={inputCls} style={inputStyle} required autoFocus />
-          </Field>
+      <div className="flex-1 overflow-y-auto px-8 py-8">
+        <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+          <form id="edit-assignment-form" onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className={labelCls}>Title *</label>
+              <input type="text" value={form.title} onChange={set('title')} className={inputCls} required autoFocus />
+            </div>
 
-          <Field label="Course *">
-            <select value={form.courseName} onChange={set('courseName')} className={inputCls} style={inputStyle} required>
-              <option value="">Select course</option>
-              {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </Field>
-
-          <Field label="Due date *">
-            <input type="datetime-local" value={form.dueDate} onChange={set('dueDate')} className={inputCls} style={inputStyle} required />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Type">
-              <select value={form.type} onChange={set('type')} className={inputCls} style={inputStyle}>
-                <option value="homework">Homework</option>
-                <option value="quiz">Quiz</option>
-                <option value="project">Project</option>
-                <option value="exam">Exam</option>
+            <div>
+              <label className={labelCls}>Course *</label>
+              <select value={form.courseName} onChange={set('courseName')} className={inputCls} required>
+                <option value="">Select course</option>
+                {courses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
-            </Field>
-            <Field label="Difficulty">
-              <select value={form.difficulty} onChange={set('difficulty')} className={inputCls} style={inputStyle}>
-                <option value="easy">Easy</option>
-                <option value="moderate">Moderate</option>
-                <option value="crushing">Crushing</option>
-                <option value="brutal">Brutal</option>
-              </select>
-            </Field>
-          </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Grade weight (%)">
-              <input type="number" value={form.weight} onChange={set('weight')} min="0" max="100" className={inputCls} style={inputStyle} />
-            </Field>
-            <Field label="Est. hours">
-              <input type="number" value={form.estimatedHours} onChange={set('estimatedHours')} placeholder="e.g. 2.5" min="0" step="0.5" className={inputCls} style={inputStyle} />
-            </Field>
-          </div>
+            <div>
+              <label className={labelCls}>Due date *</label>
+              <input type="datetime-local" value={form.dueDate} onChange={set('dueDate')} className={inputCls} required />
+            </div>
 
-          <Field label="Description">
-            <textarea value={form.description} onChange={set('description')} rows={3} className={`${inputCls} resize-none`} style={inputStyle} />
-          </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Type</label>
+                <select value={form.type} onChange={set('type')} className={inputCls}>
+                  <option value="homework">Homework</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="project">Project</option>
+                  <option value="exam">Exam</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Difficulty</label>
+                <select value={form.difficulty} onChange={set('difficulty')} className={inputCls}>
+                  <option value="easy">Easy</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="crushing">Crushing</option>
+                  <option value="brutal">Brutal</option>
+                </select>
+              </div>
+            </div>
 
-          <Field label="Submission note">
-            <textarea value={form.submissionNote} onChange={set('submissionNote')} rows={2} className={`${inputCls} resize-none`} style={inputStyle} />
-          </Field>
-        </form>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Grade weight (%)</label>
+                <input type="number" value={form.weight} onChange={set('weight')} min="0" max="100" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Est. hours</label>
+                <input type="number" value={form.estimatedHours} onChange={set('estimatedHours')} placeholder="e.g. 2.5" min="0" step="0.5" className={inputCls} />
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Description</label>
+              <textarea value={form.description} onChange={set('description')} rows={3} className={`${inputCls} resize-none`} />
+            </div>
+
+            <div>
+              <label className={labelCls}>Submission note</label>
+              <textarea value={form.submissionNote} onChange={set('submissionNote')} rows={2} className={`${inputCls} resize-none`} />
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

@@ -2,20 +2,16 @@
 
 @layer base {
   body {
-    background: #0b0d12;
-    color: #ffffff;
-    @apply bg-brandBg text-white;
-    font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    @apply bg-brandBg text-foreground;
+    font-family: 'Geist', 'Inter', sans-serif;
     line-height: 1.6;
     min-height: 100vh;
   }
 
-  h1 { font-size: 2.5rem; font-weight: 700; color: #ffffff; }
-  h2, h3, h4, h5, h6 { font-weight: 600; color: #ffffff; }
-  p { margin: 0.5rem 0; }
+  h1, h2, h3, h4, h5, h6 { @apply font-semibold text-foreground tracking-tight; }
 
   a, a:visited { color: inherit; text-decoration: none; }
-  a:hover { color: #ffffffcc; text-decoration: none; }
+  a:hover { opacity: 0.8; text-decoration: none; }
 
   button, [type='button'], [type='submit'], [type='reset'] {
     @apply appearance-none bg-transparent border-0;
@@ -23,38 +19,29 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.08) transparent;
+    scrollbar-color: rgba(0,0,0,0.1) transparent;
   }
-  *::-webkit-scrollbar { width: 4px; height: 4px; }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
   *::-webkit-scrollbar-track { background: transparent; }
-  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-  *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+  *::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 }
 
 @tailwind components;
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2
-           px-6 py-3 rounded-full font-semibold transition
-           focus-visible:outline-none focus-visible:ring-2
-           focus-visible:ring-white/40 focus-visible:ring-offset-2
-           focus-visible:ring-offset-brandBg
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition focus:outline-none focus:ring-2 focus:ring-brandPrimary focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .btn-primary   { @apply btn bg-brandPrimary text-white border border-brandPrimary shadow-md; }
-  .btn-primary:hover { @apply bg-brandPrimaryDark border-brandPrimaryDark; }
+  .btn-primary { @apply btn bg-brandPrimary text-white shadow-sm; }
+  .btn-primary:hover { @apply bg-brandPrimaryDark; }
 
-  .btn-secondary { @apply btn bg-brandPrimary/10 text-white border-2 border-brandPrimary; }
-  .btn-secondary:hover { @apply bg-brandPrimary text-white; }
-
-  .btn-cta       { @apply btn px-10 py-4 text-lg bg-brandPrimary text-white border-2 border-brandPrimary shadow-lg; }
-  .btn-cta:hover { @apply bg-brandPrimaryDark border-brandPrimaryDark; }
+  .btn-secondary { @apply btn bg-white text-foreground border border-border shadow-soft; }
+  .btn-secondary:hover { @apply bg-gray-50 border-gray-300; }
 
   .btn-primary:visited   { color: #fff; }
-  .btn-secondary:visited { color: #fff; }
-  .btn-cta:visited       { color: #fff; }
+  .btn-secondary:visited { color: #111827; }
 
   .btn-success { @apply btn; background:#16a34a; border:2px solid #16a34a; color:#fff; }
   .btn-success:hover { background:#15803d; border-color:#15803d; }
@@ -64,18 +51,14 @@
 
   .btn-sm { @apply px-3 py-1.5 text-sm rounded-md; }
 
-  .card { @apply rounded-lg p-6 border bg-cardBg; border-color: rgba(255,255,255,0.06); }
+  .card { @apply rounded-xl p-6 border border-border bg-cardBg shadow-soft; }
 
-  .content-card {
-    @apply rounded-xl border p-5 bg-cardBg;
-    border-color: rgba(255,255,255,0.08);
-  }
+  .content-card { @apply rounded-xl border border-border p-5 bg-cardBg shadow-soft; }
 
   .form-input {
-    @apply w-full px-4 py-2 rounded-md border transition-colors bg-panelBg text-white;
-    border-color: rgba(255,255,255,0.12);
+    @apply w-full px-3 py-2 rounded-md border border-border transition-colors bg-white text-foreground shadow-soft;
   }
-  .form-input:focus { @apply border-brandPrimary outline-none; box-shadow: 0 0 0 2px rgba(1,102,254,0.5); }
+  .form-input:focus { @apply border-brandPrimary ring-1 ring-brandPrimary outline-none; }
 
   .status-badge   { @apply px-2 py-1 rounded-md text-xs font-medium; }
   .status-easy    { background: rgba(34,197,94,.2);  color:#4ade80; }
@@ -83,7 +66,7 @@
   .status-crushing{ background: rgba(234,179,8,.2);  color:#eab308; }
   .status-brutal  { background: rgba(239,68,68,.2);  color:#f87171; }
 
-  .nav-link { @apply inline-flex items-center gap-1 text-white/80 hover:text-white transition; }
+  .nav-link { @apply inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition; }
 
   .page-container { @apply flex justify-center p-6; }
   .page-content   { @apply w-full; }
@@ -91,33 +74,33 @@
   .header-card    { @apply card mb-6; }
   .page-header    { @apply flex flex-col gap-4 md:flex-row md:items-center md:justify-between; }
   .page-title     { @apply text-2xl font-bold; }
-  .page-description { @apply text-white/70 text-sm mt-1; }
+  .page-description { @apply text-gray-500 text-sm mt-1; }
   .section-title  { @apply text-xl font-bold mb-4; }
   .form-group     { @apply space-y-5; }
-  .form-label     { @apply block text-sm font-medium text-white/80 mb-1; }
+  .form-label     { @apply block text-sm font-medium text-gray-700 mb-1; }
   .form-grid      { @apply grid grid-cols-1 gap-4 md:grid-cols-2; }
   .mobile-stack   { @apply flex flex-col gap-4 sm:flex-row sm:items-start; }
 
   .loading-container { @apply flex flex-col items-center justify-center py-12 gap-4; }
-  .loading-text      { @apply text-white/60 text-sm; }
+  .loading-text      { @apply text-gray-500 text-sm; }
   .empty-state       { @apply text-center py-12; }
-  .empty-title       { @apply text-xl font-semibold text-white mb-2; }
-  .empty-description { @apply text-white/60 text-sm; }
+  .empty-title       { @apply text-xl font-semibold text-gray-900 mb-2; }
+  .empty-description { @apply text-gray-500 text-sm; }
 }
 
 @tailwind utilities;
 
 @layer utilities {
   .container { @apply max-w-6xl mx-auto px-6; }
-  .muted { color: #b0b0b0; }
+  .muted { color: #6b7280; }
 
   .animate-fade-in { animation: fade-in 400ms ease-out forwards; opacity: 0; }
   @keyframes fade-in { to { opacity: 1; transform: none; } }
 
   .loading-spinner {
     width: 20px; height: 20px; border-radius: 9999px;
-    border: 2px solid rgba(255,255,255,.15);
-    border-top-color: #ffffff;
+    border: 2px solid rgba(0,0,0,.1);
+    border-top-color: #111827;
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }

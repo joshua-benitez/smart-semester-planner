@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { signOut } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useAssignments } from "@/hooks/useAssignments"
 import { useLadder } from "@/hooks/useLadder"
 import type { AssignmentStatusUpdateExtras, Assignment } from "@/types/assignment"
 import LadderSidebarCard from "@/components/features/ladder/LadderSidebarCard"
+import RecommendationPanel from "@/components/features/assignments/RecommendationPanel"
 
 type Course = {
   id: string
@@ -26,11 +26,11 @@ function daysUntil(dateStr: string): number {
 function formatDueState(dateStr: string): { label: string; cls: string; date: string } {
   const d = daysUntil(dateStr)
   const dateLabel = new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  if (d < 0) return { label: `${Math.abs(d)}d overdue`, cls: "text-red-400 font-semibold", date: dateLabel }
-  if (d === 0) return { label: "Due today", cls: "text-red-400 font-semibold", date: "" }
-  if (d === 1) return { label: "Tomorrow", cls: "text-amber-400 font-semibold", date: dateLabel }
-  if (d <= 7) return { label: `${d}d left`, cls: "text-amber-400 font-semibold", date: dateLabel }
-  return { label: dateLabel, cls: "text-white/30 font-normal", date: "" }
+  if (d < 0) return { label: `${Math.abs(d)}d overdue`, cls: "text-red-600 font-semibold", date: dateLabel }
+  if (d === 0) return { label: "Due today", cls: "text-red-600 font-semibold", date: "" }
+  if (d === 1) return { label: "Tomorrow", cls: "text-amber-600 font-semibold", date: dateLabel }
+  if (d <= 7) return { label: `${d}d left`, cls: "text-amber-600 font-semibold", date: dateLabel }
+  return { label: dateLabel, cls: "text-gray-500 font-normal", date: "" }
 }
 
 function urgencyGroup(a: Assignment): "overdue" | "today" | "week" | "next" | "later" {
@@ -42,31 +42,6 @@ function urgencyGroup(a: Assignment): "overdue" | "today" | "week" | "next" | "l
   return "later"
 }
 
-function SectionLabel({
-  name,
-  count,
-  urgent,
-  warn,
-}: {
-  name: string
-  count: number
-  urgent?: boolean
-  warn?: boolean
-}) {
-  return (
-    <div className="flex items-center gap-2 mb-1 px-1">
-      <span
-        className={`text-[0.67rem] font-semibold tracking-[0.09em] uppercase ${
-          urgent ? "text-red-400" : warn ? "text-amber-400" : "text-white/30"
-        }`}
-      >
-        {name}
-      </span>
-      <span className="font-mono text-[0.63rem] text-white/25">{count}</span>
-    </div>
-  )
-}
-
 interface RowProps {
   assignment: Assignment
   onComplete: (id: string, status: string, extras?: AssignmentStatusUpdateExtras) => Promise<void>
@@ -76,35 +51,24 @@ interface RowProps {
 function AssignmentRow({ assignment, onComplete, updating }: RowProps) {
   const due = formatDueState(assignment.dueDate)
   const isDone = assignment.status === "completed" || assignment.status === "submitted" || assignment.status === "graded"
-  const courseName = assignment.course?.name ?? ""
+  const courseName = assignment.course?.name ?? "General"
 
-  const courseColors = ["text-emerald-400", "text-blue-400", "text-violet-400", "text-cyan-400", "text-rose-400", "text-orange-400"]
+  const courseColors = [
+    "bg-emerald-100 text-emerald-800",
+    "bg-blue-100 text-blue-800",
+    "bg-violet-100 text-violet-800",
+    "bg-rose-100 text-rose-800",
+    "bg-orange-100 text-orange-800",
+  ]
   const colorIdx = Math.abs(courseName.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) % courseColors.length
-  const courseColor = courseColors[colorIdx]
+  const badgeColor = courseColors[colorIdx]
 
   return (
     <div
-      className={`grid items-center gap-3 px-2 py-[7px] rounded-md transition-colors hover:bg-white/[0.03] ${
-        isDone ? "opacity-30" : ""
+      className={`group flex items-start gap-3 bg-white px-4 py-3 transition-colors hover:bg-gray-50 ${
+        isDone ? "opacity-50" : ""
       }`}
-      style={{ gridTemplateColumns: "1fr 90px 28px" }}
     >
-      <div className="min-w-0">
-        <div className={`text-[0.875rem] font-medium text-white/90 truncate leading-snug ${isDone ? "line-through" : ""}`}>
-          {assignment.title}
-        </div>
-        <div className="flex items-center gap-1.5 mt-0.5 text-[0.7rem] text-white/30">
-          <span className={`font-semibold ${courseColor}`}>{courseName}</span>
-          <span>·</span>
-          <span className="capitalize">{assignment.type}</span>
-        </div>
-      </div>
-
-      <div className="text-right">
-        <div className={`text-[0.75rem] leading-snug ${due.cls}`}>{due.label}</div>
-        {due.date && <div className="font-mono text-[0.62rem] text-white/25 mt-0.5">{due.date}</div>}
-      </div>
-
       <button
         disabled={updating}
         onClick={() =>
@@ -112,23 +76,38 @@ function AssignmentRow({ assignment, onComplete, updating }: RowProps) {
             submittedAt: isDone ? null : new Date().toISOString(),
           })
         }
-        className={`w-[22px] h-[22px] rounded-full border flex items-center justify-center transition-all disabled:opacity-40 justify-self-center ${
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all disabled:opacity-40 ${
           isDone
-            ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-400"
-            : "border-white/15 text-transparent hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-emerald-500/[0.07]"
+            ? "border-emerald-500 bg-emerald-500 text-white"
+            : "border-gray-300 text-transparent hover:border-emerald-500 hover:text-emerald-500"
         }`}
         title={isDone ? "Undo" : "Mark complete"}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-[10px] h-[10px]">
-          <path d="M20 6 9 17l-5-5" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="h-3 w-3">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
         </svg>
       </button>
+
+      <div className="min-w-0 flex-1 flex flex-col gap-1">
+        <div className={`truncate text-[0.95rem] font-semibold leading-snug text-gray-900 ${isDone ? "line-through text-gray-500" : ""}`}>
+          {assignment.title}
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-[0.75rem] font-medium text-gray-500">
+          <span className={`rounded px-2 py-0.5 text-[0.7rem] font-bold ${badgeColor}`}>{courseName}</span>
+          <span className="capitalize">{assignment.type}</span>
+          {assignment.weight ? <span>· {assignment.weight}%</span> : null}
+        </div>
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-0.5 pt-0.5 text-right">
+        <div className={`text-[0.8rem] font-medium ${isDone ? "text-gray-400" : due.cls}`}>{due.label}</div>
+        {due.date && <div className="font-mono text-[0.7rem] text-gray-400">{due.date}</div>}
+      </div>
     </div>
   )
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
   const { assignments, loading, refresh } = useAssignments()
   const { data: ladderData, loading: ladderLoading, error: ladderError, refresh: refreshLadder } = useLadder()
   const [courses, setCourses] = useState<Course[]>([])
@@ -164,7 +143,7 @@ export default function DashboardPage() {
       list = list.filter((a) => {
         if (a.courseId === selectedCourseId) return true
         const course = courses.find((c) => c.id === selectedCourseId)
-        return course && a.course?.name === course.name
+        return Boolean(course && a.course?.name === course.name)
       })
     }
 
@@ -192,17 +171,18 @@ export default function DashboardPage() {
   const summary = useMemo(() => {
     const overdue = sections.groups.overdue
     const thisWk = [...sections.groups.today, ...sections.groups.week]
-    if (overdue.length === 0 && thisWk.length === 0) return "All clear — nothing due in the next 7 days."
+    if (overdue.length === 0 && thisWk.length === 0) return "All clear. Nothing due in the next 7 days."
+
     const parts: string[] = []
     if (overdue.length > 0) {
       const first = overdue[0]
-      parts.push(`${overdue.length} overdue — start with ${first.course?.name ?? ""} ${first.title.split(/[—–]/)[0].trim()}.`)
+      parts.push(`${overdue.length} overdue. Start with ${first.course?.name ?? ""} ${first.title.split(/[—–]/)[0].trim()}.`)
     }
     if (thisWk.length > 0) {
       const next = thisWk[0]
       const d = daysUntil(next.dueDate)
       const when = d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d}d`
-      parts.push(`${thisWk.length} due this week — next: ${next.course?.name ?? ""} ${next.title.split(/[—–]/)[0].trim()} ${when}.`)
+      parts.push(`${thisWk.length} due this week. Next: ${next.course?.name ?? ""} ${next.title.split(/[—–]/)[0].trim()} ${when}.`)
     }
     return parts.join(" ")
   }, [sections])
@@ -233,177 +213,116 @@ export default function DashboardPage() {
   const SECTION_META: { key: "overdue" | "today" | "week" | "next" | "later"; name: string; urgent?: boolean; warn?: boolean }[] = [
     { key: "overdue", name: "Overdue", urgent: true },
     { key: "today", name: "Today", urgent: true },
-    { key: "week", name: "This week", warn: true },
-    { key: "next", name: "Next week" },
+    { key: "week", name: "This Week", warn: true },
+    { key: "next", name: "Next Week" },
     { key: "later", name: "Upcoming" },
   ]
 
-  const uniqueCourses = useMemo(() => {
-    const seen = new Set<string>()
-    const out: { id: string; name: string }[] = []
-    assignments.forEach((a) => {
-      const key = a.courseId ?? a.course?.name ?? ""
-      if (key && !seen.has(key)) {
-        seen.add(key)
-        out.push({ id: a.courseId ?? key, name: a.course?.name ?? key })
-      }
-    })
-    return out
-  }, [assignments])
-
-  const courseColorClass = (name: string) => {
-    const palette = [
-      "text-emerald-400",
-      "text-blue-400",
-      "text-violet-400",
-      "text-cyan-400",
-      "text-rose-400",
-      "text-orange-400",
-    ]
-    const idx = Math.abs(name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)) % palette.length
-    return palette[idx]
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <div className="flex items-start justify-between px-7 pt-6 pb-0 flex-shrink-0" style={{ background: "#0b0d12" }}>
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-100">
+      <div className="z-20 flex flex-shrink-0 items-start justify-between border-b border-gray-200 bg-white px-8 pb-4 pt-8 shadow-sm">
         <div>
-          <h1 className="text-[1.35rem] font-semibold tracking-tight leading-none text-white/90">Assignments</h1>
-          <p className="text-[0.82rem] mt-1.5 leading-relaxed" style={{ color: "rgba(230,234,246,0.3)" }}>
-            {loading
-              ? "Loading…"
-              : summary.split(/(overdue|this week)/gi).map((part, i) => {
-                  const lower = part.toLowerCase()
-                  if (lower === "overdue") return <span key={i} className="text-red-400 font-medium">overdue</span>
-                  if (lower === "this week") return <span key={i} className="text-amber-400 font-medium">this week</span>
-                  return part
-                })}
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm font-medium text-gray-500">{loading ? "Loading…" : summary}</p>
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <button
-            className="text-[0.77rem] font-medium px-3 py-1.5 rounded-md border transition-colors"
-            style={{ borderColor: "rgba(255,255,255,0.09)", color: "rgba(230,234,246,0.5)" }}
-          >
-            Import
-          </button>
-          <Link
-            href="/assignments/new"
-            className="text-[0.77rem] font-semibold px-3 py-1.5 rounded-md text-white"
-            style={{ background: "rgba(230,234,246,0.9)", color: "#0b0d12" }}
-          >
-            + New
+        <div className="mt-1 flex items-center gap-3">
+          <Link href="/assignments/new" className="btn-primary px-4 py-2 text-sm shadow-sm">
+            + New Task
           </Link>
-          <button
-            onClick={async () => {
-              await signOut({ redirect: false })
-              router.replace("/auth/signin")
-            }}
-            className="text-[0.77rem] font-medium px-3 py-1.5 rounded-md border transition-colors"
-            style={{ borderColor: "rgba(255,255,255,0.09)", color: "rgba(230,234,246,0.5)" }}
-          >
-            Sign out
-          </button>
         </div>
       </div>
 
-      <div className="flex items-center px-7 border-b flex-shrink-0 mt-4" style={{ borderColor: "rgba(255,255,255,0.06)", background: "#0b0d12" }}>
-        <button
-          onClick={() => setSelectedCourseId("")}
-          className={`text-[0.79rem] font-medium px-3 py-2 border-b-2 transition-colors mr-1 ${
-            selectedCourseId === ""
-              ? "border-white/40 text-white/90"
-              : "border-transparent text-white/30 hover:text-white/50"
-          }`}
-          style={{ marginBottom: -1 }}
-        >
-          All
-        </button>
-        <div className="w-px h-3.5 mx-1.5" style={{ background: "rgba(255,255,255,0.09)" }} />
-        {uniqueCourses.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setSelectedCourseId(c.id === selectedCourseId ? "" : c.id)}
-            className={`text-[0.79rem] font-medium px-3 py-2 border-b-2 transition-colors ${
-              selectedCourseId === c.id
-                ? `${courseColorClass(c.name)}`
-                : "border-transparent text-white/30 hover:text-white/50"
-            }`}
-            style={{
-              marginBottom: -1,
-              borderBottomColor: selectedCourseId === c.id ? "currentColor" : "transparent",
-            }}
-          >
-            {c.name}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-3 pb-2">
-          <label className="flex items-center gap-1.5 text-[0.75rem] cursor-pointer" style={{ color: "rgba(230,234,246,0.3)" }}>
-            <input
-              type="checkbox"
-              checked={showCompleted}
-              onChange={(e) => setShowCompleted(e.target.checked)}
-              className="cursor-pointer"
-              style={{ accentColor: "#4ade80" }}
-            />
-            Completed
-          </label>
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden" style={{ background: "#0b0d12" }}>
-        <div className="flex-1 overflow-y-auto px-7 pb-12">
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-6 pb-20 pt-8 lg:px-10">
           {loading ? (
-            <div className="pt-12 text-center text-[0.85rem]" style={{ color: "rgba(230,234,246,0.3)" }}>
-              Loading…
-            </div>
+            <div className="pt-12 text-center text-sm text-gray-500">Loading…</div>
           ) : (
-            <>
-              {SECTION_META.map(({ key, name, urgent, warn }) => {
-                const items = sections.groups[key as keyof typeof sections.groups]
-                if (!items.length) return null
-                return (
-                  <div key={key} className="pt-5">
-                    <SectionLabel name={name} count={items.length} urgent={urgent} warn={warn} />
-                    {items.map((a) => (
-                      <AssignmentRow
-                        key={a.id}
-                        assignment={a}
-                        onComplete={handleStatusUpdate}
-                        updating={updatingIds.has(a.id)}
-                      />
-                    ))}
-                  </div>
-                )
-              })}
+            <div className="mx-auto flex max-w-4xl flex-col gap-10">
+              <div>
+                <RecommendationPanel assignments={filtered} />
+              </div>
 
-              {showCompleted && sections.done.length > 0 && (
-                <div className="pt-5">
-                  <SectionLabel name="Completed" count={sections.done.length} />
-                  {sections.done.map((a) => (
-                    <AssignmentRow
-                      key={a.id}
-                      assignment={a}
-                      onComplete={handleStatusUpdate}
-                      updating={updatingIds.has(a.id)}
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+                  <h2 className="text-lg font-bold tracking-tight text-gray-900">Schedule</h2>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-gray-500">
+                    <input
+                      type="checkbox"
+                      checked={showCompleted}
+                      onChange={(e) => setShowCompleted(e.target.checked)}
+                      className="rounded border-gray-300 text-brandPrimary focus:ring-brandPrimary"
                     />
-                  ))}
+                    Show Completed
+                  </label>
                 </div>
-              )}
 
-              {Object.values(sections.groups).every((g) => g.length === 0) && !sections.done.length && (
-                <div className="pt-16 text-center text-[0.85rem]" style={{ color: "rgba(230,234,246,0.3)" }}>
-                  No assignments. <Link href="/assignments/new" className="text-blue-400 hover:text-blue-300">Add one</Link>.
+                <div className="flex flex-col gap-6">
+                  {SECTION_META.map(({ key, name, urgent, warn }) => {
+                    const items = sections.groups[key as keyof typeof sections.groups]
+                    if (!items.length) return null
+
+                    return (
+                      <div key={key} className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                          <h3 className={`text-xs font-bold uppercase tracking-wider ${urgent ? "text-red-600" : warn ? "text-orange-600" : "text-gray-600"}`}>
+                            {name}
+                          </h3>
+                          <span className="rounded-full bg-gray-200/60 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                            {items.length}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col divide-y divide-gray-100">
+                          {items.map((a) => (
+                            <AssignmentRow
+                              key={a.id}
+                              assignment={a}
+                              onComplete={handleStatusUpdate}
+                              updating={updatingIds.has(a.id)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              )}
-            </>
+
+                {showCompleted && sections.done.length > 0 && (
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Completed</h3>
+                      <span className="rounded-full bg-gray-200/60 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                        {sections.done.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-col divide-y divide-gray-100">
+                      {sections.done.map((a) => (
+                        <AssignmentRow
+                          key={a.id}
+                          assignment={a}
+                          onComplete={handleStatusUpdate}
+                          updating={updatingIds.has(a.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Object.values(sections.groups).every((g) => g.length === 0) && !sections.done.length && (
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center">
+                    <p className="mb-1 text-sm font-semibold text-gray-900">Your schedule is clear.</p>
+                    <p className="mb-4 text-xs text-gray-500">Import a syllabus or add tasks manually to get started.</p>
+                    <Link href="/assignments/new" className="btn-secondary text-sm">
+                      Add Assignment
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        <aside
-          className="hidden xl:block w-80 border-l px-5 pb-6 overflow-y-auto"
-          style={{ borderColor: "rgba(255,255,255,0.06)" }}
-        >
+        <aside className="z-10 hidden w-80 overflow-y-auto border-l border-gray-200 bg-white px-6 py-6 shadow-sm xl:block">
           <LadderSidebarCard
             data={ladderData}
             loading={ladderLoading}

@@ -4,6 +4,7 @@ import { signIn, getSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Logo from "@/components/ui/Logo"
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false)
@@ -39,75 +40,50 @@ export default function SignIn() {
       } else {
         router.replace('/dashboard')
       }
-    } catch (error) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const inputCls = 'w-full text-[0.82rem] px-3 py-2 rounded-md outline-none transition-colors'
-  const inputStyle = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    color: 'rgba(230,234,246,0.85)',
-  } as React.CSSProperties
+  const inputCls = "w-full text-sm px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-brandPrimary focus:border-transparent transition-colors shadow-sm"
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: '#0b0d12' }}>
-      <div className="w-full max-w-sm px-7 py-6 rounded-xl border" style={{ borderColor: 'rgba(255,255,255,0.08)', background: '#0f1116' }}>
-        <div className="mb-5">
-          <h1 className="text-[1.1rem] font-semibold text-white/90">Welcome back</h1>
-          <p className="text-[0.78rem]" style={{ color: 'rgba(230,234,246,0.3)' }}>Sign in to continue.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-brandBg px-4">
+      <div className="mb-8">
+        <Logo width={64} unwrapped imgClassName="rounded-xl shadow-sm" />
+      </div>
+
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white px-8 py-8 shadow-card">
+        <div className="mb-6 text-center">
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">Welcome back</h1>
+          <p className="mt-1 text-sm text-gray-500">Sign in to your account.</p>
         </div>
 
         {error && (
-          <div className="mb-4 text-[0.78rem] rounded-md px-3 py-2" style={{ background: 'rgba(248,113,113,0.12)', color: 'rgba(248,113,113,0.9)' }}>
+          <div className="mb-4 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-600">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-[0.72rem] mb-1" style={{ color: 'rgba(230,234,246,0.5)' }}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className={inputCls}
-              style={inputStyle}
-              placeholder="you@example.com"
-            />
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} placeholder="you@example.com" />
           </div>
           <div>
-            <label className="block text-[0.72rem] mb-1" style={{ color: 'rgba(230,234,246,0.5)' }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className={inputCls}
-              style={inputStyle}
-              placeholder="••••••••"
-            />
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">Password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputCls} placeholder="••••••••" />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full text-[0.8rem] font-semibold px-3 py-2 rounded-md disabled:opacity-40"
-            style={{ background: 'rgba(230,234,246,0.9)', color: '#0b0d12' }}
-          >
+          <button type="submit" disabled={loading} className="btn-primary mt-2 w-full py-2.5">
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-4 text-[0.75rem]" style={{ color: 'rgba(230,234,246,0.4)' }}>
-          Don’t have an account?{' '}
-          <Link href="/auth/signup" className="text-blue-400 hover:text-blue-300">Sign up</Link>
+        <div className="mt-6 text-center text-sm font-medium text-gray-500">
+          Don’t have an account? <Link href="/auth/signup" className="text-brandPrimary transition-colors hover:text-brandPrimaryDark">Sign up</Link>
         </div>
       </div>
     </div>

@@ -86,22 +86,16 @@ const BOTTOM_NAV = [
 export default function IconRail({ className }: { className?: string }) {
   const pathname = usePathname()
 
-  const btnBase =
-    "relative w-[34px] h-[34px] rounded-[7px] flex items-center justify-center transition-colors border-none bg-transparent cursor-pointer group"
-  const btnActive = "text-white/90"
-  const btnInactive = "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+  const btnBase = "relative w-10 h-10 rounded-md flex items-center justify-center transition-colors cursor-pointer group"
+  const btnActive = "text-brandPrimary bg-brandPrimary/10 font-bold"
+  const btnInactive = "text-gray-400 hover:text-gray-900 hover:bg-gray-100"
 
   return (
     <aside
-      className={`flex-col items-center py-3.5 gap-0.5 flex-shrink-0 ${className ?? ""}`}
-      style={{
-        width: 48,
-        background: "#0b0d12",
-        borderRight: "1px solid rgba(255,255,255,0.055)",
-      }}
+      className={`flex flex-col items-center py-4 gap-2 flex-shrink-0 bg-white border-r border-border w-[64px] ${className ?? ""}`}
     >
-      <div className="mb-3.5 flex-shrink-0">
-        <Logo width={28} unwrapped imgClassName="rounded-[6px]" />
+      <div className="mb-6 flex-shrink-0">
+        <Logo width={32} unwrapped imgClassName="rounded-md" />
       </div>
 
       {NAV.map(({ href, label, icon }) => {
@@ -110,14 +104,11 @@ export default function IconRail({ className }: { className?: string }) {
           <Link
             key={href}
             href={href}
-            title={label}
             className={`${btnBase} ${active ? btnActive : btnInactive}`}
-            style={active ? { background: "rgba(255,255,255,0.07)" } : undefined}
           >
             {icon}
             <span
-              className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-semibold opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
-              style={{ background: "rgba(15,17,22,0.95)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(230,234,246,0.8)" }}
+              className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md px-2.5 py-1 text-[0.75rem] font-medium opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 bg-gray-900 text-white shadow-md z-50"
             >
               {label}
             </span>
@@ -133,17 +124,9 @@ export default function IconRail({ className }: { className?: string }) {
           <Link
             key={href}
             href={href}
-            title={label}
             className={`${btnBase} ${active ? btnActive : btnInactive}`}
-            style={active ? { background: "rgba(255,255,255,0.07)" } : undefined}
           >
             {icon}
-            <span
-              className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-semibold opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
-              style={{ background: "rgba(15,17,22,0.95)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(230,234,246,0.8)" }}
-            >
-              {label}
-            </span>
           </Link>
         )
       })}

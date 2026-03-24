@@ -10,75 +10,52 @@ interface RecommendationPanelProps {
   assignments: Assignment[]
 }
 
-const urgencyColors = {
+const urgencyStyles = {
   critical: {
-    border: 'border-red-500/60',
-    background: 'bg-red-500/10',
-    gradient: 'from-red-400/40 via-red-500/10 to-transparent',
-    text: 'text-red-300',
-    badge: 'bg-red-500/20 border-red-500/40 text-red-300',
+    borderLeft: 'border-l-red-500',
+    badge: 'bg-red-50 text-red-700 ring-1 ring-red-600/20',
   },
   high: {
-    border: 'border-orange-500/60',
-    background: 'bg-orange-500/10',
-    gradient: 'from-orange-400/40 via-orange-500/10 to-transparent',
-    text: 'text-orange-300',
-    badge: 'bg-orange-500/20 border-orange-500/40 text-orange-300',
+    borderLeft: 'border-l-orange-500',
+    badge: 'bg-orange-50 text-orange-700 ring-1 ring-orange-600/20',
   },
   medium: {
-    border: 'border-blue-500/60',
-    background: 'bg-blue-500/10',
-    gradient: 'from-blue-400/40 via-blue-500/10 to-transparent',
-    text: 'text-blue-300',
-    badge: 'bg-blue-500/20 border-blue-500/40 text-blue-300',
+    borderLeft: 'border-l-blue-500',
+    badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20',
   },
   low: {
-    border: 'border-gray-500/60',
-    background: 'bg-gray-500/10',
-    gradient: 'from-gray-400/40 via-gray-500/10 to-transparent',
-    text: 'text-gray-300',
-    badge: 'bg-gray-500/20 border-gray-500/40 text-gray-300',
+    borderLeft: 'border-l-gray-400',
+    badge: 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/20',
   },
 }
 
-const RecommendationCard = ({ rec }: { rec: AssignmentRecommendation }) => {
-  const colors = urgencyColors[rec.urgencyLevel]
-  const dueDate = new Date(rec.assignment.dueDate).toLocaleDateString([], {
-    weekday: 'short',
+const CompactRecCard = ({ rec }: { rec: AssignmentRecommendation }) => {
+  const styles = urgencyStyles[rec.urgencyLevel]
+  const dueDate = new Date(rec.assignment.dueDate).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
   })
 
   return (
     <Link
       href={`/assignments/${rec.assignment.id}/edit`}
-      className={`block relative overflow-hidden rounded-xl border-2 p-4 transition hover:scale-[1.02] ${colors.background} ${colors.border} hover:shadow-lg`}
+      className={`group flex flex-col justify-between rounded-lg border border-gray-200 border-l-4 bg-white p-3 shadow-sm transition-all hover:border-gray-300 hover:shadow-md ${styles.borderLeft}`}
     >
-      <div className={`pointer-events-none absolute inset-0 -z-10 opacity-50 bg-gradient-to-br ${colors.gradient}`} aria-hidden="true" />
-
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex-1">
-          <h4 className="text-base font-semibold text-white line-clamp-2 mb-1">
-            {rec.assignment.title}
-          </h4>
-          <p className="text-xs text-white/60">{rec.assignment.course?.name || 'General'}</p>
-        </div>
-        <span className={`px-2 py-1 border rounded-full text-xs font-semibold uppercase tracking-wider shrink-0 ${colors.badge}`}>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 transition-colors group-hover:text-brandPrimary">
+          {rec.assignment.title}
+        </h4>
+        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${styles.badge}`}>
           {rec.urgencyLevel}
         </span>
       </div>
 
-      <p className={`text-sm font-medium mb-2 ${colors.text}`}>
-        {rec.reasonText}
-      </p>
-
-      <div className="flex items-center justify-between text-xs text-white/50">
-        <span>Due: {dueDate}</span>
-        {rec.assignment.estimatedHours && (
-          <span>~{rec.assignment.estimatedHours}h</span>
-        )}
+      <div className="flex items-center justify-between text-xs font-medium text-gray-500">
+        <span className="max-w-[120px] truncate">{rec.assignment.course?.name || 'General'}</span>
+        <div className="flex shrink-0 gap-1.5">
+          {rec.assignment.estimatedHours && <span>~{rec.assignment.estimatedHours}h</span>}
+          <span className="font-mono text-[0.65rem]">• {dueDate}</span>
+        </div>
       </div>
     </Link>
   )
@@ -89,140 +66,124 @@ export const RecommendationPanel = ({ assignments }: RecommendationPanelProps) =
 
   if (!topRecommendation) {
     return (
-      <section className="rounded-lg p-6 border border-white/10 bg-panelBg">
-        <h2 className="text-xl font-bold mb-4">Smart Recommendations</h2>
-        <div className="text-center py-8 text-white/70">
-          <p className="text-lg">All caught up!</p>
-          <p className="text-sm mt-2">No assignments to recommend right now.</p>
+      <section className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center shadow-sm">
+        <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
         </div>
+        <h2 className="text-lg font-bold text-gray-900">Schedule Clear</h2>
+        <p className="mt-1 text-sm text-gray-500">Your AI overview has no urgent recommendations right now.</p>
       </section>
     )
   }
 
-  const topColors = urgencyColors[topRecommendation.urgencyLevel]
-  const topDueDate = new Date(topRecommendation.assignment.dueDate).toLocaleDateString([], {
-    weekday: 'long',
-    month: 'long',
+  const topStyles = urgencyStyles[topRecommendation.urgencyLevel]
+  const topDueDate = new Date(topRecommendation.assignment.dueDate).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   })
 
   return (
-    <section className="rounded-lg p-6 border border-white/10 bg-panelBg space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-xl font-bold">Smart Recommendations</h2>
-        <span className="text-xs text-white/50 bg-white/5 px-3 py-1 rounded-full">
-          Powered by AI scoring
-        </span>
+    <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 border-b border-gray-200 pb-3">
+        <h2 className="text-lg font-bold tracking-tight text-gray-900">Focus Overview</h2>
       </div>
 
-      {/* Top Recommendation - Hero Card */}
-      <div className={`relative overflow-hidden rounded-2xl border p-6 bg-cardBg ${topColors.border}`}>
-        <div className={`pointer-events-none absolute inset-0 -z-10 opacity-60 bg-gradient-to-br ${topColors.gradient}`} aria-hidden="true" />
+      <div className={`rounded-xl border border-gray-200 border-l-4 bg-white p-5 shadow-sm ${topStyles.borderLeft}`}>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-400">
+            Top Priority
+          </span>
+          <span className={`rounded-md px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${topStyles.badge}`}>
+            {topRecommendation.urgencyLevel}
+          </span>
+        </div>
 
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`px-3 py-1 border rounded-full text-xs font-bold uppercase tracking-wider ${topColors.badge}`}>
-                START THIS NEXT
-              </span>
+        <h3 className="mb-1 text-2xl font-bold leading-tight tracking-tight text-gray-900">
+          {topRecommendation.assignment.title}
+        </h3>
+        <div className="mb-5 flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500">
+          <span className="text-gray-800">{topRecommendation.assignment.course?.name || 'General'}</span>
+          <span>•</span>
+          <span className="text-gray-600">Due {topDueDate}</span>
+        </div>
+
+        <div className="mb-6 rounded-lg border border-gray-100 bg-gray-50 p-4">
+          <div className="mb-1 text-[0.9rem] font-bold text-gray-900">{topRecommendation.reasonText}</div>
+          <p className="text-sm leading-relaxed text-gray-600">{explainRecommendation(topRecommendation)}</p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-4">
+          <div className="flex gap-4 font-mono text-xs text-gray-500">
+            <div className="flex flex-col">
+              <span className="mb-0.5 text-[0.65rem] uppercase text-gray-400">Difficulty</span>
+              <span className="font-bold capitalize text-gray-800">{topRecommendation.assignment.difficulty}</span>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              {topRecommendation.assignment.title}
-            </h3>
-            <p className="text-sm text-white/70 mb-3">
-              {topRecommendation.assignment.course?.name || 'General'} • Due {topDueDate}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-3 mb-4">
-          <div className={`text-base font-medium ${topColors.text}`}>
-            {topRecommendation.reasonText}
-          </div>
-          <p className="text-sm text-white/80">
-            {explainRecommendation(topRecommendation)}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2 text-white/60">
-            <span className="font-medium">Difficulty:</span>
-            <span className={`status-badge status-${topRecommendation.assignment.difficulty} text-xs`}>
-              {topRecommendation.assignment.difficulty}
-            </span>
-          </div>
-          {topRecommendation.assignment.estimatedHours && (
-            <div className="flex items-center gap-2 text-white/60">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                <path strokeWidth="2" strokeLinecap="round" d="M12 6v6l4 2"/>
-              </svg>
-              <span>~{topRecommendation.assignment.estimatedHours} hours</span>
+            {topRecommendation.assignment.estimatedHours && (
+              <div className="flex flex-col">
+                <span className="mb-0.5 text-[0.65rem] uppercase text-gray-400">Est. Time</span>
+                <span className="font-bold text-gray-800">~{topRecommendation.assignment.estimatedHours}h</span>
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="mb-0.5 text-[0.65rem] uppercase text-gray-400">Weight</span>
+              <span className="font-bold text-gray-800">{topRecommendation.assignment.weight}%</span>
             </div>
-          )}
-          <div className="flex items-center gap-2 text-white/60">
-            <span className="font-medium">Weight:</span>
-            <span>{topRecommendation.assignment.weight}%</span>
           </div>
-        </div>
 
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <Link
-            href={`/assignments/${topRecommendation.assignment.id}/edit`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg font-medium text-white transition"
-          >
-            <span>View Assignment</span>
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          <Link href={`/assignments/${topRecommendation.assignment.id}/edit`} className="btn-primary px-4 py-2 text-sm shadow-sm">
+            Open Task
           </Link>
         </div>
       </div>
 
-      {/* Quick Wins */}
-      {quickWins.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-bold">Quick Wins</h3>
-            <span className="text-xs text-white/50">Easy tasks to build momentum</span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {quickWins.map((rec) => (
-              <RecommendationCard key={rec.assignment.id} rec={rec} />
-            ))}
-          </div>
-        </div>
-      )}
+      {(quickWins.length > 0 || highPriority.length > 0 || earlyBonusOpportunities.length > 0) && (
+        <div className="mt-6 space-y-6">
+          {quickWins.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <h3 className="text-base font-bold text-gray-900">Quick Wins</h3>
+                <span className="text-xs text-gray-500">Easy tasks to build momentum</span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {quickWins.map((rec) => (
+                  <CompactRecCard key={rec.assignment.id} rec={rec} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* High Priority */}
-      {highPriority.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-bold">High Priority</h3>
-            <span className="text-xs text-white/50">Critical deadlines approaching</span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {highPriority.slice(0, 3).map((rec) => (
-              <RecommendationCard key={rec.assignment.id} rec={rec} />
-            ))}
-          </div>
-        </div>
-      )}
+          {highPriority.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <h3 className="text-base font-bold text-gray-900">High Priority</h3>
+                <span className="text-xs text-gray-500">Critical deadlines approaching</span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {highPriority.slice(0, 3).map((rec) => (
+                  <CompactRecCard key={rec.assignment.id} rec={rec} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* Early Bonus Opportunities */}
-      {earlyBonusOpportunities.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-bold">Earn Bonus Points</h3>
-            <span className="text-xs text-white/50">Complete early for +15 ladder points</span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {earlyBonusOpportunities.map((rec) => (
-              <RecommendationCard key={rec.assignment.id} rec={rec} />
-            ))}
-          </div>
+          {earlyBonusOpportunities.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <h3 className="text-base font-bold text-gray-900">Bonus Points</h3>
+                <span className="text-xs text-gray-500">Complete early for +15 ladder points</span>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {earlyBonusOpportunities.map((rec) => (
+                  <CompactRecCard key={rec.assignment.id} rec={rec} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>
