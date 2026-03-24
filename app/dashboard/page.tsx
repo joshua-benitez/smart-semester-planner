@@ -15,6 +15,9 @@ type Course = {
   color?: string
 }
 
+const DASHBOARD_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DASHBOARD_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
 function daysUntil(dateStr: string): number {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -40,6 +43,11 @@ function urgencyGroup(a: Assignment): "overdue" | "today" | "week" | "next" | "l
   if (d <= 7) return "week"
   if (d <= 14) return "next"
   return "later"
+}
+
+function courseColor(name: string): string {
+  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#f97316']
+  return colors[Math.abs(name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % colors.length]
 }
 
 interface RowProps {
@@ -114,7 +122,16 @@ export default function DashboardPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
   const [showCompleted, setShowCompleted] = useState(false)
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth())
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const searchParams = useSearchParams()
+
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
 
   useEffect(() => {
     const courseParam = searchParams.get("course")
@@ -168,6 +185,30 @@ export default function DashboardPage() {
     return { groups, done }
   }, [filtered])
 
+  const calendarCells = useMemo(() => {
+    const first = new Date(calendarYear, calendarMonth, 1)
+    const last = new Date(calendarYear, calendarMonth + 1, 0)
+    const startPad = first.getDay()
+    const days: { date: Date | null }[] = Array(startPad).fill({ date: null })
+    for (let d = 1; d <= last.getDate(); d++) days.push({ date: new Date(calendarYear, calendarMonth, d) })
+    while (days.length % 7 !== 0) days.push({ date: null })
+    return days
+  }, [calendarMonth, calendarYear])
+
+  const assignmentsByDate = useMemo(() => {
+    const map: Record<string, Assignment[]> = {}
+    filtered.forEach((a) => {
+      const key = new Date(a.dueDate).toLocaleDateString('en-CA')
+      if (!map[key]) map[key] = []
+      map[key].push(a)
+    })
+    return map
+  }, [filtered])
+
+  const selectedKey = selectedDate ?? (assignmentsByDate[today.toLocaleDateString('en-CA')] ? today.toLocaleDateString('en-CA') : null)
+  const selectedAssignments = selectedKey ? (assignmentsByDate[selectedKey] ?? []) : []
+  const selectedLabel = selectedKey ? new Date(`${selectedKey}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : null
+
   const summary = useMemo(() => {
     const overdue = sections.groups.overdue
     const thisWk = [...sections.groups.today, ...sections.groups.week]
@@ -219,7 +260,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-100">
+    <div className="flex h-full flex-col overflow-hidden bg-gray-100">
       <div className="z-20 flex flex-shrink-0 items-start justify-between border-b border-gray-200 bg-white px-8 pb-4 pt-8 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
@@ -318,17 +359,149 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+
             </div>
           )}
         </div>
 
-        <aside className="z-10 hidden w-80 overflow-y-auto border-l border-gray-200 bg-white px-6 py-6 shadow-sm xl:block">
+        <aside className="z-10 hidden w-80 flex-col gap-6 overflow-y-auto border-l border-gray-200 bg-white px-6 py-8 shadow-sm xl:flex">
           <LadderSidebarCard
             data={ladderData}
             loading={ladderLoading}
             error={ladderError}
             onRefresh={refreshLadder}
           />
+
+          <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-gray-700">Calendar</h2>
+              <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white p-0.5 shadow-sm">
+                <button
+                  onClick={() => {
+                    if (calendarMonth === 0) {
+                      setCalendarMonth(11)
+                      setCalendarYear((y) => y - 1)
+                    } else {
+                      setCalendarMonth((m) => m - 1)
+                    }
+                  }}
+                  className="rounded px-2 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => {
+                    setCalendarYear(today.getFullYear())
+                    setCalendarMonth(today.getMonth())
+                    setSelectedDate(null)
+                  }}
+                  className="rounded px-2 py-0.5 text-[0.65rem] font-bold text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => {
+                    if (calendarMonth === 11) {
+                      setCalendarMonth(0)
+                      setCalendarYear((y) => y + 1)
+                    } else {
+                      setCalendarMonth((m) => m + 1)
+                    }
+                  }}
+                  className="rounded px-2 py-0.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="mb-3 text-center text-sm font-bold text-gray-900">
+                {DASHBOARD_MONTHS[calendarMonth]} {calendarYear}
+              </div>
+
+              <div className="mb-2 grid grid-cols-7">
+                {DASHBOARD_DAYS.map((day) => (
+                  <div key={day} className="text-center text-[0.6rem] font-bold uppercase tracking-wider text-gray-400">
+                    {day[0]}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {calendarCells.map((cell, i) => {
+                  if (!cell.date) return <div key={i} className="aspect-square" />
+                  const key = cell.date.toLocaleDateString('en-CA')
+                  const isSelected = key === selectedKey
+                  const isToday = cell.date.getTime() === today.getTime()
+                  const dayAssignments = assignmentsByDate[key] ?? []
+
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedDate(key === selectedDate ? null : key)}
+                      className={`relative flex aspect-square cursor-pointer flex-col items-center justify-start rounded-md pt-1 transition-all ${
+                        isSelected ? 'bg-blue-50 shadow-sm ring-1 ring-brandPrimary' : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[0.7rem] font-medium ${
+                        isToday ? 'bg-brandPrimary font-bold text-white' : isSelected ? 'font-bold text-brandPrimary' : 'text-gray-700'
+                      }`}>
+                        {cell.date.getDate()}
+                      </span>
+
+                      {dayAssignments.length > 0 && (
+                        <div className="mt-0.5 flex flex-wrap justify-center gap-0.5 px-1">
+                          {dayAssignments.slice(0, 3).map((a, idx) => (
+                            <div
+                              key={idx}
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: courseColor(a.course?.name ?? '') }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {selectedLabel && selectedAssignments.length > 0 && (
+              <div className="border-t border-gray-100 bg-gray-50/50">
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2">
+                  <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-500">{selectedLabel}</h3>
+                  <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-[0.6rem] font-bold text-gray-600">
+                    {selectedAssignments.length}
+                  </span>
+                </div>
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {selectedAssignments.slice(0, 4).map((a) => (
+                    <Link
+                      href={`/assignments/${a.id}/edit`}
+                      key={a.id}
+                      className="group flex items-center justify-between bg-white px-4 py-3 transition-colors hover:bg-gray-50"
+                      style={{ borderLeft: `3px solid ${courseColor(a.course?.name ?? '')}` }}
+                    >
+                      <div className="min-w-0 flex-1 pr-3">
+                        <div className="truncate text-xs font-bold text-gray-900 transition-colors group-hover:text-brandPrimary">
+                          {a.title}
+                        </div>
+                        <div className="mt-0.5 text-[0.65rem] font-medium text-gray-500">
+                          {a.course?.name || 'General'}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                  {selectedAssignments.length > 4 && (
+                    <div className="bg-white px-4 py-2 text-center text-xs font-medium text-gray-400">
+                      +{selectedAssignments.length - 4} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </aside>
       </div>
     </div>

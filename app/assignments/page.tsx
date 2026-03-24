@@ -33,7 +33,14 @@ function urgencyOrder(a: Assignment): number {
   return 4
 }
 
+function courseColor(name: string) {
+  const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#f97316']
+  return colors[Math.abs(name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % colors.length]
+}
+
 const COMPLETED = ['completed', 'submitted', 'graded']
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 function Row({
   assignment,
@@ -61,26 +68,43 @@ function Row({
 
   return (
     <div
-      className={`group mb-1 grid items-center gap-4 rounded-lg border border-transparent bg-white px-4 py-3 transition-all hover:border-gray-200 hover:shadow-sm ${
+      className={`group flex items-center gap-4 bg-white px-5 py-3.5 transition-colors hover:bg-gray-50 ${
         done ? 'bg-gray-50 opacity-50' : ''
       }`}
-      style={{ gridTemplateColumns: '1fr 96px auto auto' }}
     >
-      <div className="min-w-0 flex flex-col gap-1">
-        <div className={`truncate text-[0.9rem] font-semibold text-gray-900 ${done ? 'line-through text-gray-500' : ''}`}>{assignment.title}</div>
-        <div className="flex items-center gap-2 text-[0.75rem] font-medium text-gray-500">
-          <span className={`rounded-md px-2 py-0.5 ${courseColors[ci]}`}>{courseName}</span>
+      <button
+        disabled={updating}
+        onClick={() =>
+          onComplete(assignment.id, done ? 'not_started' : 'completed', {
+            submittedAt: done ? null : new Date().toISOString(),
+          })
+        }
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all disabled:opacity-40 ${
+          done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 text-transparent hover:border-emerald-500 hover:text-emerald-500'
+        }`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="h-3 w-3">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 6 9 17l-5-5" />
+        </svg>
+      </button>
+
+      <div className="min-w-0 flex-1 flex flex-col gap-1">
+        <div className={`truncate text-[0.95rem] font-semibold leading-snug text-gray-900 ${done ? 'line-through text-gray-500' : ''}`}>
+          {assignment.title}
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-[0.75rem] font-medium text-gray-500">
+          <span className={`rounded px-2 py-0.5 text-[0.7rem] font-bold ${courseColors[ci]}`}>{courseName}</span>
           <span className="capitalize">{assignment.type}</span>
           {assignment.weight ? <span>· {assignment.weight}%</span> : null}
         </div>
       </div>
 
-      <div className={`whitespace-nowrap text-right text-[0.8rem] ${done ? 'text-gray-400' : due.cls}`}>{due.text}</div>
+      <div className={`w-24 shrink-0 text-right text-[0.8rem] font-medium ${done ? 'text-gray-400' : due.cls}`}>{due.text}</div>
 
-      <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex w-[100px] shrink-0 justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
         <Link
           href={`/assignments/${assignment.id}/edit`}
-          className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+          className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-900"
         >
           Edit
         </Link>
@@ -91,20 +115,6 @@ function Row({
           Delete
         </button>
       </div>
-
-      <button
-        disabled={updating}
-        onClick={() =>
-          onComplete(assignment.id, done ? 'not_started' : 'completed', {
-            submittedAt: done ? null : new Date().toISOString(),
-          })
-        }
-        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all disabled:opacity-40 ${
-          done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 text-transparent hover:border-emerald-500 hover:text-emerald-500'
-        }`}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="h-3.5 w-3.5"><path d="M20 6 9 17l-5-5" /></svg>
-      </button>
     </div>
   )
 }
@@ -112,10 +122,21 @@ function Row({
 export default function AssignmentsPage() {
   const { assignments, loading, refresh, deleteAssignment } = useAssignments()
   const { refresh: refreshLadder } = useLadder()
+
+  const [view, setView] = useState<'list' | 'calendar'>('list')
   const [search, setSearch] = useState('')
   const [courseFilter, setCourseFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all')
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
+  const [year, setYear] = useState(() => new Date().getFullYear())
+  const [month, setMonth] = useState(() => new Date().getMonth())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
 
   const courses = useMemo(() => {
     const seen = new Set<string>()
@@ -124,7 +145,7 @@ export default function AssignmentsPage() {
       .filter((c) => c.name && !seen.has(c.id) && seen.add(c.id))
   }, [assignments])
 
-  const filtered = useMemo(() => {
+  const filteredList = useMemo(() => {
     let list = assignments
     if (courseFilter) list = list.filter((a) => (a.courseId ?? a.course?.name) === courseFilter)
     if (statusFilter === 'active') list = list.filter((a) => !COMPLETED.includes(a.status))
@@ -135,6 +156,30 @@ export default function AssignmentsPage() {
     }
     return [...list].sort((a, b) => urgencyOrder(a) - urgencyOrder(b) || new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
   }, [assignments, courseFilter, statusFilter, search])
+
+  const cells = useMemo(() => {
+    const first = new Date(year, month, 1)
+    const last = new Date(year, month + 1, 0)
+    const startPad = first.getDay()
+    const days: { date: Date | null }[] = Array(startPad).fill({ date: null })
+    for (let d = 1; d <= last.getDate(); d++) days.push({ date: new Date(year, month, d) })
+    while (days.length % 7 !== 0) days.push({ date: null })
+    return days
+  }, [year, month])
+
+  const assignmentsByDate = useMemo(() => {
+    const map: Record<string, Assignment[]> = {}
+    assignments.forEach((a) => {
+      const key = new Date(a.dueDate).toLocaleDateString('en-CA')
+      if (!map[key]) map[key] = []
+      map[key].push(a)
+    })
+    return map
+  }, [assignments])
+
+  const selectedKey = selectedDate ?? (assignmentsByDate[today.toLocaleDateString('en-CA')] ? today.toLocaleDateString('en-CA') : null)
+  const selectedAssignments = selectedKey ? (assignmentsByDate[selectedKey] ?? []) : []
+  const selectedLabel = selectedKey ? new Date(`${selectedKey}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : null
 
   const handleStatusUpdate = async (id: string, status: string, extras: AssignmentStatusUpdateExtras = {}) => {
     if (updatingIds.has(id)) return
@@ -179,72 +224,165 @@ export default function AssignmentsPage() {
     }
   }
 
-  const inputCls = 'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 transition-colors focus:border-brandPrimary focus:outline-none focus:ring-1 focus:ring-brandPrimary'
+  const inputCls = 'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 shadow-sm transition-colors focus:border-brandPrimary focus:outline-none focus:ring-1 focus:ring-brandPrimary'
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
-      <div className="flex flex-shrink-0 items-start justify-between border-b border-border bg-white px-8 pb-4 pt-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Assignments</h1>
-          <p className="mt-1 text-sm font-medium text-gray-500">{loading ? 'Loading…' : `${filtered.length} assignments`}</p>
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
+      <div className="z-20 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4 shadow-sm lg:px-8">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">All Tasks</h1>
+
+          <div className="ml-4 flex rounded-lg border border-gray-200 bg-gray-100 p-1">
+            <button
+              onClick={() => setView('list')}
+              className={`rounded-md px-3 py-1 text-xs font-semibold transition-all ${view === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setView('calendar')}
+              className={`rounded-md px-3 py-1 text-xs font-semibold transition-all ${view === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Calendar
+            </button>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
+          {view === 'calendar' && (
+            <div className="mr-2 flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+              <button
+                onClick={() => { if (month === 0) { setMonth(11); setYear((y) => y - 1) } else setMonth((m) => m - 1) }}
+                className="rounded px-2 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm"
+              >
+                ←
+              </button>
+              <button
+                onClick={() => { setYear(today.getFullYear()); setMonth(today.getMonth()); setSelectedDate(null) }}
+                className="rounded px-2 py-1 text-xs font-bold text-gray-700 hover:bg-white hover:shadow-sm"
+              >
+                Today
+              </button>
+              <div className="w-24 px-2 text-center text-xs font-bold text-gray-900">{MONTHS[month]} {year}</div>
+              <button
+                onClick={() => { if (month === 11) { setMonth(0); setYear((y) => y + 1) } else setMonth((m) => m + 1) }}
+                className="rounded px-2 py-1 text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm"
+              >
+                →
+              </button>
+            </div>
+          )}
+          <Link href="/assignments/new" className="btn-primary px-4 py-1.5 text-sm shadow-sm">+ New Task</Link>
+        </div>
+      </div>
+
+      {view === 'list' && (
+        <div className="z-10 flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-gray-200 bg-white px-6 py-2 lg:px-8">
+          <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className={inputCls} style={{ width: 220 }} />
+          <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className={inputCls}>
+            <option value="">All courses</option>
+            {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className={inputCls}>
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
           <button
             onClick={() => deleteMany(assignments.filter((a) => COMPLETED.includes(a.status)).map((a) => a.id))}
-            className="rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
+            className="ml-auto rounded-md border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
           >
-            Delete completed
+            Clear completed
           </button>
-          <Link href="/assignments/new" className="btn-primary px-4 py-2 text-sm">+ New Task</Link>
         </div>
-      </div>
+      )}
 
-      <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border bg-white px-8 py-3">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search…"
-          className={inputCls}
-          style={{ width: 200 }}
-        />
-        <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className={inputCls}>
-          <option value="">All courses</option>
-          {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className={inputCls}>
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-        </select>
-        {(search || courseFilter || statusFilter !== 'all') && (
-          <button
-            onClick={() => {
-              setSearch('')
-              setCourseFilter('')
-              setStatusFilter('all')
-            }}
-            className="text-sm font-medium text-gray-500 hover:text-gray-900"
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
+      <div className="flex-1 overflow-y-auto px-4 pb-12 pt-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[1400px]">
+          {loading ? (
+            <div className="mt-12 text-center text-sm text-gray-500">Loading…</div>
+          ) : view === 'list' ? (
+            filteredList.length === 0 ? (
+              <div className="mt-16 text-center text-sm text-gray-500">
+                No assignments found. <Link href="/assignments/new" className="text-brandPrimary hover:underline">Add one</Link>.
+              </div>
+            ) : (
+              <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
+                {filteredList.map((a) => (
+                  <Row key={a.id} assignment={a} onComplete={handleStatusUpdate} onDelete={handleDelete} updating={updatingIds.has(a.id)} />
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col items-start gap-6 xl:flex-row">
+              <div className="w-full flex-1">
+                <div className="mb-1 grid grid-cols-7">
+                  {DAYS.map((d) => (
+                    <div key={d} className="py-1 text-center text-[0.65rem] font-bold uppercase tracking-wider text-gray-500">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200 shadow-sm">
+                  {cells.map((cell, i) => {
+                    if (!cell.date) return <div key={i} className="min-h-[100px] bg-gray-50" />
+                    const key = cell.date.toLocaleDateString('en-CA')
+                    const isSelected = key === selectedKey
+                    const dayAssignments = assignmentsByDate[key] ?? []
 
-      <div className="flex-1 overflow-y-auto px-8 pb-12 pt-6">
-        {loading ? (
-          <div className="mt-12 text-center text-sm text-gray-500">Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div className="mt-16 text-center text-sm text-gray-500">
-            No assignments. <Link href="/assignments/new" className="text-brandPrimary hover:underline">Add one</Link>.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {filtered.map((a) => (
-              <Row key={a.id} assignment={a} onComplete={handleStatusUpdate} onDelete={handleDelete} updating={updatingIds.has(a.id)} />
-            ))}
-          </div>
-        )}
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedDate(key === selectedDate ? null : key)}
+                        className={`flex min-h-[100px] cursor-pointer flex-col p-1.5 transition-colors ${isSelected ? 'z-10 bg-blue-50 ring-2 ring-inset ring-brandPrimary' : 'bg-white hover:bg-gray-50'}`}
+                      >
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[0.65rem] font-bold ${cell.date.getTime() === today.getTime() ? 'bg-brandPrimary text-white' : isSelected ? 'text-brandPrimary' : 'text-gray-700'}`}>
+                            {cell.date.getDate()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 overflow-hidden">
+                          {dayAssignments.slice(0, 3).map((a) => {
+                            const cColor = courseColor(a.course?.name ?? '')
+                            return (
+                              <div key={a.id} className="truncate rounded px-1 text-[0.6rem] font-semibold" style={{ background: `${cColor}15`, color: cColor, borderLeft: `2px solid ${cColor}` }}>
+                                {a.title}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {selectedLabel && selectedAssignments.length > 0 && (
+                <div className="w-full flex-shrink-0 xl:w-80">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">{selectedLabel}</h3>
+                      <span className="rounded bg-gray-200/60 px-1.5 py-0.5 text-[0.65rem] font-bold text-gray-500">{selectedAssignments.length}</span>
+                    </div>
+                    <div className="flex flex-col divide-y divide-gray-100">
+                      {selectedAssignments.map((a) => (
+                        <Link
+                          href={`/assignments/${a.id}/edit`}
+                          key={a.id}
+                          className="group flex items-center justify-between px-4 py-3 transition-colors hover:bg-gray-50"
+                          style={{ borderLeft: `3px solid ${courseColor(a.course?.name ?? '')}` }}
+                        >
+                          <div className="min-w-0 flex-1 pr-3">
+                            <div className="truncate text-sm font-semibold text-gray-900 transition-colors group-hover:text-brandPrimary">{a.title}</div>
+                            <div className="text-[0.65rem] font-medium text-gray-500">{a.course?.name || 'General'}</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

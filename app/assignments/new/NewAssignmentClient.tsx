@@ -173,8 +173,8 @@ export default function NewAssignmentClient() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 py-5">
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
+      <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-8 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/assignments" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">← Back</Link>
           <h1 className="border-l border-gray-300 pl-4 text-xl font-bold tracking-tight text-gray-900">New Assignment</h1>
@@ -194,8 +194,8 @@ export default function NewAssignmentClient() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="flex-1 overflow-y-auto px-6 py-10">
+        <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           <form id="new-assignment-form" onSubmit={handleSubmit} className="space-y-6">
             <Field label="Title *">
               <input type="text" value={form.title} onChange={set('title')} placeholder="e.g., Calc II Homework 9.1" className={inputCls} required autoFocus />
@@ -257,8 +257,8 @@ export default function NewAssignmentClient() {
 
       {showParser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 px-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-8 shadow-xl">
-            <div className="mb-6 flex items-center justify-between">
+          <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+            <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-100 bg-white p-6">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Syllabus Parser</h2>
                 <p className="text-sm text-gray-500">Paste your syllabus text to auto-create assignments.</p>
@@ -266,53 +266,56 @@ export default function NewAssignmentClient() {
               <button className="text-sm font-medium text-gray-500 hover:text-gray-900" onClick={() => setShowParser(false)}>Close</button>
             </div>
 
-            <textarea
-              value={syllabusText}
-              onChange={(e) => setSyllabusText(e.target.value)}
-              rows={6}
-              className={`${inputCls} font-mono text-sm`}
-              placeholder="Paste syllabus text here..."
-            />
+            <div className="flex-1 overflow-y-auto p-6">
+              <textarea
+                value={syllabusText}
+                onChange={(e) => setSyllabusText(e.target.value)}
+                rows={6}
+                className={`${inputCls} font-mono text-sm`}
+                placeholder="Paste syllabus text here..."
+              />
 
-            <div className="mt-4 flex items-center gap-3">
-              <button type="button" onClick={handleParse} className="btn-primary text-sm">
-                {parsing ? 'Parsing…' : 'Extract Assignments'}
-              </button>
-              <div className="text-sm font-medium text-gray-500">
-                {parsedItems.length ? `${parsedItems.length} items found` : ''}
+              <div className="mt-4 flex items-center gap-3">
+                <button type="button" onClick={handleParse} className="btn-primary px-5 py-2 text-sm">
+                  {parsing ? 'Parsing…' : 'Extract Assignments'}
+                </button>
+                <div className="text-sm font-medium text-gray-500">
+                  {parsedItems.length ? `${parsedItems.length} items found` : ''}
+                </div>
               </div>
+
+              {parsedItems.length > 0 && (
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-gray-900">Review & Edit</h3>
+                  {parsedItems.map((item, idx) => (
+                    <div key={`${item.title}-${idx}`} className="grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm">
+                      <input value={item.title} onChange={(e) => updateParsed(idx, 'title', e.target.value)} className={inputCls} />
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <input type="datetime-local" value={item.dueDate} onChange={(e) => updateParsed(idx, 'dueDate', e.target.value)} className={inputCls} />
+                        <select value={item.type} onChange={(e) => updateParsed(idx, 'type', e.target.value)} className={inputCls}>
+                          <option value="homework">Homework</option>
+                          <option value="quiz">Quiz</option>
+                          <option value="project">Project</option>
+                          <option value="exam">Exam</option>
+                        </select>
+                        <select value={item.difficulty} onChange={(e) => updateParsed(idx, 'difficulty', e.target.value)} className={inputCls}>
+                          <option value="easy">Easy</option>
+                          <option value="moderate">Moderate</option>
+                          <option value="crushing">Crushing</option>
+                          <option value="brutal">Brutal</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {parsedItems.length > 0 && (
-              <div className="mt-6 max-h-72 space-y-3 overflow-y-auto">
-                {parsedItems.map((item, idx) => (
-                  <div key={`${item.title}-${idx}`} className="grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <input value={item.title} onChange={(e) => updateParsed(idx, 'title', e.target.value)} className={inputCls} />
-                    <div className="grid gap-2 md:grid-cols-3">
-                      <input type="datetime-local" value={item.dueDate} onChange={(e) => updateParsed(idx, 'dueDate', e.target.value)} className={inputCls} />
-                      <select value={item.type} onChange={(e) => updateParsed(idx, 'type', e.target.value)} className={inputCls}>
-                        <option value="homework">Homework</option>
-                        <option value="quiz">Quiz</option>
-                        <option value="project">Project</option>
-                        <option value="exam">Exam</option>
-                      </select>
-                      <select value={item.difficulty} onChange={(e) => updateParsed(idx, 'difficulty', e.target.value)} className={inputCls}>
-                        <option value="easy">Easy</option>
-                        <option value="moderate">Moderate</option>
-                        <option value="crushing">Crushing</option>
-                        <option value="brutal">Brutal</option>
-                      </select>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {parsedItems.length > 0 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-500">Creates assignments under the selected course.</div>
-                <button type="button" onClick={handleBatchCreate} className="btn-primary text-sm">
-                  Create {parsedItems.length}
+              <div className="z-10 flex flex-shrink-0 items-center justify-between border-t border-gray-100 bg-gray-50 p-6">
+                <div className="text-sm text-gray-600">Creates assignments under the selected course (from main form).</div>
+                <button type="button" onClick={handleBatchCreate} className="btn-primary px-6 py-2 text-sm shadow-sm">
+                  Create {parsedItems.length} Tasks
                 </button>
               </div>
             )}

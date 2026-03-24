@@ -14,7 +14,6 @@ export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
   { href: "/assignments", label: "Assignments", icon: <AssignmentsIcon /> },
   { href: "/courses", label: "Courses", icon: <CoursesIcon /> },
-  { href: "/calendar", label: "Calendar", icon: <CalendarIcon /> },
   { href: "/profile", label: "Profile", icon: <ProfileIcon /> },
 ];
 
@@ -53,18 +52,6 @@ function AssignmentsIcon() {
       <path d="M9 7h6" />
       <path d="M9 11h6" />
       <path d="M9 15h4" />
-    </IconShell>
-  )
-}
-
-function CalendarIcon() {
-  return (
-    <IconShell>
-      <path d="M6 4V2" />
-      <path d="M18 4V2" />
-      <path d="M4 7h16" />
-      <rect x="4" y="4" width="16" height="18" rx="2" />
-      <path d="m8 12 2 2 3-3" />
     </IconShell>
   )
 }

@@ -85,18 +85,29 @@ export default function EditAssignmentPage() {
 
   const inputCls = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brandPrimary'
   const labelCls = 'mb-1.5 block text-sm font-semibold text-gray-700'
+  const hintCls = 'mt-1 text-xs text-gray-500'
+
+  function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+    return (
+      <div>
+        <label className={labelCls}>{label}</label>
+        {children}
+        {hint && <p className={hintCls}>{hint}</p>}
+      </div>
+    )
+  }
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-brandBg text-sm text-gray-500">
-        Loading…
+      <div className="flex h-full items-center justify-center bg-brandBg text-sm font-medium text-gray-500">
+        Loading Assignment Data…
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 py-5">
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
+      <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-8 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/assignments" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">← Back</Link>
           <h1 className="border-l border-gray-300 pl-4 text-xl font-bold tracking-tight text-gray-900">Edit Assignment</h1>
@@ -105,74 +116,65 @@ export default function EditAssignmentPage() {
           form="edit-assignment-form"
           type="submit"
           disabled={saving || !form.title.trim() || !form.dueDate || !form.courseName.trim()}
-          className="btn-primary text-sm"
+          className="btn-primary px-5 py-2 text-sm"
         >
-          {saving ? 'Saving…' : 'Save Task'}
+          {saving ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="flex-1 overflow-y-auto px-6 py-10">
+        <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           <form id="edit-assignment-form" onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className={labelCls}>Title *</label>
+            <Field label="Title *">
               <input type="text" value={form.title} onChange={set('title')} className={inputCls} required autoFocus />
-            </div>
+            </Field>
 
-            <div>
-              <label className={labelCls}>Course *</label>
+            <Field label="Course *">
               <select value={form.courseName} onChange={set('courseName')} className={inputCls} required>
                 <option value="">Select course</option>
                 {courses.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
-            </div>
+            </Field>
 
-            <div>
-              <label className={labelCls}>Due date *</label>
+            <Field label="Due date *">
               <input type="datetime-local" value={form.dueDate} onChange={set('dueDate')} className={inputCls} required />
-            </div>
+            </Field>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Type</label>
+              <Field label="Type">
                 <select value={form.type} onChange={set('type')} className={inputCls}>
                   <option value="homework">Homework</option>
                   <option value="quiz">Quiz</option>
                   <option value="project">Project</option>
                   <option value="exam">Exam</option>
                 </select>
-              </div>
-              <div>
-                <label className={labelCls}>Difficulty</label>
+              </Field>
+              <Field label="Difficulty">
                 <select value={form.difficulty} onChange={set('difficulty')} className={inputCls}>
                   <option value="easy">Easy</option>
                   <option value="moderate">Moderate</option>
                   <option value="crushing">Crushing</option>
                   <option value="brutal">Brutal</option>
                 </select>
-              </div>
+              </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Grade weight (%)</label>
+              <Field label="Grade weight (%)" hint="What % of your final grade">
                 <input type="number" value={form.weight} onChange={set('weight')} min="0" max="100" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Est. hours</label>
+              </Field>
+              <Field label="Est. hours" hint="Optional">
                 <input type="number" value={form.estimatedHours} onChange={set('estimatedHours')} placeholder="e.g. 2.5" min="0" step="0.5" className={inputCls} />
-              </div>
+              </Field>
             </div>
 
-            <div>
-              <label className={labelCls}>Description</label>
-              <textarea value={form.description} onChange={set('description')} rows={3} className={`${inputCls} resize-none`} />
-            </div>
+            <Field label="Description" hint="Optional — any context about what's needed">
+              <textarea value={form.description} onChange={set('description')} rows={4} className={`${inputCls} resize-none`} />
+            </Field>
 
-            <div>
-              <label className={labelCls}>Submission note</label>
+            <Field label="Submission note" hint="Where to submit, portal link, etc.">
               <textarea value={form.submissionNote} onChange={set('submissionNote')} rows={2} className={`${inputCls} resize-none`} />
-            </div>
+            </Field>
           </form>
         </div>
       </div>

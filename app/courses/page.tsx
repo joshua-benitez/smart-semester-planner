@@ -68,32 +68,34 @@ export default function CoursesPage() {
   const inputCls = 'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brandPrimary'
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 pb-4 pt-8">
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
+      <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-8 py-5 shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">
             ← Dashboard
           </Link>
-          <h1 className="border-l border-gray-300 pl-4 text-2xl font-bold tracking-tight text-gray-900">Courses</h1>
+          <h1 className="border-l border-gray-300 pl-4 text-xl font-bold tracking-tight text-gray-900">Course Directory</h1>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="max-w-3xl space-y-8">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="mb-4 text-sm font-bold uppercase tracking-wider text-gray-500">
-              Add course
+      <div className="flex-1 overflow-y-auto px-6 py-10 lg:px-10">
+        <div className="mx-auto max-w-6xl space-y-10">
+          <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-gray-900">Create New Course</h2>
+              <p className="text-sm text-gray-500">Group your assignments by creating a dedicated course label.</p>
             </div>
-            <form onSubmit={handleCreate} className="flex flex-wrap items-center gap-3">
+
+            <form onSubmit={handleCreate} className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Course name"
-                className={`${inputCls} min-w-[220px] flex-1`}
+                placeholder="e.g., Data Structures"
+                className={`${inputCls} w-full sm:max-w-[240px]`}
                 required
               />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-2">
                 {DEFAULT_COLORS.map((c) => (
                   <button
                     key={c}
@@ -111,7 +113,7 @@ export default function CoursesPage() {
               <button
                 type="submit"
                 disabled={saving || !name.trim()}
-                className="btn-primary text-sm"
+                className="btn-primary whitespace-nowrap text-sm sm:ml-auto"
               >
                 {saving ? 'Adding…' : 'Add Course'}
               </button>
@@ -119,44 +121,51 @@ export default function CoursesPage() {
           </div>
 
           <div>
-            <div className="mb-3 text-sm font-bold uppercase tracking-wider text-gray-500">
-              Your courses
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">
+                Active Courses
+              </h2>
             </div>
 
             {loading ? (
-              <div className="text-sm text-gray-500">Loading…</div>
+              <div className="text-sm text-gray-500">Loading courses…</div>
             ) : courses.length === 0 ? (
-              <div className="text-sm text-gray-500">No courses yet.</div>
+              <div className="rounded-xl border border-dashed border-gray-300 bg-white py-12 text-center shadow-sm">
+                <p className="text-sm font-semibold text-gray-900">No courses yet</p>
+                <p className="mt-1 text-xs text-gray-500">Add your first course above.</p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {courses.map((c) => (
                   <div
                     key={c.id}
-                    className="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:border-gray-300"
-                    style={{ borderLeft: `4px solid ${c.color ?? '#3b82f6'}` }}
+                    className="group flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
                   >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-gray-900">{c.name}</div>
-                      {c._count && (
-                        <div className="text-xs text-gray-500">
-                          {c._count.assignments} assignment{c._count.assignments !== 1 ? 's' : ''}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Link
-                        href={`/dashboard?course=${c.id}`}
-                        className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-900"
-                      >
-                        View
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(c)}
-                        disabled={deleting === c.id}
-                        className="rounded bg-red-50 px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 disabled:opacity-40"
-                      >
-                        {deleting === c.id ? '…' : 'Delete'}
-                      </button>
+                    <div className="h-2 w-full" style={{ backgroundColor: c.color ?? '#3b82f6' }} />
+
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="mb-1 truncate text-lg font-bold text-gray-900" title={c.name}>
+                        {c.name}
+                      </h3>
+                      <div className="mb-6 text-xs font-medium text-gray-500">
+                        {c._count?.assignments || 0} Assignment{c._count?.assignments !== 1 ? 's' : ''}
+                      </div>
+
+                      <div className="mt-auto flex items-center gap-2 border-t border-gray-100 pt-4 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Link
+                          href={`/dashboard?course=${c.id}`}
+                          className="flex-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-center text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                        >
+                          View Tasks
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(c)}
+                          disabled={deleting === c.id}
+                          className="flex-1 rounded-md border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 disabled:opacity-40"
+                        >
+                          {deleting === c.id ? '…' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

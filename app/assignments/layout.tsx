@@ -1,6 +1,6 @@
 import AppShell from "@/components/layout/AppShell"
 
-export default function DashboardRouteLayout({
+export default function AssignmentsLayout({
   children,
 }: {
   children: React.ReactNode

@@ -60,114 +60,142 @@ export default function CalendarPage() {
     : null
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 pb-4 pt-8">
-        <div>
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
+      <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-8 py-5 shadow-sm">
+        <div className="flex items-center gap-4">
           <Link href="/dashboard" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">← Dashboard</Link>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">Calendar</h1>
+          <h1 className="border-l border-gray-300 pl-4 text-xl font-bold tracking-tight text-gray-900">Calendar</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900">
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1">
+          <button onClick={prevMonth} className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-white hover:shadow-sm">
             ←
           </button>
-          <button onClick={goToday} className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900">
+          <button onClick={goToday} className="rounded-md px-3 py-1.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-white hover:shadow-sm">
             Today
           </button>
-          <div className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-900">
+          <div className="min-w-[140px] px-4 py-1.5 text-center text-sm font-bold text-gray-900">
             {MONTHS[month]} {year}
           </div>
-          <button onClick={nextMonth} className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900">
+          <button onClick={nextMonth} className="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-white hover:shadow-sm">
             →
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="mb-1 grid grid-cols-7">
-          {DAYS.map((d) => (
-            <div key={d} className="py-2 text-center text-[0.68rem] font-bold uppercase tracking-wider text-gray-500">
-              {d}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {cells.map((cell, i) => {
-            if (!cell.date) return <div key={i} className="min-h-[112px] rounded-xl bg-transparent" />
-            const key = cell.date.toLocaleDateString('en-CA')
-            const isToday = cell.date.getTime() === today.getTime()
-            const isSelected = key === selectedKey
-            const dayAssignments = assignmentsByDate[key] ?? []
-
-            return (
-              <div
-                key={i}
-                onClick={() => setSelectedDate(key === selectedDate ? null : key)}
-                className={`min-h-[112px] cursor-pointer rounded-xl border p-3 transition-all ${
-                  isSelected ? 'border-brandPrimary bg-blue-50 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                }`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-[0.78rem] font-semibold ${
-                      isToday ? 'bg-brandPrimary text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    {cell.date.getDate()}
-                  </span>
-                  {dayAssignments.length > 0 && (
-                    <span className="text-[0.62rem] font-mono text-gray-400">{dayAssignments.length}</span>
-                  )}
+      <div className="flex-1 overflow-y-auto px-6 py-8 lg:px-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 xl:flex-row">
+          <div className="w-full flex-1">
+            <div className="mb-2 grid grid-cols-7">
+              {DAYS.map((d) => (
+                <div key={d} className="py-2 text-center text-xs font-bold uppercase tracking-wider text-gray-500">
+                  {d}
                 </div>
-                <div className="space-y-1">
-                  {dayAssignments.slice(0, 3).map((a) => (
-                    <div
-                      key={a.id}
-                      className="truncate rounded-md px-2 py-1 text-[0.66rem] font-medium"
-                      style={{ background: `${courseColor(a.course?.name ?? '')}18`, color: courseColor(a.course?.name ?? ''), borderLeft: `3px solid ${courseColor(a.course?.name ?? '')}` }}
-                    >
-                      {a.title}
-                    </div>
-                  ))}
-                  {dayAssignments.length > 3 && (
-                    <div className="text-[0.62rem] text-gray-400">+{dayAssignments.length - 3} more</div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {selectedLabel && selectedAssignments.length > 0 && (
-          <div className="mt-8 pb-4">
-            <div className="mb-3 text-[0.72rem] font-bold uppercase tracking-wider text-gray-500">
-              {selectedLabel}
+              ))}
             </div>
-            <div className="space-y-2">
-              {selectedAssignments.map((a) => {
-                const color = courseColor(a.course?.name ?? '')
-                const time = new Date(a.dueDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+            <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-gray-300 bg-gray-300 shadow-sm">
+              {cells.map((cell, i) => {
+                if (!cell.date) return <div key={i} className="min-h-[120px] bg-gray-100" />
+                const key = cell.date.toLocaleDateString('en-CA')
+                const isToday = cell.date.getTime() === today.getTime()
+                const isSelected = key === selectedKey
+                const dayAssignments = assignmentsByDate[key] ?? []
+
                 return (
                   <div
-                    key={a.id}
-                    className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
-                    style={{ borderLeft: `4px solid ${color}` }}
+                    key={i}
+                    onClick={() => setSelectedDate(key === selectedDate ? null : key)}
+                    className={`flex min-h-[120px] cursor-pointer flex-col p-2 transition-colors ${
+                      isSelected ? 'z-10 bg-blue-50 ring-2 ring-inset ring-brandPrimary' : 'bg-white hover:bg-gray-50'
+                    }`}
                   >
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">{a.title}</div>
-                      <div className="text-xs text-gray-500">{a.course?.name}</div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                          isToday ? 'bg-brandPrimary text-white' : isSelected ? 'text-brandPrimary' : 'text-gray-700'
+                        }`}
+                      >
+                        {cell.date.getDate()}
+                      </span>
+                      {dayAssignments.length > 0 && (
+                        <span className="text-[0.65rem] font-bold text-gray-400">{dayAssignments.length}</span>
+                      )}
                     </div>
-                    <div className="text-xs font-mono text-gray-500">{time}</div>
+                    <div className="flex flex-col gap-1 overflow-hidden">
+                      {dayAssignments.slice(0, 3).map((a) => {
+                        const cColor = courseColor(a.course?.name ?? '')
+                        return (
+                          <div
+                            key={a.id}
+                            className="truncate rounded px-1.5 py-0.5 text-[0.68rem] font-semibold leading-tight"
+                            style={{ background: `${cColor}15`, color: cColor, borderLeft: `2px solid ${cColor}` }}
+                          >
+                            {a.title}
+                          </div>
+                        )
+                      })}
+                      {dayAssignments.length > 3 && (
+                        <div className="mt-0.5 pl-1 text-[0.65rem] font-semibold text-gray-400">
+                          +{dayAssignments.length - 3} more
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
             </div>
-          </div>
-        )}
 
-        {loading && (
-          <div className="pt-8 text-sm text-gray-500">Loading…</div>
-        )}
+            {loading && (
+              <div className="mt-4 text-center text-sm text-gray-500">Loading…</div>
+            )}
+          </div>
+
+          {selectedLabel && selectedAssignments.length > 0 && (
+            <div className="w-full flex-shrink-0 xl:w-96">
+              <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-3.5">
+                  <h3 className="text-sm font-bold text-gray-900">
+                    {selectedLabel}
+                  </h3>
+                  <span className="rounded-full bg-gray-200/60 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                    {selectedAssignments.length}
+                  </span>
+                </div>
+
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {selectedAssignments.map((a) => {
+                    const color = courseColor(a.course?.name ?? '')
+                    const time = new Date(a.dueDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+                    return (
+                      <Link
+                        href={`/assignments/${a.id}/edit`}
+                        key={a.id}
+                        className="group flex items-center justify-between px-5 py-4 transition-colors hover:bg-gray-50"
+                        style={{ borderLeft: `4px solid ${color}` }}
+                      >
+                        <div className="min-w-0 flex-1 pr-4">
+                          <div className="truncate text-[0.9rem] font-semibold text-gray-900 transition-colors group-hover:text-brandPrimary">
+                            {a.title}
+                          </div>
+                          <div className="mt-0.5 text-xs font-medium text-gray-500">
+                            {a.course?.name || 'General'}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end">
+                          <div className="text-xs font-bold text-gray-700">{time}</div>
+                          <div className="mt-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-gray-400">
+                            {a.type}
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

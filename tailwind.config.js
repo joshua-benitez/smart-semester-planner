@@ -8,9 +8,9 @@ module.exports = {
     extend: {
       colors: {
         border: '#e5e7eb',
-        background: '#f9fafb',
+        background: '#f3f4f6',
         foreground: '#111827',
-        brandBg: '#f9fafb',
+        brandBg: '#f3f4f6',
         cardBg: '#ffffff',
         panelBg: '#ffffff',
         brandPrimary: '#0070f3',

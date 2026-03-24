@@ -109,14 +109,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-brandBg text-sm text-gray-500">
+      <div className="flex h-full items-center justify-center bg-brandBg text-sm text-gray-500">
         Loading…
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brandBg">
+    <div className="flex h-full flex-col overflow-hidden bg-brandBg">
       <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-white px-8 pb-4 pt-8">
         <div>
           <Link href="/dashboard" className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900">← Dashboard</Link>
