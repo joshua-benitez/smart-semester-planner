@@ -31,7 +31,7 @@ const AiSyllabusSchema = z.object({
   assignments: z.array(AiAssignmentSchema),
 })
 
-const OPENAI_SYLLABUS_SCHEMA = {
+const GEMINI_SYLLABUS_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -128,80 +128,72 @@ function mergeAssignments(primary: ParsedAssignment[], fallback: ParsedAssignmen
   })
 }
 
-function extractOutputText(body: any): string | null {
-  if (typeof body?.output_text === 'string') return body.output_text
-
+function extractGeminiOutputText(body: any): string | null {
   const chunks: string[] = []
-  for (const output of body?.output ?? []) {
-    for (const content of output?.content ?? []) {
-      if (typeof content?.refusal === 'string') {
-        throw new Error(content.refusal)
-      }
-      if (typeof content?.text === 'string') {
-        chunks.push(content.text)
-      }
+  for (const candidate of body?.candidates ?? []) {
+    for (const part of candidate?.content?.parts ?? []) {
+      if (typeof part?.text === 'string') chunks.push(part.text)
     }
   }
 
   return chunks.length ? chunks.join('') : null
 }
 
-async function parseWithOpenAI(input: string, opts: Required<ParseOptions>) {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return { assignments: [], reason: 'OPENAI_API_KEY is not configured' }
+async function parseWithGemini(input: string, opts: Required<ParseOptions>) {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return { assignments: [], reason: 'GEMINI_API_KEY is not configured' }
 
-  const model = process.env.OPENAI_SYLLABUS_MODEL || 'gpt-4o-mini'
-  const response = await fetch('https://api.openai.com/v1/responses', {
+  const model = process.env.GEMINI_SYLLABUS_MODEL || 'gemini-2.5-flash'
+  const normalizedModel = model.startsWith('models/') ? model.slice('models/'.length) : model
+  const prompt = [
+    'You extract graded coursework from college syllabi.',
+    'Return only assignments, quizzes, projects, exams, labs, papers, and other graded deliverables.',
+    'Ignore policies, grading scales, readings without a graded deliverable, office hours, and instructor information.',
+    'Do not invent due dates. Use TBD if the syllabus does not state a due date.',
+    'Default missing times to the provided default due time.',
+    '',
+    `Academic year for missing years: ${opts.assumeAcademicYear}`,
+    `Reference date: ${opts.referenceDate.toISOString()}`,
+    `Timezone: ${opts.timezone}`,
+    `Default due time: ${opts.defaultDueTime}`,
+    '',
+    'Syllabus text:',
+    input,
+  ].join('\n')
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(normalizedModel)}:generateContent`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      'x-goog-api-key': apiKey,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model,
-      input: [
-        {
-          role: 'system',
-          content: [
-            'You extract graded coursework from college syllabi.',
-            'Return only assignments, quizzes, projects, exams, labs, papers, and other graded deliverables.',
-            'Ignore policies, grading scales, readings without a graded deliverable, office hours, and instructor information.',
-            'Do not invent due dates. Use TBD if the syllabus does not state a due date.',
-            'Default missing times to the provided default due time.',
-          ].join(' '),
-        },
+      contents: [
         {
           role: 'user',
-          content: [
-            `Academic year for missing years: ${opts.assumeAcademicYear}`,
-            `Reference date: ${opts.referenceDate.toISOString()}`,
-            `Timezone: ${opts.timezone}`,
-            `Default due time: ${opts.defaultDueTime}`,
-            'Syllabus text:',
-            input,
-          ].join('\n'),
+          parts: [{ text: prompt }],
         },
       ],
-      text: {
-        format: {
-          type: 'json_schema',
-          name: 'syllabus_assignments',
-          strict: true,
-          schema: OPENAI_SYLLABUS_SCHEMA,
+      generationConfig: {
+        responseFormat: {
+          text: {
+            mimeType: 'application/json',
+            schema: GEMINI_SYLLABUS_SCHEMA,
+          },
         },
-      },
-      max_output_tokens: 4000,
+        maxOutputTokens: 4000,
+      }
     }),
   })
 
   if (!response.ok) {
     const message = await response.text()
-    throw new Error(`OpenAI syllabus parse failed: ${message}`)
+    throw new Error(`Gemini syllabus parse failed: ${message}`)
   }
 
   const body = await response.json()
-  const outputText = extractOutputText(body)
-  if (!outputText) throw new Error('OpenAI syllabus parse returned no text output')
+  const outputText = extractGeminiOutputText(body)
+  if (!outputText) throw new Error('Gemini syllabus parse returned no text output')
 
   const parsedJson = JSON.parse(outputText)
   const parsed = AiSyllabusSchema.parse(parsedJson)
@@ -225,13 +217,13 @@ export async function parseSyllabusHybrid(input: string, options?: ParseOptions)
   const heuristicAssignments = parseSyllabus(input, opts)
 
   try {
-    const aiResult = await parseWithOpenAI(input, opts)
+    const aiResult = await parseWithGemini(input, opts)
     if (!aiResult.assignments.length) {
       return {
         assignments: heuristicAssignments,
         diagnostics: {
           source: 'heuristic',
-          aiAvailable: Boolean(process.env.OPENAI_API_KEY),
+          aiAvailable: Boolean(process.env.GEMINI_API_KEY),
           fallbackUsed: true,
           model: aiResult.model,
           reason: aiResult.reason ?? 'AI returned no assignments',
@@ -258,7 +250,7 @@ export async function parseSyllabusHybrid(input: string, options?: ParseOptions)
       assignments: heuristicAssignments,
       diagnostics: {
         source: 'heuristic',
-        aiAvailable: Boolean(process.env.OPENAI_API_KEY),
+        aiAvailable: Boolean(process.env.GEMINI_API_KEY),
         fallbackUsed: true,
         reason: error instanceof Error ? error.message : 'AI parsing failed',
         aiCount: 0,
