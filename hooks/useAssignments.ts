@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Assignment } from '@/types/assignment'
+import type { Assignment, AssignmentStatusUpdateExtras } from '@/types/assignment'
 
 // wraps the assignments API with React Query so every screen can share the same cache
 export const useAssignments = () => {
@@ -34,6 +34,23 @@ export const useAssignments = () => {
     },
   })
 
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status, extras = {} }: { id: string; status: string; extras?: AssignmentStatusUpdateExtras }) => {
+      const res = await fetch('/api/assignments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status, ...extras }),
+      })
+      if (!res.ok) throw new Error('Failed to update assignment status')
+      const payload = await res.json()
+      if (!payload.ok) throw new Error(payload?.error?.message || 'Failed to update assignment status')
+      return payload.data as Assignment
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] })
+    },
+  })
+
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['assignments'] })
   }
@@ -43,6 +60,8 @@ export const useAssignments = () => {
     loading: assignmentsQuery.isLoading,
     error: assignmentsQuery.isError ? 'Failed to load assignments' : null,
     deleteAssignment: (id: string) => deleteMutation.mutateAsync(id),
+    updateAssignmentStatus: (id: string, status: string, extras?: AssignmentStatusUpdateExtras) =>
+      statusMutation.mutateAsync({ id, status, extras }),
     refresh,
   }
 }
