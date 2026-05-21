@@ -86,12 +86,12 @@ function segmentBlocks(lines: { line: string; index: number }[]): { text: string
 // my quick keyword map so the parser has a clue what type we're dealing with
 const KEYWORD_MAP: Record<AssignmentType, string[]> = {
   quiz: ["quiz", "content quiz", "practice quiz"],
-  project: ["project", "programming project", "research assignment", "speech", "presentation", "slides"],
+  project: ["project", "programming project", "research assignment", "speech", "presentation", "slides", "paper", "essay"],
   exam: ["exam", "midterm", "final", "test"],
   homework: [
-    "assignment", "hw", "lab", "lab assignment",
-    "webassign", "reading", "chapter", "participation", "challenge questions",
-    "attendance", "worksheet"
+    "assignment", "homework", "hw", "problem set", "pset", "lab", "lab assignment",
+    "webassign", "participation", "challenge questions",
+    "attendance", "worksheet", "discussion", "discussion post", "reflection"
   ],
 };
 
@@ -118,6 +118,7 @@ function isHeaderNoise(line: string): boolean {
 
 function detectType(line: string): AssignmentType | null {
   const lower = line.toLowerCase();
+  if (/\b(final|term|research)\s+paper\b/.test(lower)) return "project";
   for (const [type, words] of Object.entries(KEYWORD_MAP)) {
     if (words.some(w => lower.includes(w))) return type as AssignmentType;
   }
@@ -234,15 +235,92 @@ function toLocalISO(d: Date): string {
 // clean up the noisy title text so the UI looks decent
 function cleanTitle(raw: string): string {
   let t = raw;
+  // strip common schedule labels before removing dates
+  t = t.replace(/^(?:week|module|unit)\s*\d+[:\s-]*/i, "");
   // ditch trailing "Due..." wording
   t = t.replace(/\b(due|by|deadline)[:\s].*$/i, "").trim();
+  // strip dates and times that were already extracted by extractISO
+  t = t.replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g, "");
+  t = t.replace(/\b\d{1,2}-\d{1,2}(?:-\d{2,4})?\b/g, "");
+  t = t.replace(/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?\b/gi, "");
+  t = t.replace(/\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?(?:,?\s+\d{4})?\b/gi, "");
+  t = t.replace(/\b(?:at\s*)?\d{1,2}:[0-5]\d\s*(?:am|pm)?\b/gi, "");
+  t = t.replace(/\b(?:am|pm)\b/gi, "");
   // also strip dates inside parentheses
-  t = t.replace(/\((?:[^()]*\d[^()]*)\)$/g, "").trim();
+  t = t.replace(/\((?:[^()]*\d[^()]*)\)/g, "").trim();
+  // clean connector words left behind after date removal
+  t = t.replace(/\b(?:due|by|deadline|at|on)\b\s*$/i, "").trim();
+  t = t.replace(/\s+[-:|]\s*$/g, "").trim();
   // collapse random spacing
   t = t.replace(/\s{2,}/g, " ");
+  t = t.replace(/^[-:|\s.,]+|[-:|\s.,]+$/g, "");
   // capitalize the front so cards look consistent
   if (t.length) t = t[0].toUpperCase() + t.slice(1);
   return t;
+}
+
+function hasUsefulTitle(title: string): boolean {
+  return /[a-z]/i.test(title) && title.trim().length > 2;
+}
+
+function hasLineOverlap(a: ParsedAssignment, b: ParsedAssignment): boolean {
+  if (!a.sourceLines.length || !b.sourceLines.length) return false;
+  const bLines = new Set(b.sourceLines);
+  return a.sourceLines.some((line) => bLines.has(line));
+}
+
+function mergeParsedAssignments(candidates: ParsedAssignment[]): ParsedAssignment[] {
+  const merged: ParsedAssignment[] = [];
+
+  for (const item of candidates) {
+    const title = cleanTitle(item.title);
+    if (!hasUsefulTitle(title)) continue;
+
+    const normalized: ParsedAssignment = {
+      ...item,
+      title,
+      sourceLines: Array.from(new Set(item.sourceLines)).sort((a, b) => a - b),
+    };
+    const key = `${title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}|${normalized.dueDate}`;
+    const existingIndex = merged.findIndex((existing) => {
+      const existingKey = `${existing.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}|${existing.dueDate}`;
+      return existingKey === key || (existing.dueDate === normalized.dueDate && hasLineOverlap(existing, normalized));
+    });
+
+    if (existingIndex === -1) {
+      merged.push(normalized);
+      continue;
+    }
+
+    const existing = merged[existingIndex];
+    const shouldReplace = normalized.confidence > existing.confidence ||
+      (normalized.confidence === existing.confidence && normalized.title.length < existing.title.length);
+
+    if (shouldReplace) {
+      merged[existingIndex] = {
+        ...normalized,
+        sourceLines: Array.from(new Set([...existing.sourceLines, ...normalized.sourceLines])).sort((a, b) => a - b),
+      };
+    } else {
+      existing.sourceLines = Array.from(new Set([...existing.sourceLines, ...normalized.sourceLines])).sort((a, b) => a - b);
+    }
+  }
+
+  return merged.sort((a, b) => {
+    if (a.dueDate === "TBD" && b.dueDate !== "TBD") return 1;
+    if (a.dueDate !== "TBD" && b.dueDate === "TBD") return -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  });
+}
+
+function isTableNoise(line: string): boolean {
+  if (!line.includes("|")) return false;
+  const cells = line.split("|").map((cell) => cell.trim()).filter(Boolean);
+  if (!cells.length) return false;
+  if (cells.every((cell) => /^[-:=\s]+$/.test(cell))) return true;
+
+  const lower = cells.join(" ").toLowerCase();
+  return /assignment|task|work|topic/.test(lower) && /due|date|deadline/.test(lower);
 }
 
 // score how confident I am this block is a real assignment
@@ -380,6 +458,8 @@ function parseGroupedFormat(lines: { line: string; index: number }[], opts: Requ
   const assignmentHintRegex = /(assignment|quiz|project|exam|lab|participation|challenge|practice|attendance)/i
 
   for (const { line, index } of lines) {
+    if (isTableNoise(line)) continue;
+
     const iso = extractISO(line, opts)
     const platformMatch = platformRegex.exec(line)
     const type = detectType(line)
@@ -426,81 +506,75 @@ function parseGroupedFormat(lines: { line: string; index: number }[], opts: Requ
 
 // main parse entry point used by the syllabus modal
 export function parseSyllabus(input: string, options?: ParseOptions): ParsedAssignment[] {
-  const opts = { ...DEFAULTS, ...(options || {}) };
+  const opts = {
+    ...DEFAULTS,
+    ...(options || {}),
+    assumeAcademicYear: options?.assumeAcademicYear ?? options?.referenceDate?.getFullYear() ?? DEFAULTS.assumeAcademicYear,
+  };
   const text = normalizeText(input);
 
-  // Try specialized parsers first
   const out: ParsedAssignment[] = [];
   const lines = splitKeepIndex(text).filter(({ line }) => !isHeaderNoise(line));
+  const parsedLineIndices = new Set<number>();
 
-  const groupedResults = parseGroupedFormat(lines, opts)
-  if (groupedResults.length > 0) {
-    out.push(...groupedResults)
-  }
-
-  // Check for table format
-  if (out.length === 0 && text.includes('|') && text.split('|').length > 10) {
-    const tableResults = parseTableFormat(text, opts);
-    if (tableResults.length > 0) {
-      out.push(...tableResults);
+  const addResults = (results: ParsedAssignment[]) => {
+    for (const result of results) {
+      out.push(result);
+      for (const index of result.sourceLines) parsedLineIndices.add(index);
     }
   }
 
-  // Check for week-based format
-  if (out.length === 0 && text.match(/week\s+\d+/i)) {
-    const weekResults = parseWeekBasedFormat(lines, opts);
-    if (weekResults.length > 0) {
-      out.push(...weekResults);
-    }
+  addResults(parseGroupedFormat(lines, opts));
+
+  if (text.includes('|') && text.split('|').length > 10) {
+    addResults(parseTableFormat(text, opts));
   }
 
-  // Fallback to original block-based parsing
-  if (out.length === 0) {
-    const blocks = segmentBlocks(lines);
+  if (text.match(/week\s+\d+/i)) {
+    addResults(parseWeekBasedFormat(lines, opts));
+  }
 
-    for (const block of blocks) {
-      const raw = block.text;
-      const type = detectType(raw) ?? "homework";
-      const iso = extractISO(raw, opts);
+  const unparsedLines = lines.filter(({ index }) => !parsedLineIndices.has(index));
+  const blocks = segmentBlocks(unparsedLines);
 
-      // if the date wasn't in the block, take a second pass for trailing "due:" text
-      let dueISO = iso;
-      if (!dueISO) {
-        const match = raw.match(/(?:due|by)[:\s]+([^.;]+)[.;]?/i);
-        if (match) {
-          dueISO = extractISO(match[1], opts);
-        }
+  for (const block of blocks) {
+    const raw = block.text;
+    if (isTableNoise(raw)) continue;
+
+    const detectedType = detectType(raw);
+    const type = detectedType ?? "homework";
+    const iso = extractISO(raw, opts);
+
+    // if the date wasn't in the block, take a second pass for trailing "due:" text
+    let dueISO = iso;
+    if (!dueISO) {
+      const match = raw.match(/(?:due|by)[:\s]+([^.;]+)[.;]?/i);
+      if (match) {
+        dueISO = extractISO(match[1], opts);
       }
-
-      // skip anything that doesn't feel like an assignment
-      const looksLikeAssignment = detectType(raw) !== null || !!dueISO || /\bchapter\b|\bchapter\s*\d+\b/i.test(raw);
-      if (!looksLikeAssignment) continue;
-
-      const title = cleanTitle(raw);
-      const dueDate = dueISO ?? "TBD";
-      const confidence = scoreLine(raw, !!dueISO, detectType(raw));
-
-      out.push({
-        title: title || raw.slice(0, 140),
-        dueDate,
-        type,
-        difficulty: defaultDifficulty(type),
-        confidence,
-        sourceLines: block.indices,
-      });
     }
+
+    const title = cleanTitle(raw);
+    // skip anything that doesn't feel like an assignment
+    const hasDueCue = /\b(due|deadline|submit|complete|assigned|closes|available until)\b/i.test(raw);
+    const dateLedAssignment = /^\s*\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\s*[-:|]?\s*(?:quiz|exam|test|project|paper|essay|homework|hw|assignment|lab)\b/i.test(raw);
+    const looksLikeAssignment = detectedType !== null || (!!dueISO && hasUsefulTitle(title) && (hasDueCue || dateLedAssignment));
+    if (!looksLikeAssignment || !hasUsefulTitle(title)) continue;
+
+    const dueDate = dueISO ?? "TBD";
+    const confidence = scoreLine(raw, !!dueISO, detectedType);
+
+    out.push({
+      title,
+      dueDate,
+      type,
+      difficulty: defaultDifficulty(type),
+      confidence,
+      sourceLines: block.indices,
+    });
   }
 
-  // remove accidental duplicates caused by syllabus formatting quirks
-  const seen = new Set<string>();
-  const deduped: ParsedAssignment[] = [];
-  for (const a of out) {
-    const key = `${a.title.toLowerCase()}|${a.dueDate}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(a);
-  }
-  return deduped;
+  return mergeParsedAssignments(out);
 }
 
 // schema keeps downstream consumers honest without trusting my string parsing

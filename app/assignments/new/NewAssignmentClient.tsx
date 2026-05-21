@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { parseSyllabus } from '@/lib/parser'
 
 type Course = { id: string; name: string }
 type ParsedItem = {
@@ -13,6 +12,15 @@ type ParsedItem = {
   difficulty: 'easy' | 'moderate' | 'crushing' | 'brutal'
   confidence?: number
 }
+type ParseDiagnostics = {
+  source: 'ai' | 'heuristic'
+  aiAvailable: boolean
+  fallbackUsed: boolean
+  model?: string
+  reason?: string
+  aiCount: number
+  heuristicCount: number
+}
 
 export default function NewAssignmentClient() {
   const router = useRouter()
@@ -21,6 +29,7 @@ export default function NewAssignmentClient() {
   const [showParser, setShowParser] = useState(false)
   const [syllabusText, setSyllabusText] = useState('')
   const [parsedItems, setParsedItems] = useState<ParsedItem[]>([])
+  const [parseDiagnostics, setParseDiagnostics] = useState<ParseDiagnostics | null>(null)
   const [parsing, setParsing] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -85,17 +94,27 @@ export default function NewAssignmentClient() {
     }
   }
 
-  const handleParse = () => {
+  const handleParse = async () => {
     if (!syllabusText.trim()) return
     setParsing(true)
+    setParseDiagnostics(null)
     try {
-      const parsed = parseSyllabus(syllabusText, {
-        referenceDate: new Date(),
-        defaultDueTime: '23:59',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
-        acceptPastDates: true,
+      const referenceDate = new Date()
+      const res = await fetch('/api/syllabus/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: syllabusText,
+          referenceDate: referenceDate.toISOString(),
+          assumeAcademicYear: referenceDate.getFullYear(),
+          defaultDueTime: '23:59',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
+        }),
       })
-      const mapped: ParsedItem[] = parsed.map((item) => ({
+      const payload = await res.json()
+      if (!res.ok || !payload.ok) throw new Error(payload?.error?.message ?? 'Failed')
+
+      const mapped: ParsedItem[] = payload.data.assignments.map((item: ParsedItem) => ({
         title: item.title,
         dueDate: item.dueDate === 'TBD' ? '' : item.dueDate,
         type: item.type,
@@ -103,6 +122,7 @@ export default function NewAssignmentClient() {
         confidence: item.confidence,
       }))
       setParsedItems(mapped)
+      setParseDiagnostics(payload.data.diagnostics)
     } catch {
       alert('Failed to parse syllabus. Check formatting and try again.')
     } finally {
@@ -150,6 +170,7 @@ export default function NewAssignmentClient() {
       setShowParser(false)
       setSyllabusText('')
       setParsedItems([])
+      setParseDiagnostics(null)
       router.push('/assignments')
     } catch {
       alert('Failed to create assignments. Please try again.')
@@ -283,6 +304,13 @@ export default function NewAssignmentClient() {
                   {parsedItems.length ? `${parsedItems.length} items found` : ''}
                 </div>
               </div>
+              {parseDiagnostics && (
+                <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600">
+                  {parseDiagnostics.source === 'ai'
+                    ? `AI extraction${parseDiagnostics.model ? ` (${parseDiagnostics.model})` : ''}${parseDiagnostics.fallbackUsed ? ' + fallback' : ''}`
+                    : `Local parser${parseDiagnostics.aiAvailable ? ' fallback' : ' (no AI key configured)'}`}
+                </div>
+              )}
 
               {parsedItems.length > 0 && (
                 <div className="mt-8 space-y-4">
@@ -305,6 +333,11 @@ export default function NewAssignmentClient() {
                           <option value="brutal">Brutal</option>
                         </select>
                       </div>
+                      {typeof item.confidence === 'number' && (
+                        <div className="text-xs font-medium text-gray-500">
+                          Confidence {Math.round(item.confidence * 100)}%
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

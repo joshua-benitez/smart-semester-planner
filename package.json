@@ -17,6 +17,7 @@
     "verify:env": "node scripts/check-env.mjs",
     "smoke:check": "npm run verify:env && npm run build && node scripts/smoke-report.mjs",
     "test:parser": "tsx tests/parser-smoke.ts",
+    "eval:parser": "tsx tests/parser-eval.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
